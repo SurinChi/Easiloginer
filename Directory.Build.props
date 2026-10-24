@@ -1,0 +1,40 @@
+<Project>
+
+  <!--
+    全解决方案共享的编译设置。
+    设计依据：EasiLoginer-CSharp-重构框架.md §4.4「命名与代码约定」。
+  -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- 文档要求零警告交付；任何警告都视为构建失败 -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-minimum</AnalysisLevel>
+
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
+    <NeutralLanguage>zh-Hans</NeutralLanguage>
+
+    <!-- 中文优先：源码与资源统一 UTF-8 -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);.cache/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <!-- 版权与品牌（GPLv3 衍生作品，保留上游归属见 NOTICE） -->
+  <PropertyGroup>
+    <Company>SurinChi</Company>
+    <Product>EasiLoginer</Product>
+    <Authors>SurinChi</Authors>
+    <Copyright>Copyright (C) 2026 SurinChi</Copyright>
+
+    <!-- 首版版本号由 SurinChi 定为 0.0.1（文档示例的 2.0.0 不采用） -->
+    <Version>0.0.1</Version>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1.0</FileVersion>
+    <InformationalVersion>0.0.1</InformationalVersion>
+  </PropertyGroup>
+
+</Project>

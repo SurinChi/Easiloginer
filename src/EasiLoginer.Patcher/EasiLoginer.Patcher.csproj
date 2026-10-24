@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    收编上游 tools/DllPatcher（文档 §8.5）：独立进程、无业务依赖。
+    源码原样保留（仅改命名空间与 TFM），IL 补丁逻辑不得重写。
+
+    因此本项目刻意关闭可空分析与代码分析器：
+    上游代码早于本仓库的严格设置编写，改写它来"取悦分析器"违反"不要重写 IL 逻辑"的约束。
+    主解决方案其余项目仍保持零警告门禁。
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>EasiLoginer.Patcher</RootNamespace>
+    <AssemblyName>DllPatcher</AssemblyName>
+    <Nullable>enable</Nullable>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <!-- 上游代码的可空流分析告警：不修改源码，仅在此项目内抑制 -->
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="dnlib" />
+  </ItemGroup>
+
+</Project>

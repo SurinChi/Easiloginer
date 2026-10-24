@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    宿主：唯一组合根（文档 §4.3）。可引用全部项目。
+    输出名必须是 EasiLoginer.exe：快捷方式、更新脚本都依赖它（文档 §12.1）。
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>EasiLoginer</AssemblyName>
+    <RootNamespace>EasiLoginer.Host</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\easiloginer.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasiLoginer.Application\EasiLoginer.Application.csproj" />
+    <ProjectReference Include="..\EasiLoginer.Domain\EasiLoginer.Domain.csproj" />
+    <ProjectReference Include="..\EasiLoginer.Infrastructure\EasiLoginer.Infrastructure.csproj" />
+    <ProjectReference Include="..\EasiLoginer.Integrations.EasiNote\EasiLoginer.Integrations.EasiNote.csproj" />
+    <ProjectReference Include="..\EasiLoginer.Automation\EasiLoginer.Automation.csproj" />
+    <ProjectReference Include="..\EasiLoginer.Presentation\EasiLoginer.Presentation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Sinks.Async" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,20 @@
+<Window x:Class="EasiLoginer.Presentation.Login.StatusOverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="440" Height="132"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual">
+    <Border CornerRadius="10" Background="#F21F1F1F" Padding="18,14">
+        <StackPanel>
+            <TextBlock x:Name="TaskText" Text="正在登录" FontSize="16" FontWeight="SemiBold" Foreground="White" />
+            <TextBlock x:Name="ProgressText" Text="" Margin="0,6,0,0" Foreground="#CCFFFFFF" TextWrapping="Wrap" />
+            <TextBlock x:Name="BrandText" Text="EasiLoginer" Margin="0,10,0,0" FontSize="11" Foreground="#88FFFFFF" />
+        </StackPanel>
+    </Border>
+</Window>

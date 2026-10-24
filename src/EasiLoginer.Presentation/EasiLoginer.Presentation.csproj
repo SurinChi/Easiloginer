@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    呈现层：WPF + WPF-UI。
+    只允许引用 Application 与 Domain（文档 §4.3）；不得直接引用 Infrastructure / Integrations。
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>EasiLoginer.Presentation</RootNamespace>
+    <AssemblyName>EasiLoginer.Presentation</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasiLoginer.Application\EasiLoginer.Application.csproj" />
+    <ProjectReference Include="..\EasiLoginer.Domain\EasiLoginer.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WPF-UI" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 窗口图标（PNG，WPF 直接支持）；exe 图标在 Host 项目用 .ico -->
+    <Resource Include="Assets\easiloginer.png" />
+  </ItemGroup>
+
+</Project>

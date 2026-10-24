@@ -1,0 +1,43 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{json,yml,yaml,xml,csproj,props,targets}]
+indent_size = 2
+
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+
+[*.cs]
+# using 排序：System 在前
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+# 语言风格（文档 §4.4）
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_prefer_braces = true:suggestion
+dotnet_style_readonly_field = true:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+
+# 异步约定：禁止 async void、禁止 .Result（§6.7）
+dotnet_diagnostic.CA2012.severity = error
+dotnet_diagnostic.CA2007.severity = none
+dotnet_diagnostic.VSTHRD002.severity = error
+dotnet_diagnostic.VSTHRD110.severity = error
+
+# 日志：本项目日志集中在低频路径（启动、配置、里程碑），热点（登录进度）另行去重与节流，
+# 因此接受日志调用的参数装箱/数组分配；保留结构化模板写法要求（§4.4）。
+dotnet_diagnostic.CA1873.severity = none
+dotnet_diagnostic.CA1848.severity = none
+
+[*.{xaml}]
+indent_size = 4

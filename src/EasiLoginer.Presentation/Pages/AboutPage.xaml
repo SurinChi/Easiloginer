@@ -1,0 +1,25 @@
+<Page x:Class="EasiLoginer.Presentation.Pages.AboutPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="关于"
+      TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Text="EasiLoginer" FontSize="30" FontWeight="SemiBold" />
+            <TextBlock x:Name="VersionText" Opacity="0.75" Margin="0,4,0,16" />
+
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"
+                       Text="EasiLoginer 是 EasiAuto 的 C# 重写，用于手动触发希沃白板自动登录。登录只由你在应用内、命令行或快捷方式手动发起，不存在定时或外部调度。" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"
+                       Text="本程序基于 EasiAuto（作者 hxabcd，https://github.com/hxabcd/EasiAuto）重写，遵循 GNU General Public License v3.0 发布。" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"
+                       Text="Copyright (C) 2026 SurinChi" />
+            <TextBlock TextWrapping="Wrap" Opacity="0.75" Margin="0,0,0,8"
+                       Text="本项目不支持 ClassIsland，也不会读写其配置或自动化。" />
+
+            <TextBlock Text="开源许可" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,6" />
+            <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                       Text="完整文本见安装目录下的 LICENSE、NOTICE 与 THIRD-PARTY-NOTICES.md。" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

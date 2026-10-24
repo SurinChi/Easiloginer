@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    领域层：只有 BCL，禁止 WPF / Win32 / HTTP / Microsoft.Extensions（文档 §4.3）。
+    该约束由 EasiLoginer.Architecture.Tests 强制。
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>EasiLoginer.Domain</RootNamespace>
+    <AssemblyName>EasiLoginer.Domain</AssemblyName>
+  </PropertyGroup>
+
+</Project>

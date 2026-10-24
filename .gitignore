@@ -1,0 +1,35 @@
+# 构建产物
+bin/
+obj/
+build/out/
+build/stage/
+*.zip
+*.binlog
+artifacts/
+
+# IDE / 编辑器
+.vs/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# 本地缓存与临时文件
+.cache/
+tmp/
+*.tmp
+
+# 运行期数据（便携目录，不入库）
+data/
+logs/
+resources/avatars/
+resources/icons/*.ico.bak
+
+# 测试与本地产物
+TestResults/
+*.trx
+*.coverage
+*.received.*
+
+# 第三方参考实现（只读对照，独立仓库）
+EasiAuto-master/

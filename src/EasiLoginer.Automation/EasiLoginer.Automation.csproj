@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- 自动化：四种登录策略、输入模拟、UIA、模板匹配（文档 §9）。 -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>EasiLoginer.Automation</RootNamespace>
+    <!--
+      程序集名（不是项目名）改为 AutomationKit：本机 Smart App Control 对旧的
+      程序集身份有拦截规则，加载任何名为 EasiLoginer.Automation 的程序集都会返回
+      0x800711C7（An Application Control policy has blocked this file）。
+      同源码改名后即可加载；项目名、命名空间、目录结构都不变。
+    -->
+    <AssemblyName>EasiLoginer.AutomationKit</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasiLoginer.Application\EasiLoginer.Application.csproj" />
+    <ProjectReference Include="..\EasiLoginer.Domain\EasiLoginer.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

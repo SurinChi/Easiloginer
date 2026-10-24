@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- 希沃集成：路径/环境/进程/窗口/HTTP/管道/补丁（文档 §8）。 -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>EasiLoginer.Integrations.EasiNote</RootNamespace>
+    <AssemblyName>EasiLoginer.Integrations.EasiNote</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasiLoginer.Application\EasiLoginer.Application.csproj" />
+    <ProjectReference Include="..\EasiLoginer.Domain\EasiLoginer.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>
