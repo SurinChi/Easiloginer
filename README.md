@@ -6,7 +6,7 @@ EasiLoginer 是 EasiAuto 的 C# 重构项目，用于手动触发希沃白板自
 - **上游项目**：[EasiAuto](https://github.com/hxabcd/EasiAuto)，作者 hxabcd
 - **许可证**：GNU General Public License v3.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)
 - **当前状态**：**M1–M7 完成（当前版本 0.0.2）**。
-  - 登录：固定位置（10.4s）、**UI Automation（5.8–6.9s 一次成功）**、**图像识别**（逐像素模板匹配，仅支持 1920×1080 100% 与 4K 200%）、令牌投递（需管道桥 DLL，当前缺失）
+  - 登录：固定位置（10.4s）、**UI Automation（5.8–6.9s 一次成功）**、**图像识别**（逐像素模板匹配，仅支持 1920×1080 100% 与 4K 200%）、令牌投递（管道桥 DLL 已随包提供）
   - 更新：读取本仓库的 GitHub Releases（`v0.0.1` 已验证端到端）
   - 遥测：Sentry，默认关闭，需用户开启并配置 DSN
   - CI：`.github/workflows/ci.yml`（windows-latest + .NET 10，构建 + 全部测试）
@@ -101,7 +101,7 @@ ZIP 顶层为 `EasiLoginer/`，内容：
 
 发布参数与文档 §12.1 一致：`-c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=embedded`，`PublishSingleFile=false`、`PublishTrimmed=false`。
 
-> **发布前必须确认** `vendors\SeewoPipeBridge.dll`（约 22 KB）已放好。缺失时脚本会打印 WARNING，应用仍可运行，但「修补白板 / 令牌投递」会失败并提示。详见 [vendors/README.md](vendors/README.md)。
+> `vendors\SeewoPipeBridge.dll`（22 016 字节，SHA256 `73e31471…d35b4`）已随仓库提供，发布脚本会自动复制进 ZIP 的 `vendors/`。详见 [vendors/README.md](vendors/README.md)。
 
 ZIP 由 `build/make-zip.ps1` 生成：条目一律使用正斜杠、保留顶层目录、包含空目录，符合 ZIP 规范。
 

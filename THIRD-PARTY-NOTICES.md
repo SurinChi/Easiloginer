@@ -41,7 +41,7 @@ EasiLoginer 以 GNU GPLv3 发布。下表列出**实际被引用的**第三方�
 |---|---|---|
 | .NET 10 运行时 | Microsoft | 自包含发布时随包附带，MIT |
 | UIAutomationClient / UIAutomationTypes | Windows | UI Automation 客户端，系统组件 |
-| SeewoPipeBridge.dll | 上游 EasiAuto（GPLv3） | 修补希沃时部署的管道桥；上游以 Git LFS 存放，需放置实体文件到 `vendors/` |
+| SeewoPipeBridge.dll | 上游 EasiAuto（GPLv3，作者 hxabcd） | 修补希沃时部署的管道桥；22 016 字节，x86 程序集，SHA256 `73e3147134ff6c636cc9f57f8d98d3be6b76990e3bbf069da9f9550df95d35b4`（上游 LFS oid） |
 
 ## 图标与素材
 
