@@ -103,10 +103,11 @@ ZIP 由 `build/make-zip.ps1` 生成：条目一律使用正斜杠、保留顶层
 
 | 资源 | 位置 | 说明 |
 |---|---|---|
-| 应用图标（PNG） | [src/EasiLoginer.Presentation/Assets/easiloginer.png](src/EasiLoginer.Presentation/Assets/easiloginer.png) | 窗口图标（`MainWindow.Icon`，pack URI 引用） |
-| 应用图标（ICO） | [src/EasiLoginer.Host/Assets/easiloginer.ico](src/EasiLoginer.Host/Assets/easiloginer.ico) | exe 图标（`<ApplicationIcon>`），含 16/24/32/48/64/128/256 七种尺寸 |
-| 原始设计稿 | [icon/easiloginer.png](icon/easiloginer.png) | 496×496 源图，改图后需重新生成 ICO |
+| 应用图标（PNG） | [src/EasiLoginer.Presentation/Assets/easiloginer.png](src/EasiLoginer.Presentation/Assets/easiloginer.png) | 窗口图标与关于页图标（pack URI 引用），也是设计源图 |
+| 应用图标（ICO） | [src/EasiLoginer.Host/Assets/easiloginer.ico](src/EasiLoginer.Host/Assets/easiloginer.ico) | exe 图标（`<ApplicationIcon>`），含 16/24/32/48/64/128/256 七种尺寸（由上面的 PNG 生成） |
 | 导航图标 | `MainWindow.xaml` 内的 `DrawingImage` | GitHub Octicons（MIT）：`gear-24`、`person-24`、`download-24`、`info-24`，以矢量路径内联，无需字体或第三方 DLL |
+
+替换应用图标：同时替换 `Assets/easiloginer.png`，并据其重新生成 `Assets/easiloginer.ico`（多尺寸 ICO），两处保持一致。
 
 导航图标的着色使用 `{DynamicResource TextFillColorPrimaryBrush}`，随明暗主题自动适配；尺寸固定 16 DIP，与 WPF-UI 导航默认一致。署名见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 

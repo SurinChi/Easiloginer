@@ -24,16 +24,6 @@
             <TextBlock TextWrapping="Wrap" Opacity="0.75" Margin="0,0,0,8"
                        Text="本项目不支持 ClassIsland，也不会读写其配置或自动化。" />
 
-            <TextBlock Text="反馈" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,6" />
-            <TextBlock TextWrapping="Wrap" Opacity="0.8" Margin="0,0,0,10"
-                       Text="遇到问题时，点「发送邮件」会用系统默认邮件客户端起草一封邮件（收件人 hiloading@163.com），正文已带上版本与系统信息；也可以先复制邮箱再自行发送。" />
-
-            <StackPanel Orientation="Horizontal">
-                <Button Content="发送邮件" Padding="18,6" Click="OnSendFeedbackClicked" />
-                <Button Content="复制邮箱" Padding="18,6" Margin="8,0,0,0" Click="OnCopyEmailClicked" />
-            </StackPanel>
-            <TextBlock x:Name="FeedbackStatus" Opacity="0.75" Margin="0,8,0,0" />
-
             <TextBlock Text="开源许可" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,6" />
             <TextBlock TextWrapping="Wrap" Opacity="0.8"
                        Text="完整文本见安装目录下的 LICENSE、NOTICE 与 THIRD-PARTY-NOTICES.md。" />
