@@ -20,7 +20,10 @@ internal static class AppBootstrap
     {
         var paths = AppPaths.Default;
         paths.EnsureWritableDirectories();
-        LoggingSetup.Configure(paths);
+
+        // 遥测开关要在装配日志之前确定：Sentry sink 只能在 LoggerConfiguration 阶段加入
+        var telemetry = TelemetrySettings.Load(paths);
+        LoggingSetup.Configure(paths, telemetry);
         RegisterGlobalHandlers();
 
         try
@@ -30,10 +33,20 @@ internal static class AppBootstrap
         catch (Exception exception)
         {
             Log.Fatal(exception, "未处理异常，进程退出");
+            if (SentryIntegration.IsAvailable)
+            {
+                SentryIntegration.Capture(exception);
+            }
+
             return ExitCodes.Failure;
         }
         finally
         {
+            if (SentryIntegration.IsAvailable)
+            {
+                await SentryIntegration.FlushAsync().ConfigureAwait(false);
+            }
+
             await Log.CloseAndFlushAsync().ConfigureAwait(false);
         }
     }
@@ -44,12 +57,24 @@ internal static class AppBootstrap
         AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
         {
             Log.Fatal(eventArgs.ExceptionObject as Exception, "AppDomain 未处理异常，进程即将终止");
+
+            if (SentryIntegration.IsAvailable && eventArgs.ExceptionObject is Exception exception)
+            {
+                SentryIntegration.Capture(exception);
+            }
+
             Log.CloseAndFlush();
         };
 
         TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
         {
             Log.Error(eventArgs.Exception, "未观察的任务异常");
+
+            if (SentryIntegration.IsAvailable)
+            {
+                SentryIntegration.Capture(eventArgs.Exception);
+            }
+
             eventArgs.SetObserved();
         };
     }

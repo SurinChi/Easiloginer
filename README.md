@@ -111,6 +111,23 @@ ZIP 由 `build/make-zip.ps1` 生成：条目一律使用正斜杠、保留顶层
 
 导航图标的着色使用 `{DynamicResource TextFillColorPrimaryBrush}`，随明暗主题自动适配；尺寸固定 16 DIP，与 WPF-UI 导航默认一致。署名见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 
+## 遥测（默认关闭）
+
+崩溃上报使用 **Sentry**，默认**完全关闭**：只有同时满足下面两个条件才会初始化 SDK 并发送任何内容。
+
+1. 配置页勾选「参与匿名使用情况分析」（`App.TelemetryEnabled`）；
+2. 提供了本项目自己的 DSN —— 环境变量 `EASILOGINER_SENTRY_DSN`，或 `data/sentry.dsn` 文件（`data/` 不入库）。
+
+开关与隐私处理：
+
+- `SendDefaultPii = false`，不收集 IP、用户名、请求体；
+- 只上报 **Error 及以上**的日志事件，Info 仅作为面包屑；
+- 上报前经 `SensitiveDataScrubber` 脱敏：`ea$` 密文与 11 位手机号会被替换为 `ea$***` / `1*********`；
+- 不做性能采样（`TracesSampleRate = 0`）；
+- 诊断命令：`EasiLoginer.exe sentry-test` 发送一条测试事件，验证链路。
+
+> `Sentry.dll` 是未签名第三方库。开启 SAC 的机器可能拦截它（`0x800711C7`），此时程序会记一条警告并退回纯本地日志，不影响使用。
+
 ## 第三方依赖
 
 发布前需根据锁定版本生成 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。

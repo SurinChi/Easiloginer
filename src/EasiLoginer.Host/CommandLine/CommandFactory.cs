@@ -22,7 +22,15 @@ internal static class CommandFactory
         root.Add(CreateOobeCommand());
         root.Add(CreateSkipCommand());
         root.Add(CreatePatchCommand());
+        root.Add(CreateSentryTestCommand());
         return root;
+    }
+
+    private static Command CreateSentryTestCommand()
+    {
+        var command = new Command("sentry-test", "(诊断) 发送一条测试事件到 Sentry，验证遥测链路");
+        command.SetAction((_, _) => Task.FromResult(CommandHandlers.SentryTest()));
+        return command;
     }
 
     private static Command CreateSettingsCommand()
