@@ -32,8 +32,8 @@ public static class OobeSteps
 
         new WizardStep(
             "登录方式",
-            "固定位置：按坐标点击，开箱即用。令牌投递：需要先修补希沃白板。\n\n" +
-            "图像识别与自动定位尚未实现，选中后登录会明确提示不支持。",
+            "固定位置：按坐标点击，开箱即用。自动定位：用 UI Automation 找控件，最稳。\n\n" +
+            "图像识别：仅在 1920×1080 100% 或 4K 200% 环境下可用。令牌投递：需要先修补希沃白板。",
             WizardStepKind.LoginMethod),
 
         new WizardStep(

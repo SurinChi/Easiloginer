@@ -6,12 +6,12 @@ EasiLoginer 是 EasiAuto 的 C# 重构项目，用于手动触发希沃白板自
 - **上游项目**：[EasiAuto](https://github.com/hxabcd/EasiAuto)，作者 hxabcd
 - **许可证**：GNU General Public License v3.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)
 - **当前状态**：**M1–M7 完成（当前版本 0.0.2）**。
-  - 登录：固定位置（10.4s）、**UI Automation（5.8–6.9s 一次成功）**、令牌投递（需管道桥 DLL，当前缺失）；图像识别（`Cv`）暂未实现，选中时明确拒绝而不是静默降级
+  - 登录：固定位置（10.4s）、**UI Automation（5.8–6.9s 一次成功）**、**图像识别**（逐像素模板匹配，仅支持 1920×1080 100% 与 4K 200%）、令牌投递（需管道桥 DLL，当前缺失）
   - 更新：读取本仓库的 GitHub Releases（`v0.0.1` 已验证端到端）
   - 遥测：Sentry，默认关闭，需用户开启并配置 DSN
   - CI：`.github/workflows/ci.yml`（windows-latest + .NET 10，构建 + 全部测试）
   - **351 个测试全绿**（6 个测试项目）
-  - 仍未做：图像识别策略、主题令牌表、公告区、代码签名
+  - 仍未做：主题令牌表、公告区、代码签名
 
 > **Smart App Control 与程序集命名**：本机 SAC 对**程序集身份** `EasiLoginer.Automation` 有拦截规则——
 > 无论内容/版本/路径如何，加载它都会返回 `0x800711C7`（An Application Control policy has blocked this file）。

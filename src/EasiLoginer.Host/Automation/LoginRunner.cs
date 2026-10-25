@@ -5,6 +5,7 @@ using EasiLoginer.Application.Abstractions;
 using EasiLoginer.Application.Automation;
 using EasiLoginer.Application.Profiles;
 using EasiLoginer.Automation.Input;
+using EasiLoginer.Automation.Cv;
 using EasiLoginer.Automation.Strategies;
 using EasiLoginer.Automation.Uia;
 using EasiLoginer.Domain.Automation;
@@ -239,6 +240,7 @@ public static class LoginRunner
         {
             LoginMethod.Token => new TokenLoginStrategy(authenticator, tokenPipe, session),
             LoginMethod.Uia => new UiaLoginStrategy(new WindowsUiAutomation()),
+            LoginMethod.Cv => new CvLoginStrategy(input, new ScreenTemplateLocator(), session, display),
             _ => new FixedPositionStrategy(input, session, display),
         };
 

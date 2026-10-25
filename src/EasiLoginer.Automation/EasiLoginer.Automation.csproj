@@ -15,6 +15,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- 图像识别：截图与位图比较（模板匹配不使用 OpenCV，保持“精确匹配”语义） -->
+    <PackageReference Include="System.Drawing.Common" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\EasiLoginer.Application\EasiLoginer.Application.csproj" />
     <ProjectReference Include="..\EasiLoginer.Domain\EasiLoginer.Domain.csproj" />
   </ItemGroup>

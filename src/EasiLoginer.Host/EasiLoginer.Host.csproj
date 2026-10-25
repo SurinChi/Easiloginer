@@ -35,4 +35,13 @@
     <PackageReference Include="Sentry.Serilog" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- 图像识别模板（上游 EasiAuto 的功能资源，与品牌无关），随输出与发布包分发 -->
+    <Content Include="..\..\resources\EasiNoteUI\*.png">
+      <Link>resources\EasiNoteUI\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
