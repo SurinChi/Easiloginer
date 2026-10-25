@@ -5,7 +5,13 @@ EasiLoginer 是 EasiAuto 的 C# 重构项目，用于手动触发希沃白板自
 - **作者 / 维护者**：SurinChi
 - **上游项目**：[EasiAuto](https://github.com/hxabcd/EasiAuto)，作者 hxabcd
 - **许可证**：GNU General Public License v3.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)
-- **当前状态**：**M1–M7 完成（版本 0.0.1）**。M4 三种策略真机验证：固定位置 10.4s、**UI Automation 5.8–6.9s 一次成功**、令牌投递。图像识别（`Cv`）**明确拒绝**而非静默降级（缺 `resources/EasiNoteUI` 模板，运行时会给出可读原因）。**当前 334 个测试全绿**（6 个测试项目）。**明确未做**：主题令牌表、公告区（需自有公告端点）、更新源地址（清单格式已定，托管待定）、CI 与代码签名。
+- **当前状态**：**M1–M7 完成（当前版本 0.0.2）**。
+  - 登录：固定位置（10.4s）、**UI Automation（5.8–6.9s 一次成功）**、令牌投递（需管道桥 DLL，当前缺失）；图像识别（`Cv`）暂未实现，选中时明确拒绝而不是静默降级
+  - 更新：读取本仓库的 GitHub Releases（`v0.0.1` 已验证端到端）
+  - 遥测：Sentry，默认关闭，需用户开启并配置 DSN
+  - CI：`.github/workflows/ci.yml`（windows-latest + .NET 10，构建 + 全部测试）
+  - **351 个测试全绿**（6 个测试项目）
+  - 仍未做：图像识别策略、主题令牌表、公告区、代码签名
 
 > **Smart App Control 与程序集命名**：本机 SAC 对**程序集身份** `EasiLoginer.Automation` 有拦截规则——
 > 无论内容/版本/路径如何，加载它都会返回 `0x800711C7`（An Application Control policy has blocked this file）。
@@ -73,7 +79,7 @@ dotnet test  EasiLoginer.sln -c Release --no-build
 退出码：`0` 成功、`1` 失败或参数非法、`20–29` 为 `patch` 专用码
 （20 成功、21 操作失败、22 未找到希沃、29 未知异常）。
 
-> **版本**：首版为 `0.0.1`（由 SurinChi 决定，不使用文档示例中的 2.0.0）。
+> **版本**：首发 `0.0.1`，当前 `0.0.2`（由 SurinChi 决定，不使用文档示例中的 2.0.0）。
 
 ## 发布
 
@@ -81,7 +87,7 @@ dotnet test  EasiLoginer.sln -c Release --no-build
 build\publish.cmd
 ```
 
-产物：`..\EasiLoginer-dist\EasiLoginer_0.0.1.zip`（约 107 MB，自包含 win-x64，无需预装 .NET）。**输出在仓库之外**，避免构建物污染工作区。
+产物：`..\EasiLoginer-dist\EasiLoginer_0.0.2.zip`（约 107 MB，自包含 win-x64，无需预装 .NET）。**输出在仓库之外**，避免构建物污染工作区。
 
 ZIP 顶层为 `EasiLoginer/`，内容：
 

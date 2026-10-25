@@ -36,11 +36,11 @@
     <Authors>SurinChi</Authors>
     <Copyright>Copyright (C) 2026 SurinChi</Copyright>
 
-    <!-- 首版版本号由 SurinChi 定为 0.0.1（文档示例的 2.0.0 不采用） -->
-    <Version>0.0.1</Version>
-    <AssemblyVersion>0.0.1.0</AssemblyVersion>
-    <FileVersion>0.0.1.0</FileVersion>
-    <InformationalVersion>0.0.1</InformationalVersion>
+    <!-- 版本号由 SurinChi 维护：0.0.1 为首发，0.0.2 起走正常迭代 -->
+    <Version>0.0.2</Version>
+    <AssemblyVersion>0.0.2.0</AssemblyVersion>
+    <FileVersion>0.0.2.0</FileVersion>
+    <InformationalVersion>0.0.2</InformationalVersion>
   </PropertyGroup>
 
 </Project>
