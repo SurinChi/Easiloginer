@@ -37,9 +37,9 @@ public partial class MainWindow : FluentWindow
         var wizard = new Onboarding.OobeWizardWindow(_services.Config) { Owner = this };
         var completed = wizard.ShowDialog() == true;
 
-        RootNavigation.Navigate(completed && wizard.FinishToProfile
-            ? typeof(ProfilePage)
-            : typeof(ConfigPage));
+        RootNavigation.Navigate(completed && !wizard.FinishToProfile
+            ? typeof(ConfigPage)
+            : typeof(ProfilePage));
     }
 
     /// <inheritdoc />
@@ -48,9 +48,9 @@ public partial class MainWindow : FluentWindow
         base.OnContentRendered(e);
 
         // NavigationView 初始化时可能默认选中 footer 项（关于），
-        // 因此在首帧渲染完成后（Idle）再显式导航到配置页。
+        // 因此在首帧渲染完成后（Idle）再显式导航到档案页（应用启动的默认页）。
         Dispatcher.BeginInvoke(
-            new Action(() => RootNavigation.Navigate(typeof(ConfigPage))),
+            new Action(() => RootNavigation.Navigate(typeof(ProfilePage))),
             DispatcherPriority.ApplicationIdle);
     }
 }

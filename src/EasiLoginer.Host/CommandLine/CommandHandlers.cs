@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net.Http;
 using System.Threading;
 using Serilog;
 using EasiLoginer.Host.Automation;
@@ -8,6 +9,7 @@ using EasiLoginer.Host.Services;
 using EasiLoginer.Infrastructure.Configuration;
 using EasiLoginer.Infrastructure.Paths;
 using EasiLoginer.Infrastructure.Profiles;
+using EasiLoginer.Infrastructure.Update;
 using EasiLoginer.Infrastructure.Windows;
 using EasiLoginer.Presentation;
 
@@ -19,6 +21,9 @@ namespace EasiLoginer.Host.CommandLine;
 /// </summary>
 internal static class CommandHandlers
 {
+    /// <summary>更新检查共用的 HTTP 客户端（GitHub API 要求 User-Agent，超时保守）。</summary>
+    private static readonly HttpClient UpdateHttpClient = new() { Timeout = TimeSpan.FromSeconds(20) };
+
     /// <summary>打开主界面。</summary>
     public static int Settings()
     {
@@ -35,7 +40,8 @@ internal static class CommandHandlers
                 new ConfigServiceAdapter(configStore, config),
                 profiles,
                 new LoginRunnerAdapter(),
-                new WindowsDisplayMetrics());
+                new WindowsDisplayMetrics(),
+                new GitHubUpdateSource(UpdateHttpClient));
 
             var exitCode = 0;
             var thread = new Thread(() =>

@@ -19,6 +19,12 @@
     <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
     <NeutralLanguage>zh-Hans</NeutralLanguage>
 
+    <!--
+      不要把 git 提交哈希塞进 InformationalVersion：
+      界面（关于页）与更新检查（PEP 440 解析）都把它当纯版本号用。
+    -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+
     <!-- 中文优先：源码与资源统一 UTF-8 -->
     <DefaultItemExcludes>$(DefaultItemExcludes);.cache/**</DefaultItemExcludes>
   </PropertyGroup>

@@ -5,8 +5,15 @@
       TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
         <StackPanel MaxWidth="720" HorizontalAlignment="Left">
-            <TextBlock Text="EasiLoginer" FontSize="30" FontWeight="SemiBold" />
-            <TextBlock x:Name="VersionText" Opacity="0.75" Margin="0,4,0,16" />
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                <Image Width="64" Height="64" Margin="0,0,16,0"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       Source="pack://application:,,,/EasiLoginer.Presentation;component/Assets/easiloginer.png" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="EasiLoginer" FontSize="30" FontWeight="SemiBold" />
+                    <TextBlock x:Name="VersionText" Opacity="0.75" Margin="0,4,0,0" />
+                </StackPanel>
+            </StackPanel>
 
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"
                        Text="EasiLoginer 是 EasiAuto 的 C# 重写，用于手动触发希沃白板自动登录。登录只由你在应用内、命令行或快捷方式手动发起，不存在定时或外部调度。" />
@@ -16,6 +23,16 @@
                        Text="Copyright (C) 2026 SurinChi" />
             <TextBlock TextWrapping="Wrap" Opacity="0.75" Margin="0,0,0,8"
                        Text="本项目不支持 ClassIsland，也不会读写其配置或自动化。" />
+
+            <TextBlock Text="反馈" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,6" />
+            <TextBlock TextWrapping="Wrap" Opacity="0.8" Margin="0,0,0,10"
+                       Text="遇到问题时，点「发送邮件」会用系统默认邮件客户端起草一封邮件（收件人 hiloading@163.com），正文已带上版本与系统信息；也可以先复制邮箱再自行发送。" />
+
+            <StackPanel Orientation="Horizontal">
+                <Button Content="发送邮件" Padding="18,6" Click="OnSendFeedbackClicked" />
+                <Button Content="复制邮箱" Padding="18,6" Margin="8,0,0,0" Click="OnCopyEmailClicked" />
+            </StackPanel>
+            <TextBlock x:Name="FeedbackStatus" Opacity="0.75" Margin="0,8,0,0" />
 
             <TextBlock Text="开源许可" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,6" />
             <TextBlock TextWrapping="Wrap" Opacity="0.8"

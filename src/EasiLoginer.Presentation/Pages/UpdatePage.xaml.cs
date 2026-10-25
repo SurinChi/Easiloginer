@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using EasiLoginer.Application.Update;
 using EasiLoginer.Domain.Versioning;
-using EasiLoginer.Presentation.Update;
 
 namespace EasiLoginer.Presentation.Pages;
 
@@ -19,14 +18,14 @@ public partial class UpdatePage : Page
 
         _services = services;
         VersionText.Text = $"当前版本：{CurrentVersionText()}";
-        StatusText.Text = "尚未配置更新源";
+        StatusText.Text = "点击「检查更新」从 GitHub Releases 获取最新版本";
     }
 
     private async void OnCheckClicked(object sender, RoutedEventArgs e)
     {
         if (_services is null)
         {
-            StatusText.Text = "尚未配置更新源";
+            StatusText.Text = "更新服务未注入";
             return;
         }
 
@@ -37,7 +36,7 @@ public partial class UpdatePage : Page
         {
             var version = Pep440Version.Parse(CurrentVersionText());
             var channel = _services.Config.Current.Update.TargetUpdateChannel;
-            var checker = new UpdateChecker(new NotConfiguredUpdateSource());
+            var checker = new UpdateChecker(_services.Update);
             var result = await checker.CheckAsync(version, channel, CancellationToken.None);
             StatusText.Text = result.Message;
         }
@@ -58,7 +57,8 @@ public partial class UpdatePage : Page
 
         if (!string.IsNullOrWhiteSpace(informational))
         {
-            return informational;
+            // 只取版本本身，忽略可能的 "+<commit>" 后缀
+            return informational.Split('+')[0];
         }
 
         var version = assembly.GetName().Version;

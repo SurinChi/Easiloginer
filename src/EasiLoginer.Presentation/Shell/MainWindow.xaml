@@ -51,14 +51,14 @@
                            PaneDisplayMode="Left"
                            IsBackButtonVisible="Collapsed">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Content="配置" TargetPageType="{x:Type pages:ConfigPage}">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:ImageIcon Width="16" Height="16" Source="{StaticResource OcticonGear}" />
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
                 <ui:NavigationViewItem Content="档案" TargetPageType="{x:Type pages:ProfilePage}">
                     <ui:NavigationViewItem.Icon>
                         <ui:ImageIcon Width="16" Height="16" Source="{StaticResource OcticonPerson}" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="配置" TargetPageType="{x:Type pages:ConfigPage}">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:ImageIcon Width="16" Height="16" Source="{StaticResource OcticonGear}" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem Content="更新" TargetPageType="{x:Type pages:UpdatePage}">

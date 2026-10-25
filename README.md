@@ -81,7 +81,7 @@ dotnet test  EasiLoginer.sln -c Release --no-build
 build\publish.cmd
 ```
 
-产物：`build\EasiLoginer_0.0.1.zip`（约 107 MB，自包含 win-x64，无需预装 .NET）。
+产物：`..\EasiLoginer-dist\EasiLoginer_0.0.1.zip`（约 107 MB，自包含 win-x64，无需预装 .NET）。**输出在仓库之外**，避免构建物污染工作区。
 
 ZIP 顶层为 `EasiLoginer/`，内容：
 

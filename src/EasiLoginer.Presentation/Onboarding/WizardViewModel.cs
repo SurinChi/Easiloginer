@@ -47,7 +47,8 @@ public sealed partial class WizardViewModel : ObservableObject
             _ => 0,
         };
         _methodIndex = (int)current.Login.Method;
-        _finishPageIndex = current.Internal.IsOobeCompleted ? 1 : 0;
+        // 0 = 配置，1 = 档案；档案页已是应用默认页，这里默认选它
+        _finishPageIndex = 1;
     }
 
     /// <summary>全部步骤。</summary>

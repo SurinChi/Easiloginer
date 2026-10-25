@@ -1,16 +1,19 @@
 @echo off
 rem EasiLoginer publish script (doc 12.1): self-contained win-x64 + portable layout + ZIP.
+rem Output goes OUTSIDE the repository (parent folder) so the worktree stays clean.
 setlocal
 if exist "%USERPROFILE%\.dotnet\dotnet.exe" set "PATH=%USERPROFILE%\.dotnet;%PATH%"
 
 set "ROOT=%~dp0.."
-set "OUT=%ROOT%\build\out"
-set "STAGE=%ROOT%\build\stage\EasiLoginer"
-set "ZIP=%ROOT%\build\EasiLoginer_0.0.1.zip"
+set "DIST=%ROOT%\..\EasiLoginer-dist"
+set "OUT=%DIST%\out"
+set "STAGE=%DIST%\stage\EasiLoginer"
+set "ZIP=%DIST%\EasiLoginer_0.0.1.zip"
 
 if exist "%OUT%" rmdir /s /q "%OUT%"
 if exist "%STAGE%" rmdir /s /q "%STAGE%"
 if exist "%ZIP%" del /q "%ZIP%"
+if not exist "%DIST%" mkdir "%DIST%"
 
 echo [1/5] publish main app
 dotnet publish "%ROOT%\src\EasiLoginer.Host\EasiLoginer.Host.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=0.0.1 -p:AssemblyInformationalVersion=0.0.1 -o "%OUT%"
