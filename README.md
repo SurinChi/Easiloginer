@@ -134,6 +134,13 @@ ZIP 由 `build/make-zip.ps1` 生成：条目一律使用正斜杠、保留顶层
 
 > `Sentry.dll` 是未签名第三方库。开启 SAC 的机器可能拦截它（`0x800711C7`），此时程序会记一条警告并退回纯本地日志，不影响使用。
 
+> **Smart App Control 警告（分发相关）**
+> 未签名的自包含发布在**开启 Smart App Control** 的机器上可能被整体拦截：
+> 首次运行会因 `EasiLoginer.dll` 等程序集加载失败而退出（`0x800711C7`），
+> 单文件发布也一样（`An Application Control policy has blocked this file`）。
+> 这是 SAC 对未知/未签名程序的设计行为，与本项目代码无关。
+> 面向公众分发前应做**代码签名**（文档 §12.5）；否则需在发布说明中提示用户关闭 SAC 或改用已签名的构建。
+
 ## 第三方依赖
 
 发布前需根据锁定版本生成 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
