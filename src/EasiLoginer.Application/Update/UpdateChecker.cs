@@ -54,7 +54,7 @@ public sealed class UpdateChecker
 
         if (string.IsNullOrWhiteSpace(json))
         {
-            return new UpdateCheckResult(UpdateAvailability.NotConfigured, null, "尚未配置更新源");
+            return new UpdateCheckResult(UpdateAvailability.NotConfigured, null, "更新源没有返回清单（未配置或还没有发布版本）");
         }
 
         UpdateManifest manifest;
