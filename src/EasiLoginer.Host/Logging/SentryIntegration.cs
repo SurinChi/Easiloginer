@@ -30,7 +30,9 @@ internal static class SentryIntegration
         {
             // Sink 内部会用它初始化 Sentry；缺 DSN 会直接抛异常
             options.Dsn = dsn;
-            options.Release = $"EasiLoginer@{version}";
+
+            // 与 GitHub Release 的 tag 保持一致（v0.0.1），这样 Sentry 里能直接对上发布
+            options.Release = $"v{version}";
             options.Environment = "production";
             options.SendDefaultPii = false;   // 不收集 IP / 用户名等默认隐私信息
             options.TracesSampleRate = 0.0;   // 只收错误，不做性能采样

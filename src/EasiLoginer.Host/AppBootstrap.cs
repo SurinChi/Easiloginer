@@ -24,6 +24,12 @@ internal static class AppBootstrap
         // 遥测开关要在装配日志之前确定：Sentry sink 只能在 LoggerConfiguration 阶段加入
         var telemetry = TelemetrySettings.Load(paths);
         LoggingSetup.Configure(paths, telemetry);
+
+        if (SentryIntegration.IsAvailable)
+        {
+            Log.Information("Sentry 已启用，Release v{Version}，仅上报错误级事件", telemetry.Version);
+        }
+
         RegisterGlobalHandlers();
 
         try
