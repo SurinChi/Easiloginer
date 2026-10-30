@@ -6,9 +6,6 @@ public enum WizardStepKind
     /// <summary>纯说明。</summary>
     Info,
 
-    /// <summary>遥测开关。</summary>
-    Telemetry,
-
     /// <summary>主题选择。</summary>
     Theme,
 

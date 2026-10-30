@@ -20,12 +20,6 @@ public static class OobeSteps
             Skippable: false),
 
         new WizardStep(
-            "基本设置",
-            "匿名使用情况分析默认关闭。只有在你配置了本项目自己的 Sentry DSN 之后才会真正上报；" +
-            "在此之前不会向任何第三方发送数据。",
-            WizardStepKind.Telemetry),
-
-        new WizardStep(
             "外观",
             "选择应用主题。选择「跟随系统」时会读取 Windows 的浅色/深色设置。",
             WizardStepKind.Theme),

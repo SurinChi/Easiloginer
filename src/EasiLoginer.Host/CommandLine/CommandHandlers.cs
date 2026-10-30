@@ -49,12 +49,6 @@ internal static class CommandHandlers
                 try
                 {
                     var app = new App(services);
-
-                    if (SentryIntegration.IsAvailable)
-                    {
-                        app.DispatcherUnhandledException += (_, args) => SentryIntegration.Capture(args.Exception);
-                    }
-
                     exitCode = app.Run();
                 }
                 catch (Exception exception)
@@ -112,32 +106,6 @@ internal static class CommandHandlers
         return await LoginRunner
             .RunAsync(profileId, account, password, manual, cancellationToken)
             .ConfigureAwait(false);
-    }
-
-    /// <summary>诊断命令：发送一条测试事件到 Sentry，验证遥测链路是否打通。</summary>
-    public static int SentryTest()
-    {
-        if (!SentryIntegration.IsAvailable)
-        {
-            Log.Warning(
-                "Sentry 未启用：请在配置页开启「参与匿名使用情况分析」，并设置环境变量 {Variable} 或 data/sentry.dsn",
-                TelemetrySettings.DsnVariable);
-            return ExitCodes.Failure;
-        }
-
-        try
-        {
-            throw new InvalidOperationException("EasiLoginer Sentry smoke test");
-        }
-        catch (Exception exception)
-        {
-            Log.Error(exception, "Sentry 测试事件");
-            SentryIntegration.Capture(exception);
-        }
-
-        SentryIntegration.FlushAsync().GetAwaiter().GetResult();
-        Log.Information("Sentry 测试事件已发送");
-        return ExitCodes.Success;
     }
 
     /// <summary>重新进入首次向导：重置标记后打开主界面，由界面弹出向导。</summary>

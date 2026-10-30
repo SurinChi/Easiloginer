@@ -2,13 +2,14 @@ using Serilog;
 using EasiLoginer.Host.CommandLine;
 using EasiLoginer.Host.Lifecycle;
 using EasiLoginer.Host.Logging;
+using EasiLoginer.Host.Startup;
 using EasiLoginer.Infrastructure.Ipc;
 using EasiLoginer.Infrastructure.Paths;
 
 namespace EasiLoginer.Host;
 
 /// <summary>
-/// 进程启动编排：路径 → 日志 → 全局异常 → 单实例 → 命令分发（文档 §6.3 / §7.5）。
+/// 进程启动编排：路径 → 数据保留 → 日志 → 全局异常 → 单实例 → 命令分发（文档 §6.3 / §7.5）。
 /// </summary>
 internal static class AppBootstrap
 {
@@ -21,13 +22,17 @@ internal static class AppBootstrap
         var paths = AppPaths.Default;
         paths.EnsureWritableDirectories();
 
-        // 遥测开关要在装配日志之前确定：Sentry sink 只能在 LoggerConfiguration 阶段加入
-        var telemetry = TelemetrySettings.Load(paths);
-        LoggingSetup.Configure(paths, telemetry);
+        // 长期未启动则清空数据；必须在读配置与开日志之前
+        var wipe = DataRetentionService.ApplyIfExpired(paths);
 
-        if (SentryIntegration.IsAvailable)
+        LoggingSetup.Configure(paths);
+
+        if (wipe is not null)
         {
-            Log.Information("Sentry 已启用，Release v{Version}，仅上报错误级事件", telemetry.Version);
+            Log.Warning(
+                "已超过 {Days} 天未启动，清空 {Files} 个数据文件并恢复初始状态",
+                wipe.Days,
+                wipe.Files);
         }
 
         RegisterGlobalHandlers();
@@ -39,20 +44,10 @@ internal static class AppBootstrap
         catch (Exception exception)
         {
             Log.Fatal(exception, "未处理异常，进程退出");
-            if (SentryIntegration.IsAvailable)
-            {
-                SentryIntegration.Capture(exception);
-            }
-
             return ExitCodes.Failure;
         }
         finally
         {
-            if (SentryIntegration.IsAvailable)
-            {
-                await SentryIntegration.FlushAsync().ConfigureAwait(false);
-            }
-
             await Log.CloseAndFlushAsync().ConfigureAwait(false);
         }
     }
@@ -63,24 +58,12 @@ internal static class AppBootstrap
         AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
         {
             Log.Fatal(eventArgs.ExceptionObject as Exception, "AppDomain 未处理异常，进程即将终止");
-
-            if (SentryIntegration.IsAvailable && eventArgs.ExceptionObject is Exception exception)
-            {
-                SentryIntegration.Capture(exception);
-            }
-
             Log.CloseAndFlush();
         };
 
         TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
         {
             Log.Error(eventArgs.Exception, "未观察的任务异常");
-
-            if (SentryIntegration.IsAvailable)
-            {
-                SentryIntegration.Capture(eventArgs.Exception);
-            }
-
             eventArgs.SetObserved();
         };
     }

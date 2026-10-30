@@ -19,9 +19,6 @@ public sealed partial class WizardViewModel : ObservableObject
     private int _currentIndex;
 
     [ObservableProperty]
-    private bool _telemetryEnabled;
-
-    [ObservableProperty]
     private int _themeIndex;
 
     [ObservableProperty]
@@ -39,7 +36,6 @@ public sealed partial class WizardViewModel : ObservableObject
         Steps = steps ?? OobeSteps.Create();
 
         var current = config.Current;
-        _telemetryEnabled = current.App.TelemetryEnabled;
         _themeIndex = current.App.Theme switch
         {
             ThemeOptions.Light => 1,
@@ -102,7 +98,6 @@ public sealed partial class WizardViewModel : ObservableObject
         }
 
         var current = _config.Current;
-        current.App.TelemetryEnabled = TelemetryEnabled;
         current.App.Theme = ThemeIndex switch
         {
             1 => ThemeOptions.Light,

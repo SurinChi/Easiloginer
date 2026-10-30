@@ -16,8 +16,6 @@ EasiLoginer 以 GNU GPLv3 发布。下表列出**实际被引用的**第三方�
 | Serilog.Sinks.Console | 6.1.1 | Apache-2.0 | 控制台日志 |
 | Serilog.Sinks.File | 7.0.0 | Apache-2.0 | 文件日志与脱敏滚动 |
 | Serilog.Sinks.Async | 2.1.0 | Apache-2.0 | 异步写日志，避免阻塞 UI |
-| Sentry | 6.12.1 | MIT | 崩溃与错误上报（默认关闭，需用户开启并配置 DSN） |
-| Sentry.Serilog | 6.12.1 | MIT | 把 Serilog 事件送入 Sentry |
 | System.CommandLine | 2.0.13 | MIT | 命令行解析 |
 | Microsoft.Extensions.Hosting | 10.0.13 | MIT | 宿主与依赖注入 |
 | Microsoft.Extensions.Logging.Abstractions | 10.0.13 | MIT | 日志抽象 |

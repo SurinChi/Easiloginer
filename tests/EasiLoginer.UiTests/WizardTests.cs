@@ -5,21 +5,20 @@ using FluentAssertions;
 
 namespace EasiLoginer.UiTests;
 
-/// <summary>首次向导的状态机（文档 §10.7）。</summary>
+/// <summary>首次向导的状态机（文档 §10.7；已去掉遥测步骤，共 6 步）。</summary>
 public sealed class WizardTests
 {
-    /// <summary>七个步骤、顺序与首尾约束。</summary>
+    /// <summary>六个步骤、顺序与首尾约束。</summary>
     [Fact]
     public void 步骤定义()
     {
         var steps = OobeSteps.Create();
 
-        steps.Should().HaveCount(7);
+        steps.Should().HaveCount(6);
         steps[0].Title.Should().Contain("欢迎");
         steps[0].Skippable.Should().BeFalse("第一步不允许单步跳过");
         steps[^1].Kind.Should().Be(WizardStepKind.Finish);
         steps.Select(step => step.Kind).Should().Contain([
-            WizardStepKind.Telemetry,
             WizardStepKind.Theme,
             WizardStepKind.LoginMethod,
             WizardStepKind.EasiNote,
@@ -33,21 +32,21 @@ public sealed class WizardTests
     {
         var viewModel = CreateViewModel(out _, out _);
 
-        viewModel.ProgressText.Should().Be("第 1 / 7 步");
+        viewModel.ProgressText.Should().Be("第 1 / 6 步");
         viewModel.IsFirst.Should().BeTrue();
         viewModel.IsLast.Should().BeFalse();
 
         viewModel.Previous();
         viewModel.CurrentIndex.Should().Be(0, "第一步不能再往前");
 
-        for (var index = 0; index < 6; index++)
+        for (var index = 0; index < 5; index++)
         {
             viewModel.Next();
         }
 
-        viewModel.CurrentIndex.Should().Be(6);
+        viewModel.CurrentIndex.Should().Be(5);
         viewModel.IsLast.Should().BeTrue();
-        viewModel.ProgressText.Should().Be("第 7 / 7 步");
+        viewModel.ProgressText.Should().Be("第 6 / 6 步");
     }
 
     /// <summary>完成时把选择写回配置并落盘一次。</summary>
@@ -55,13 +54,11 @@ public sealed class WizardTests
     public void 完成写回配置()
     {
         var viewModel = CreateViewModel(out var config, out var saves);
-        viewModel.TelemetryEnabled = true;
         viewModel.ThemeIndex = 2;
         viewModel.MethodIndex = 3;
 
         viewModel.Complete();
 
-        config.App.TelemetryEnabled.Should().BeTrue();
         config.App.Theme.Should().Be(ThemeOptions.Dark);
         config.Login.Method.Should().Be(LoginMethod.Token);
         config.Internal.IsOobeCompleted.Should().BeTrue();
@@ -100,7 +97,7 @@ public sealed class WizardTests
     {
         var viewModel = CreateViewModel(out var config, out _);
 
-        for (var index = 0; index < 7; index++)
+        for (var index = 0; index < 6; index++)
         {
             viewModel.Next();
         }

@@ -65,6 +65,19 @@ public sealed class ConfigStoreTests : IDisposable
         root["Statistics"]!.AsObject().ContainsKey("ThisInstanceLaunchTime").Should().BeFalse("该字段不落盘");
     }
 
+    /// <summary>警示横幅的自定义文本能落盘并读回。</summary>
+    [Fact]
+    public void 横幅文本往返()
+    {
+        var original = _store.Load();
+        original.Banner.Style.Text = "自定义提示：课程结束前请勿关闭";
+        _store.Save(original);
+
+        var loaded = _store.Load();
+
+        loaded.Banner.Style.Text.Should().Be("自定义提示：课程结束前请勿关闭");
+    }
+
     /// <summary>保存后能无损读回（颜色、坐标、枚举、统计）。</summary>
     [Fact]
     public void 保存后可无损读回()

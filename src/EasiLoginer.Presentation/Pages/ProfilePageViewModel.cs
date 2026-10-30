@@ -49,10 +49,12 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         _config = config;
         _display = display;
 
-        // 已加密时优先尝试本机缓存静默解锁，避免列表里全是空密码
-        if (profiles.Current.EncryptionEnabled && !profiles.IsUnlocked)
+        // 设过主密码后，账号与密码保持锁定：打开页面不自动解锁，
+        // 每次敏感操作（保存 / 删除 / 运行登录）都要重新验证主密码。
+        if (profiles.Current.EncryptionEnabled)
         {
-            _ = profiles.TryCachedUnlock();
+            profiles.Lock();
+            profiles.Reload();
         }
 
         RefreshEncryptionState();
@@ -63,6 +65,34 @@ public sealed partial class ProfilePageViewModel : ObservableObject
 
     /// <summary>是否有选中项（控制编辑器可用性）。</summary>
     public bool HasSelection => Selected is not null;
+
+    /// <summary>是否已启用主密码（敏感操作需要验证）。</summary>
+    public bool RequiresMasterPassword => _profiles.Current.EncryptionEnabled;
+
+    /// <summary>校验主密码；成功则本次操作期间解锁。</summary>
+    public bool VerifyMasterPassword(string password)
+    {
+        var ok = _profiles.Unlock(password);
+        if (ok)
+        {
+            RefreshEncryptionState();
+        }
+
+        return ok;
+    }
+
+    /// <summary>敏感操作结束后立刻重新锁定，下次操作仍需验证。</summary>
+    public void EndSensitiveOperation()
+    {
+        if (!_profiles.Current.EncryptionEnabled)
+        {
+            return;
+        }
+
+        _profiles.Lock();
+        _profiles.Reload();
+        RefreshEncryptionState();
+    }
 
     /// <summary>是否可以启用加密。</summary>
     public bool CanEnableEncryption => ProfileEncryptionState.CanEnable(_profiles.Current);

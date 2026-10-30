@@ -56,9 +56,6 @@ public partial class OobeWizardWindow : FluentWindow
 
         switch (step.Kind)
         {
-            case WizardStepKind.Telemetry:
-                StepContent.Children.Add(BuildTelemetryToggle());
-                break;
             case WizardStepKind.Theme:
                 StepContent.Children.Add(BuildThemeSelector());
                 break;
@@ -73,20 +70,6 @@ public partial class OobeWizardWindow : FluentWindow
         PreviousButton.IsEnabled = !_viewModel.IsFirst;
         SkipButton.IsEnabled = !_viewModel.IsLast;
         NextButton.Content = _viewModel.IsLast ? "完成" : "下一步";
-    }
-
-    private CheckBox BuildTelemetryToggle()
-    {
-        var checkBox = new CheckBox
-        {
-            Content = "参与匿名使用情况分析（配置自有 DSN 后才会生效）",
-            IsChecked = _viewModel.TelemetryEnabled,
-            Margin = new Thickness(0, 16, 0, 0),
-        };
-
-        checkBox.Checked += (_, _) => _viewModel.TelemetryEnabled = true;
-        checkBox.Unchecked += (_, _) => _viewModel.TelemetryEnabled = false;
-        return checkBox;
     }
 
     private ComboBox BuildThemeSelector()

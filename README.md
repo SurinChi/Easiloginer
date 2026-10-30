@@ -8,10 +8,10 @@ EasiLoginer 是 EasiAuto 的 C# 重构项目，用于手动触发希沃白板自
 - **当前状态**：**M1–M7 完成（当前版本 0.0.3）**。
   - 登录：固定位置（10.4s）、**UI Automation（5.8–6.9s 一次成功）**、**图像识别**（逐像素模板匹配，仅支持 1920×1080 100% 与 4K 200%）、令牌投递（管道桥 DLL 已随包提供）
   - 更新：读取本仓库的 GitHub Releases（`v0.0.1` 已验证端到端）
-  - 遥测：Sentry，默认关闭，需用户开启并配置 DSN
+  - 数据保留：超过 N 天未启动自动清空数据并恢复初始状态（默认 90 天，最短 7 天，可在配置页关闭）
   - CI：`.github/workflows/ci.yml`（windows-latest + .NET 10，构建 + 全部测试）
   - **351 个测试全绿**（6 个测试项目）
-  - 仍未做：主题令牌表、公告区、代码签名
+  - 明确不做：公告（无端点，也不再规划）；仍未做：主题令牌表、代码签名
 
 > **Smart App Control 与程序集命名**：本机 SAC 对**程序集身份** `EasiLoginer.Automation` 有拦截规则——
 > 无论内容/版本/路径如何，加载它都会返回 `0x800711C7`（An Application Control policy has blocked this file）。
@@ -117,29 +117,17 @@ ZIP 由 `build/make-zip.ps1` 生成：条目一律使用正斜杠、保留顶层
 
 导航图标的着色使用 `{DynamicResource TextFillColorPrimaryBrush}`，随明暗主题自动适配；尺寸固定 16 DIP，与 WPF-UI 导航默认一致。署名见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 
-## 遥测（默认关闭）
+## 数据保留与清理
 
-崩溃上报使用 **Sentry**，默认**完全关闭**：只有同时满足下面两个条件才会初始化 SDK 并发送任何内容。
+应用**只写本地文件**，不做任何遥测上报（Sentry 已移除，`App.TelemetryEnabled` 仅为与上游配置兼容而保留）。
 
-1. 配置页勾选「参与匿名使用情况分析」（`App.TelemetryEnabled`）；
-2. 提供了本项目自己的 DSN —— 环境变量 `EASILOGINER_SENTRY_DSN`，或 `data/sentry.dsn` 文件（`data/` 不入库）。
+超过配置天数未启动时，下次启动会**清空 `data/` 下的全部数据**（配置、档案、日志、缓存），恢复首次安装状态：
 
-开关与隐私处理：
-
-- `SendDefaultPii = false`，不收集 IP、用户名、请求体；
-- 只上报 **Error 及以上**的日志事件，Info 仅作为面包屑；
-- 上报前经 `SensitiveDataScrubber` 脱敏：`ea$` 密文与 11 位手机号会被替换为 `ea$***` / `1*********`；
-- 不做性能采样（`TracesSampleRate = 0`）；
-- 诊断命令：`EasiLoginer.exe sentry-test` 发送一条测试事件，验证链路。
-
-> `Sentry.dll` 是未签名第三方库。开启 SAC 的机器可能拦截它（`0x800711C7`），此时程序会记一条警告并退回纯本地日志，不影响使用。
-
-> **Smart App Control 警告（分发相关）**
-> 未签名的自包含发布在**开启 Smart App Control** 的机器上可能被整体拦截：
-> 首次运行会因 `EasiLoginer.dll` 等程序集加载失败而退出（`0x800711C7`），
-> 单文件发布也一样（`An Application Control policy has blocked this file`）。
-> 这是 SAC 对未知/未签名程序的设计行为，与本项目代码无关。
-> 面向公众分发前应做**代码签名**（文档 §12.5）；否则需在发布说明中提示用户关闭 SAC 或改用已签名的构建。
+- 配置项：`App.ResetDataAfterDays`（配置页 → 应用设置 →「未启动清理」）；
+- 默认 **90 天**（约 3 个月）；
+- 填 `0` 表示关闭；
+- 启用时**最短 7 天**，填更小的值会按 7 天处理（防止"启动即清空"）；
+- 判断依据是 `data/state.json` 里记录的上次启动时间，与实际运行时长无关。
 
 ## 第三方依赖
 

@@ -8,7 +8,8 @@
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True"
                  WindowBackdropType="None"
-                 Background="{DynamicResource ApplicationBackgroundBrush}">
+                 Background="{DynamicResource ApplicationBackgroundBrush}"
+                 TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

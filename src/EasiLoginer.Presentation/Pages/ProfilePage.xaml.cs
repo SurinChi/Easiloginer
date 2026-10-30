@@ -21,11 +21,74 @@ public partial class ProfilePage : Page
 
     private void OnAddClicked(object sender, RoutedEventArgs e) => _viewModel.Add();
 
-    private void OnDeleteClicked(object sender, RoutedEventArgs e) => _viewModel.Delete();
+    private void OnDeleteClicked(object sender, RoutedEventArgs e)
+    {
+        if (!EnsureMasterPassword())
+        {
+            return;
+        }
 
-    private void OnSaveClicked(object sender, RoutedEventArgs e) => _viewModel.Save();
+        _viewModel.Delete();
+        _viewModel.EndSensitiveOperation();
+    }
 
-    private async void OnRunClicked(object sender, RoutedEventArgs e) => await _viewModel.RunAsync();
+    private void OnSaveClicked(object sender, RoutedEventArgs e)
+    {
+        if (!EnsureMasterPassword())
+        {
+            return;
+        }
+
+        _viewModel.Save();
+        _viewModel.EndSensitiveOperation();
+    }
+
+    private async void OnRunClicked(object sender, RoutedEventArgs e)
+    {
+        if (!EnsureMasterPassword())
+        {
+            return;
+        }
+
+        await _viewModel.RunAsync();
+        _viewModel.EndSensitiveOperation();
+    }
+
+    /// <summary>涉及账号密码的操作前验证主密码；未设主密码时直接放行。</summary>
+    private bool EnsureMasterPassword()
+    {
+        if (!_viewModel.RequiresMasterPassword)
+        {
+            return true;
+        }
+
+        var dialog = new MasterPasswordDialog(
+            "验证主密码",
+            "该操作涉及账号与密码，请先输入主密码。",
+            requireConfirmation: false)
+        {
+            Owner = Window.GetWindow(this),
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return false;
+        }
+
+        if (_viewModel.VerifyMasterPassword(dialog.Password))
+        {
+            return true;
+        }
+
+        MessageBox.Show(
+            Window.GetWindow(this),
+            "主密码错误，操作已取消。",
+            "验证失败",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
+
+        return false;
+    }
 
     private void OnEnableEncryptionClicked(object sender, RoutedEventArgs e)
     {
@@ -40,6 +103,9 @@ public partial class ProfilePage : Page
         if (dialog.ShowDialog() == true)
         {
             _viewModel.EnableEncryption(dialog.Password);
+
+            // 启用后立即回到锁定状态：后续每次敏感操作都要重新验证
+            _viewModel.EndSensitiveOperation();
         }
     }
 

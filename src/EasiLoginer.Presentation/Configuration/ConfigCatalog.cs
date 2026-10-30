@@ -40,6 +40,7 @@ public static class ConfigCatalog
         "Login.Position.BaseSize",
         "Login.Position.LoginWindowSize",
         "Update.LastVersion",
+        "App.TelemetryEnabled",
     };
 
     private static readonly Dictionary<string, string> Titles = new(StringComparer.Ordinal)
@@ -86,6 +87,7 @@ public static class ConfigCatalog
         ["App.MaxRetries"] = "最大重试次数",
         ["App.Theme"] = "应用主题",
         ["App.LogEnabled"] = "启用日志记录",
+        ["App.ResetDataAfterDays"] = "未启动清理（天，0 关闭，最短 7）",
         ["App.TelemetryEnabled"] = "参与匿名使用情况分析",
         ["Experimental.PrivacyMask.Enabled"] = "启用隐私保护遮罩",
         ["Experimental.PrivacyMask.MaskLeftTop"] = "遮罩位置",
@@ -122,6 +124,7 @@ public static class ConfigCatalog
         ["Banner.Style.Fps"] = (1, 120),
         ["Banner.Style.TextSpeed"] = (-8, 8),
         ["App.MaxRetries"] = (0, 5),
+        ["App.ResetDataAfterDays"] = (0, 3650),
     };
 
     /// <summary>生成全部分组与设置项描述。</summary>

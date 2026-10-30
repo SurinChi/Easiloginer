@@ -19,11 +19,23 @@ public sealed class AppConfig
 
     /// <summary>
     /// 参与匿名使用情况分析。
-    /// 上游默认 true；EasiLoginer 默认 <b>false</b>，且只有配置了自己的 Sentry DSN 才会真正上报
-    /// （文档 §0.2 / §5.1）。
+    /// 上游默认 true；EasiLoginer 默认 <b>false</b>。
     /// </summary>
+    /// <remarks>
+    /// EasiLoginer 已移除所有第三方上报渠道（不再接入 Sentry），该字段仅保留用于与上游配置双向兼容。
+    /// </remarks>
     [JsonPropertyName("TelemetryEnabled")]
     public bool TelemetryEnabled { get; set; }
+
+    /// <summary>
+    /// 超过指定天数未启动时清空全部数据并恢复初始状态；0 表示禁用。
+    /// </summary>
+    /// <remarks>
+    /// 启用时最短 7 天（<see cref="EasiLoginer.Domain.Retention.DataRetentionPolicy.MinimumDays"/>），
+    /// 默认 90 天。取值为 EasiLoginer 自有扩展键，上游会忽略。
+    /// </remarks>
+    [JsonPropertyName("ResetDataAfterDays")]
+    public int ResetDataAfterDays { get; set; } = 90;
 }
 
 /// <summary>档案设置，对应上游 <c>ProfileConfig</c>。</summary>

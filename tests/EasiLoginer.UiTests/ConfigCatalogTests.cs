@@ -23,6 +23,24 @@ public sealed class ConfigCatalogTests
         groups.Should().NotContain("Statistics");
     }
 
+    /// <summary>警示横幅的文本可以在配置页直接改（斜纹上滚动显示的内容）。</summary>
+    [Fact]
+    public void 横幅文本可编辑()
+    {
+        var descriptor = ConfigCatalog.Build().Single(item => item.Path == "Banner.Style.Text");
+
+        descriptor.Kind.Should().Be(SettingKind.Text);
+        descriptor.Title.Should().Be("文本");
+        descriptor.Group.Should().Be("Banner");
+    }
+
+    /// <summary>已移除的遥测开关不再出现在目录里。</summary>
+    [Fact]
+    public void 遥测开关已隐藏()
+    {
+        ConfigCatalog.Build().Select(item => item.Path).Should().NotContain("App.TelemetryEnabled");
+    }
+
     /// <summary>隐藏项不出现在界面目录中。</summary>
     [Theory]
     [InlineData("Login.Position.BaseSize")]
