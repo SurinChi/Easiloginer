@@ -19,6 +19,9 @@ public sealed partial class WizardViewModel : ObservableObject
     private int _currentIndex;
 
     [ObservableProperty]
+    private bool _agreementAccepted;
+
+    [ObservableProperty]
     private int _themeIndex;
 
     [ObservableProperty]

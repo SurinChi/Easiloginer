@@ -125,6 +125,11 @@ public sealed partial class SettingItemViewModel : ObservableObject
                 TextValue = Convert.ToDouble(value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
                 break;
 
+            case SettingKind.Point:
+                // 与 ParsePoint 的格式保持一致，避免"没动过也保存失败"
+                TextValue = value is PixelPoint point ? $"{point.X}, {point.Y}" : string.Empty;
+                break;
+
             default:
                 TextValue = value?.ToString() ?? string.Empty;
                 break;
@@ -133,7 +138,12 @@ public sealed partial class SettingItemViewModel : ObservableObject
 
     private static PixelPoint ParsePoint(string text)
     {
-        var parts = text.Split([',', '，'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        // 兼容 "(172, 1044)"、"[172, 1044]"、"172,1044" 以及全角逗号
+        var normalized = text.Trim().Trim('(', ')', '[', ']', '（', '）', '【', '】').Trim();
+        var parts = normalized.Split(
+            [',', '，', ';', '；'],
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
         if (parts.Length != 2 ||
             !int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var x) ||
             !int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var y))

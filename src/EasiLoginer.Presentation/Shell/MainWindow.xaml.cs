@@ -13,6 +13,9 @@ public partial class MainWindow : FluentWindow
 {
     private readonly AppServices _services;
 
+    /// <summary>向导完成后要进入的页面；null 表示应用启动的默认页（档案）。</summary>
+    private Type? _startPage;
+
     /// <summary>创建主窗口。</summary>
     public MainWindow(AppServices services)
     {
@@ -31,10 +34,17 @@ public partial class MainWindow : FluentWindow
         RootNavigation.SetPageProviderService(new PageProvider(services));
     }
 
+    /// <summary>首次启动时：向导完成后再显示主界面，并进入用户选择的页面。</summary>
+    /// <param name="toConfigPage">true 进入配置页；false 进入档案页。</param>
+    public void ShowAfterOobe(bool toConfigPage)
+    {
+        _startPage = toConfigPage ? typeof(ConfigPage) : typeof(ProfilePage);
+        Show();
+    }
+
     /// <summary>打开首次设置向导；完成后按用户选择跳到配置页或档案页。</summary>
     public void ShowOobe()
     {
-
         var wizard = new Onboarding.OobeWizardWindow(_services.Config) { Owner = this };
 
         // 向导是独立窗口，FluentWindow 自己维护一份主题资源；显式套用一次，
@@ -42,8 +52,6 @@ public partial class MainWindow : FluentWindow
         Wpf.Ui.Appearance.ApplicationThemeManager.Apply(wizard);
 
         var completed = wizard.ShowDialog() == true;
-
-
         RootNavigation.Navigate(completed && !wizard.FinishToProfile
             ? typeof(ConfigPage)
             : typeof(ProfilePage));
@@ -55,9 +63,10 @@ public partial class MainWindow : FluentWindow
         base.OnContentRendered(e);
 
         // NavigationView 初始化时可能默认选中 footer 项（关于），
-        // 因此在首帧渲染完成后（Idle）再显式导航到档案页（应用启动的默认页）。
+        // 因此在首帧渲染完成后（Idle）再显式导航到目标页（默认档案页）。
+        var page = _startPage ?? typeof(ProfilePage);
         Dispatcher.BeginInvoke(
-            new Action(() => RootNavigation.Navigate(typeof(ProfilePage))),
+            new Action(() => RootNavigation.Navigate(page)),
             DispatcherPriority.ApplicationIdle);
     }
 }

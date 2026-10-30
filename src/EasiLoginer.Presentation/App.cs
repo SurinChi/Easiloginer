@@ -50,12 +50,19 @@ public sealed class App : System.Windows.Application
 
         var window = new MainWindow(Services);
         MainWindow = window;
-        window.Show();
 
-        // 首次运行（或 IsOobeCompleted=false）时先走 6 步向导
+        // 首次运行：先只显示向导，完成后再显示主界面，
+        // 避免"向导浮在一个还没用过的主界面之上"。
         if (!Services.Config.Current.Internal.IsOobeCompleted)
         {
-            window.ShowOobe();
+            var wizard = new Onboarding.OobeWizardWindow(Services.Config);
+            Wpf.Ui.Appearance.ApplicationThemeManager.Apply(wizard);
+
+            var completed = wizard.ShowDialog() == true;
+            window.ShowAfterOobe(completed && !wizard.FinishToProfile);
+            return;
         }
+
+        window.Show();
     }
 }

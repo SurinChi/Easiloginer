@@ -130,6 +130,37 @@ public sealed class ConfigCatalogTests
         config.Login.Position.AccountLoginTab.Should().Be(new PixelPoint(100, 200));
     }
 
+    /// <summary>括号写法也要能解析：界面里显示为 (x, y) 时，未修改直接保存不能失败。</summary>
+    [Theory]
+    [InlineData("(172, 1044)")]
+    [InlineData("[172, 1044]")]
+    [InlineData("172,1044")]
+    [InlineData(" 172 ， 1044 ")]
+    public void 坐标括号写法可解析(string text)
+    {
+        var config = new Config();
+        var item = Create(config, "Login.Position.AccountInput");
+
+        item.TextValue = text;
+        item.Apply();
+
+        config.Login.Position.AccountInput.Should().Be(new PixelPoint(172, 1044));
+    }
+
+    /// <summary>载入时坐标按 "x, y" 显示，保证显示值与解析器互逆。</summary>
+    [Fact]
+    public void 坐标显示与解析互逆()
+    {
+        var config = new Config();
+        config.Login.Position.AccountInput = new PixelPoint(172, 1044);
+
+        var item = Create(config, "Login.Position.AccountInput");
+
+        item.TextValue.Should().Be("172, 1044");
+        item.Apply();
+        config.Login.Position.AccountInput.Should().Be(new PixelPoint(172, 1044));
+    }
+
     /// <summary>坐标格式非法时必须明确报错，而不是静默写成 (0,0)。</summary>
     [Fact]
     public void 坐标格式非法抛异常()

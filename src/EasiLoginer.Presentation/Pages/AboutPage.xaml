@@ -4,8 +4,8 @@
       Title="关于"
       TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
-        <StackPanel MaxWidth="720" HorizontalAlignment="Left">
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+        <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
                 <Image Width="64" Height="64" Margin="0,0,16,0"
                        RenderOptions.BitmapScalingMode="HighQuality"
                        Source="pack://application:,,,/EasiLoginer.Presentation;component/Assets/easiloginer.png" />
@@ -15,16 +15,37 @@
                 </StackPanel>
             </StackPanel>
 
-            <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"
-                       Text="EasiLoginer 是 EasiAuto 的 C# 重写，用于手动触发希沃白板自动登录。登录只由你在应用内、命令行或快捷方式手动发起，不存在定时或外部调度。" />
-            <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"
-                       Text="本程序基于 EasiAuto（作者 hxabcd，https://github.com/hxabcd/EasiAuto）重写，遵循 GNU General Public License v3.0 发布。" />
-            <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"
-                       Text="Copyright (C) 2026 SurinChi" />
-            <TextBlock TextWrapping="Wrap" Opacity="0.75" Margin="0,0,0,8"
-                       Text="本项目不支持 ClassIsland，也不会读写其配置或自动化。" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,16"
+                       Text="一个手动触发的希沃白板自动登录工具：点一下按钮，它替你走完启动、填账号、点登录的流程。不驻留后台、不监控事件、不自动执行。" />
 
-            <TextBlock Text="开源许可" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,6" />
+            <TextBlock Text="它能做什么" FontSize="18" FontWeight="SemiBold" Margin="0,4,0,8" />
+
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="• 四种登录方式：固定位置、图像识别（模板匹配）、UI Automation、令牌投递，可在配置页随时切换。" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="• 档案管理：保存多个账号；可选用主密码加密，账号密码以 ea$ 密文落盘，敏感操作每次都要求验证。" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="• 流程可控：超时、坐标缩放、隐私遮罩、警示横幅、状态浮窗、重试次数都可调。" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="• 与希沃集成：检测安装路径、修补白板、终止 EasiAgent、查杀残留进程。" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="• 更新检查：读取 GitHub Releases，对比版本并在更新页给出下载地址。" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="• 本地优先：没有账号体系、没有公告推送、不做任何遥测上报；除检查更新外不发起网络请求。" />
+
+            <TextBlock Text="触发方式" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,8" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="登录只由你发起：应用内的「运行登录」按钮、命令行 EasiLoginer.exe login，或指向它的快捷方式；也可以用 EasiLoginer.exe skip 跳过下一次。" />
+
+            <TextBlock Text="兼容与来源" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,8" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="与上游 EasiAuto 的 config.json、profile.json 双向兼容，加密档案可交叉解密；旧配置中的 ClassIsland 段会被忽略并丢弃。" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="本项目基于 EasiAuto（作者 hxabcd，https://github.com/hxabcd/EasiAuto）用 C# / WPF 重写。" />
+
+            <TextBlock Text="版权与许可" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,8" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                       Text="Copyright (C) 2026 SurinChi。以 GNU General Public License v3.0 发布，按「现状」提供，不附带任何担保。" />
             <TextBlock TextWrapping="Wrap" Opacity="0.8"
                        Text="完整文本见安装目录下的 LICENSE、NOTICE 与 THIRD-PARTY-NOTICES.md。" />
         </StackPanel>

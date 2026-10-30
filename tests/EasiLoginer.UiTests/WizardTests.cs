@@ -5,7 +5,7 @@ using FluentAssertions;
 
 namespace EasiLoginer.UiTests;
 
-/// <summary>首次向导的状态机（文档 §10.7；已去掉遥测步骤，共 6 步）。</summary>
+/// <summary>首次向导的状态机（文档 §10.7；6 步，首步为用户协议）。</summary>
 public sealed class WizardTests
 {
     /// <summary>六个步骤、顺序与首尾约束。</summary>
@@ -15,15 +15,25 @@ public sealed class WizardTests
         var steps = OobeSteps.Create();
 
         steps.Should().HaveCount(6);
-        steps[0].Title.Should().Contain("欢迎");
-        steps[0].Skippable.Should().BeFalse("第一步不允许单步跳过");
+        steps[0].Kind.Should().Be(WizardStepKind.Agreement, "第一页是用户协议");
+        steps[0].Skippable.Should().BeFalse("协议页不允许单步跳过");
         steps[^1].Kind.Should().Be(WizardStepKind.Finish);
         steps.Select(step => step.Kind).Should().Contain([
+            WizardStepKind.Agreement,
             WizardStepKind.Theme,
             WizardStepKind.LoginMethod,
             WizardStepKind.EasiNote,
             WizardStepKind.Shortcuts,
         ]);
+    }
+
+    /// <summary>协议页必须有正文，且默认未勾选。</summary>
+    [Fact]
+    public void 协议默认未同意()
+    {
+        OobeSteps.AgreementText.Should().Contain("GPLv3");
+        var viewModel = CreateViewModel(out _, out _);
+        viewModel.AgreementAccepted.Should().BeFalse();
     }
 
     /// <summary>进度文案与首尾标记随索引变化。</summary>

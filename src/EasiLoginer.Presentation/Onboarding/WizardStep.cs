@@ -6,6 +6,9 @@ public enum WizardStepKind
     /// <summary>纯说明。</summary>
     Info,
 
+    /// <summary>用户协议（需滚动阅读并勾选同意）。</summary>
+    Agreement,
+
     /// <summary>主题选择。</summary>
     Theme,
 
