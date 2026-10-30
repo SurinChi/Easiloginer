@@ -3,18 +3,42 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="更新"
       TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-    <StackPanel Margin="24">
-        <TextBlock Text="更新" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,6" />
-        <TextBlock x:Name="VersionText" Opacity="0.75" Margin="0,0,0,16" />
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/EasiLoginer.Presentation;component/Configuration/SettingsTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
 
-        <TextBlock TextWrapping="Wrap" Opacity="0.85"
-                   Text="更新来自本项目的 GitHub Releases（SurinChi/EasiLoginer）。Stable 通道取最新正式版，Dev 通道取最新一次发布（可能为预发布）。本程序只读取自己的发布，不使用上游 EasiAuto 的清单或资产。" />
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
-            <Button x:Name="CheckButton" Content="检查更新" Padding="18,6" Click="OnCheckClicked" />
-            <TextBlock x:Name="StatusText" VerticalAlignment="Center" Margin="14,0,0,0" Opacity="0.85" TextWrapping="Wrap" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="更新" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,6" />
+            <TextBlock x:Name="VersionText" Opacity="0.75" Margin="0,0,0,8" />
+            <TextBlock TextWrapping="Wrap" Opacity="0.85"
+                       Text="更新来自本项目的 GitHub Releases（SurinChi/EasiLoginer）。Stable 通道取最新正式版，Dev 通道取最新一次发布（可能为预发布）。本程序只读取自己的发布，不使用上游 EasiAuto 的清单或资产。" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                <Button x:Name="CheckButton" Content="检查更新" Padding="18,6" Click="OnCheckClicked" />
+                <TextBlock x:Name="StatusText" VerticalAlignment="Center" Margin="14,0,0,0" Opacity="0.85" TextWrapping="Wrap" />
+            </StackPanel>
         </StackPanel>
 
-        <TextBlock Text="更新通道与模式可在配置页的「更新」分组调整。" Opacity="0.65" Margin="0,16,0,0" />
-    </StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,8,0,0">
+                <ItemsControl ItemsSource="{Binding Groups}"
+                              ItemTemplate="{StaticResource SettingsGroupTemplate}" />
+
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="保存更新设置" Padding="20,8" Click="OnSaveSettingsClicked" />
+                    <TextBlock Text="{Binding SettingsStatus}" VerticalAlignment="Center" Margin="14,0,0,0" Opacity="0.85" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </Page>

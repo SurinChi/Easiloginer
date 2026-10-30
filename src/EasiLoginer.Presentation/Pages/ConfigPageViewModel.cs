@@ -20,7 +20,9 @@ public sealed partial class ConfigPageViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(config);
         _config = config;
 
+        // 「更新」分组已移到更新页，配置页不再显示
         Groups = ConfigCatalog.Build()
+            .Where(descriptor => !string.Equals(descriptor.Group, "Update", StringComparison.Ordinal))
             .GroupBy(descriptor => descriptor.Group)
             .Select(group => new SettingsGroupViewModel(
                 ConfigCatalog.GetGroupTitle(group.Key),

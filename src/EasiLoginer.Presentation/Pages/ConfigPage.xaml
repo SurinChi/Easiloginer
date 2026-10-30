@@ -5,7 +5,11 @@
       Title="配置"
       TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Page.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/EasiLoginer.Presentation;component/Configuration/SettingsTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Page.Resources>
 
     <DockPanel Margin="24">
@@ -20,44 +24,8 @@
         </StackPanel>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Groups}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type config:SettingsGroupViewModel}">
-                        <Border Margin="0,0,0,16" Padding="16" CornerRadius="8"
-                                Background="{DynamicResource ControlFillColorDefaultBrush}">
-                            <StackPanel>
-                                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                <ItemsControl ItemsSource="{Binding Items}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type config:SettingItemViewModel}">
-                                            <Grid Margin="0,4">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="240" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-
-                                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextWrapping="Wrap" />
-
-                                                <Grid Grid.Column="1">
-                                                    <CheckBox IsChecked="{Binding BoolValue, Mode=TwoWay}"
-                                                              Visibility="{Binding IsBool, Converter={StaticResource BoolToVis}}" />
-
-                                                    <ComboBox ItemsSource="{Binding Options}"
-                                                              SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
-                                                              Visibility="{Binding IsEnum, Converter={StaticResource BoolToVis}}" />
-
-                                                    <TextBox Text="{Binding TextValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             Visibility="{Binding IsTextual, Converter={StaticResource BoolToVis}}" />
-                                                </Grid>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <ItemsControl ItemsSource="{Binding Groups}"
+                          ItemTemplate="{StaticResource SettingsGroupTemplate}" />
         </ScrollViewer>
     </DockPanel>
 </Page>

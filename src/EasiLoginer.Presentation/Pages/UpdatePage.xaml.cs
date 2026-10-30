@@ -6,10 +6,11 @@ using EasiLoginer.Domain.Versioning;
 
 namespace EasiLoginer.Presentation.Pages;
 
-/// <summary>更新页：显示当前版本并按配置通道检查更新。</summary>
+/// <summary>更新页：版本、检查更新，以及「更新设置」分组（从配置页迁来）。</summary>
 public partial class UpdatePage : Page
 {
     private readonly AppServices? _services;
+    private readonly UpdatePageViewModel? _viewModel;
 
     /// <summary>创建更新页。</summary>
     public UpdatePage(AppServices? services = null)
@@ -17,8 +18,20 @@ public partial class UpdatePage : Page
         InitializeComponent();
 
         _services = services;
+        if (services is not null)
+        {
+            _viewModel = new UpdatePageViewModel(services.Config);
+            DataContext = _viewModel;
+            PageLayout.ConstrainToNavigationHost(this);
+        }
+
         VersionText.Text = $"当前版本：{CurrentVersionText()}";
         StatusText.Text = "点击「检查更新」从 GitHub Releases 获取最新版本";
+    }
+
+    private void OnSaveSettingsClicked(object sender, RoutedEventArgs e)
+    {
+        _viewModel?.Save();
     }
 
     private async void OnCheckClicked(object sender, RoutedEventArgs e)
