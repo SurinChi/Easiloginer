@@ -21,6 +21,7 @@ public partial class OobeWizardWindow : FluentWindow
         InitializeComponent();
         _viewModel = new WizardViewModel(config);
         Render();
+        WizardTheme.Apply(this, Root);
     }
 
     /// <summary>完成后是否应打开档案页（否则打开配置页）。</summary>
@@ -145,6 +146,7 @@ public partial class OobeWizardWindow : FluentWindow
 
                 // 全局主题换掉后，向导自身也要重新套用，否则窗口还是旧主题
                 Wpf.Ui.Appearance.ApplicationThemeManager.Apply(this);
+                WizardTheme.Apply(this, Root);
             }
         };
         return combo;

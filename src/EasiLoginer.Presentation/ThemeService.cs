@@ -14,6 +14,9 @@ public static class ThemeService
     private const string PersonalizeKey = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private const string LightThemeValue = "AppsUseLightTheme";
 
+    /// <summary>最近一次解析出的主题（供独立窗口自绘背景时使用）。</summary>
+    public static ApplicationTheme CurrentTheme { get; private set; } = ApplicationTheme.Light;
+
     /// <summary>按配置应用主题。</summary>
     public static void Apply(ThemeOptions theme)
     {
@@ -26,6 +29,7 @@ public static class ThemeService
 
         // 背板效果（Mica）在部分虚拟化环境下会导致窗口整体透明，
         // 这里统一使用 None + 不透明主题背景，等真机验证后再按平台启用。
+        CurrentTheme = resolved;
         ApplicationThemeManager.Apply(resolved, WindowBackdropType.None, true);
     }
 

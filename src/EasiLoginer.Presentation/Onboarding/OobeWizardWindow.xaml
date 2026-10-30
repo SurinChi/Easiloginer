@@ -10,7 +10,7 @@
                  WindowBackdropType="None"
                  Background="{DynamicResource ApplicationBackgroundBrush}"
                  TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-    <Grid>
+    <Grid x:Name="Root">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
