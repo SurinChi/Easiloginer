@@ -34,8 +34,15 @@ public partial class MainWindow : FluentWindow
     /// <summary>打开首次设置向导；完成后按用户选择跳到配置页或档案页。</summary>
     public void ShowOobe()
     {
+
         var wizard = new Onboarding.OobeWizardWindow(_services.Config) { Owner = this };
+
+        // 向导是独立窗口，FluentWindow 自己维护一份主题资源；显式套用一次，
+        // 避免出现"深色主窗口 + 浅色向导"的错配。
+        Wpf.Ui.Appearance.ApplicationThemeManager.Apply(wizard);
+
         var completed = wizard.ShowDialog() == true;
+
 
         RootNavigation.Navigate(completed && !wizard.FinishToProfile
             ? typeof(ConfigPage)

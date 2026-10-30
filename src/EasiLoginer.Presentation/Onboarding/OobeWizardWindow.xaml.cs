@@ -90,6 +90,9 @@ public partial class OobeWizardWindow : FluentWindow
                     2 => ThemeOptions.Dark,
                     _ => ThemeOptions.Auto,
                 });
+
+                // 全局主题换掉后，向导自身也要重新套用，否则窗口还是旧主题
+                Wpf.Ui.Appearance.ApplicationThemeManager.Apply(this);
             }
         };
         return combo;
