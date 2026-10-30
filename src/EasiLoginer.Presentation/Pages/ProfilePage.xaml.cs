@@ -9,6 +9,9 @@ public partial class ProfilePage : Page
 {
     private readonly ProfilePageViewModel _viewModel;
 
+    /// <summary>正在把视图模型的密码写进 PasswordBox 时抑制反向同步。</summary>
+    private bool _syncingPassword;
+
     /// <summary>创建档案页。</summary>
     public ProfilePage(AppServices services)
     {
@@ -18,42 +21,82 @@ public partial class ProfilePage : Page
         _viewModel = new ProfilePageViewModel(services.Profiles, services.Login, services.Config, services.Display);
         DataContext = _viewModel;
         PageLayout.ConstrainToNavigationHost(this);
+
+        _viewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(ProfilePageViewModel.Selected))
+            {
+                SyncPasswordBox();
+            }
+        };
+        SyncPasswordBox();
+    }
+
+    /// <summary>把当前选中档案的密码同步到 PasswordBox（避免来回触发 PasswordChanged）。</summary>
+    private void SyncPasswordBox()
+    {
+        if (PasswordInput is null)
+        {
+            return;
+        }
+
+        _syncingPassword = true;
+        try
+        {
+            PasswordInput.Password = _viewModel.Selected?.Password ?? string.Empty;
+        }
+        finally
+        {
+            _syncingPassword = false;
+        }
+    }
+
+    private void OnPasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (_syncingPassword || _viewModel.Selected is null)
+        {
+            return;
+        }
+
+        _viewModel.Selected.Password = PasswordInput.Password;
+    }
+
+    private void OnRevealClicked(object sender, RoutedEventArgs e)
+    {
+        var reveal = PasswordInput.PasswordChar == '●';
+        PasswordInput.PasswordChar = reveal ? '\0' : '●';
+        RevealButton.Content = reveal ? "🙈" : "👁";
+        RevealButton.ToolTip = reveal ? "隐藏密码" : "显示密码";
     }
 
     private void OnAddClicked(object sender, RoutedEventArgs e) => _viewModel.Add();
 
     private void OnDeleteClicked(object sender, RoutedEventArgs e)
     {
-        if (!EnsureMasterPassword())
+        // 删除账号属于"修改账号"，设了主密码就要验证
+        if (_viewModel.RequiresMasterPassword && !EnsureMasterPassword())
         {
             return;
         }
 
         _viewModel.Delete();
-        _viewModel.EndSensitiveOperation();
+        _viewModel.CaptureSensitiveSnapshot();
     }
 
     private void OnSaveClicked(object sender, RoutedEventArgs e)
     {
-        if (!EnsureMasterPassword())
+        // 只有账号或密码真的被改过才要求验证；改名称等其它字段直接保存
+        if (_viewModel.RequiresMasterPassword && _viewModel.HasSensitiveChanges() && !EnsureMasterPassword())
         {
             return;
         }
 
         _viewModel.Save();
-        _viewModel.EndSensitiveOperation();
+        _viewModel.CaptureSensitiveSnapshot();
+        SyncPasswordBox();
     }
 
-    private async void OnRunClicked(object sender, RoutedEventArgs e)
-    {
-        if (!EnsureMasterPassword())
-        {
-            return;
-        }
-
-        await _viewModel.RunAsync();
-        _viewModel.EndSensitiveOperation();
-    }
+    private async void OnRunClicked(object sender, RoutedEventArgs e) => await _viewModel.RunAsync();
 
     /// <summary>涉及账号密码的操作前验证主密码；未设主密码时直接放行。</summary>
     private bool EnsureMasterPassword()
@@ -104,9 +147,7 @@ public partial class ProfilePage : Page
         if (dialog.ShowDialog() == true)
         {
             _viewModel.EnableEncryption(dialog.Password);
-
-            // 启用后立即回到锁定状态：后续每次敏感操作都要重新验证
-            _viewModel.EndSensitiveOperation();
+            _viewModel.CaptureSensitiveSnapshot();
         }
     }
 
@@ -120,6 +161,7 @@ public partial class ProfilePage : Page
         if (dialog.ShowDialog() == true)
         {
             _viewModel.Unlock(dialog.Password);
+            SyncPasswordBox();
         }
     }
 
@@ -136,6 +178,7 @@ public partial class ProfilePage : Page
         if (dialog.ShowDialog() == true)
         {
             _viewModel.DisableEncryption(dialog.Password);
+            SyncPasswordBox();
         }
     }
 }

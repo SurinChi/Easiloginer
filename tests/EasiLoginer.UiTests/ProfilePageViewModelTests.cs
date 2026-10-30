@@ -72,16 +72,16 @@ public sealed class ProfilePageViewModelTests
         repository.SaveCalls.Should().Be(2);
     }
 
-    /// <summary>启用主密码后打开页面保持锁定，不再自动解锁。</summary>
+    /// <summary>查看档案不算敏感操作：启用主密码后打开页面会尝试本机缓存解锁。</summary>
     [Fact]
-    public void 加密后打开页面保持锁定()
+    public void 加密后打开页面尝试缓存解锁()
     {
-        var repository = new FakeProfileRepository { EncryptionEnabled = true, Unlocked = true };
+        var repository = new FakeProfileRepository { EncryptionEnabled = true, Unlocked = false };
+        repository.CachedUnlockSucceeds = true;
 
         var viewModel = CreateViewModel(repository);
 
-        repository.LockCalls.Should().BeGreaterThan(0, "打开页面就要回到锁定状态");
-        repository.ReloadCalls.Should().BeGreaterThan(0);
+        repository.CachedUnlockCalls.Should().Be(1);
         viewModel.RequiresMasterPassword.Should().BeTrue();
     }
 
@@ -97,22 +97,37 @@ public sealed class ProfilePageViewModelTests
         repository.IsUnlocked.Should().BeTrue();
     }
 
-    /// <summary>敏感操作结束后重新锁定，下次仍需验证。</summary>
+    /// <summary>只有改动账号或密码才需要验证；改其它字段不算敏感变更。</summary>
     [Fact]
-    public void 操作结束重新锁定()
+    public void 敏感变更判断()
     {
-        var repository = new FakeProfileRepository { EncryptionEnabled = true, Unlocked = false };
+        var repository = new FakeProfileRepository { EncryptionEnabled = true, Unlocked = true };
         var viewModel = CreateViewModel(repository);
         viewModel.Add();
-        viewModel.Selected!.Account = "a";
-        viewModel.Selected.Password = "b";
+        viewModel.Selected!.Account = "13800000000";
+        viewModel.Selected.Password = "pw";
+        viewModel.CaptureSensitiveSnapshot();
 
-        viewModel.VerifyMasterPassword("pw").Should().BeTrue();
-        viewModel.Save();
-        viewModel.EndSensitiveOperation();
+        viewModel.Selected.Name = "改名不算敏感";
+        viewModel.HasSensitiveChanges().Should().BeFalse();
 
-        repository.IsUnlocked.Should().BeFalse();
-        repository.LockCalls.Should().BeGreaterThan(1, "打开页面锁一次、操作结束再锁一次");
+        viewModel.Selected.Password = "pw2";
+        viewModel.HasSensitiveChanges().Should().BeTrue();
+
+        viewModel.CaptureSensitiveSnapshot();
+        viewModel.HasSensitiveChanges().Should().BeFalse();
+    }
+
+    /// <summary>新增档案填了凭据也算敏感变更，需要验证。</summary>
+    [Fact]
+    public void 新增凭据算敏感变更()
+    {
+        var repository = new FakeProfileRepository { EncryptionEnabled = true, Unlocked = true };
+        var viewModel = CreateViewModel(repository);
+        viewModel.Add();
+        viewModel.Selected!.Account = "13800000000";
+
+        viewModel.HasSensitiveChanges().Should().BeTrue();
     }
 
     private static ProfilePageViewModel CreateViewModel(FakeProfileRepository repository)
@@ -150,7 +165,20 @@ public sealed class ProfilePageViewModelTests
             return Unlocked;
         }
 
-        public bool TryCachedUnlock() => Unlocked;
+        public bool CachedUnlockSucceeds { get; set; }
+
+        public int CachedUnlockCalls { get; private set; }
+
+        public bool TryCachedUnlock()
+        {
+            CachedUnlockCalls++;
+            if (CachedUnlockSucceeds)
+            {
+                Unlocked = true;
+            }
+
+            return Unlocked;
+        }
 
         public void EnableEncryption(string masterPassword)
         {

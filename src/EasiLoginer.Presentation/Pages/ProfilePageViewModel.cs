@@ -20,6 +20,9 @@ public sealed partial class ProfilePageViewModel : ObservableObject
     private readonly IConfigService _config;
     private readonly IDisplayMetrics _display;
 
+    /// <summary>账号/密码基线，用于判断保存时是否需要验证主密码。</summary>
+    private List<SensitiveSnapshot> _sensitiveSnapshot = [];
+
     [ObservableProperty]
     private AutomationProfile? _selected;
 
@@ -49,15 +52,15 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         _config = config;
         _display = display;
 
-        // 设过主密码后，账号与密码保持锁定：打开页面不自动解锁，
-        // 每次敏感操作（保存 / 删除 / 运行登录）都要重新验证主密码。
-        if (profiles.Current.EncryptionEnabled)
+        // 设过主密码时优先用本机缓存静默解锁：查看不算敏感操作，
+        // 只有"修改/删除账号及其密码"才要求重新验证。
+        if (profiles.Current.EncryptionEnabled && !profiles.IsUnlocked)
         {
-            profiles.Lock();
-            profiles.Reload();
+            _ = profiles.TryCachedUnlock();
         }
 
         RefreshEncryptionState();
+        CaptureSensitiveSnapshot();
     }
 
     /// <summary>档案集合。</summary>
@@ -66,10 +69,10 @@ public sealed partial class ProfilePageViewModel : ObservableObject
     /// <summary>是否有选中项（控制编辑器可用性）。</summary>
     public bool HasSelection => Selected is not null;
 
-    /// <summary>是否已启用主密码（敏感操作需要验证）。</summary>
+    /// <summary>是否已启用主密码（只有改账号/密码与删除才需要验证）。</summary>
     public bool RequiresMasterPassword => _profiles.Current.EncryptionEnabled;
 
-    /// <summary>校验主密码；成功则本次操作期间解锁。</summary>
+    /// <summary>校验主密码；成功则解锁。</summary>
     public bool VerifyMasterPassword(string password)
     {
         var ok = _profiles.Unlock(password);
@@ -81,18 +84,41 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         return ok;
     }
 
-    /// <summary>敏感操作结束后立刻重新锁定，下次操作仍需验证。</summary>
-    public void EndSensitiveOperation()
+    /// <summary>
+    /// 当前编辑是否改动了账号或密码（新增档案带凭据也算）。
+    /// </summary>
+    public bool HasSensitiveChanges()
     {
-        if (!_profiles.Current.EncryptionEnabled)
+        foreach (var profile in Items)
         {
-            return;
+            var before = _sensitiveSnapshot.FirstOrDefault(
+                item => string.Equals(item.Id, profile.Id, StringComparison.Ordinal));
+
+            if (before is null)
+            {
+                if (!string.IsNullOrEmpty(profile.Account) || !string.IsNullOrEmpty(profile.Password))
+                {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (!string.Equals(before.Account, profile.Account, StringComparison.Ordinal) ||
+                !string.Equals(before.Password, profile.Password, StringComparison.Ordinal))
+            {
+                return true;
+            }
         }
 
-        _profiles.Lock();
-        _profiles.Reload();
-        RefreshEncryptionState();
+        return false;
     }
+
+    /// <summary>记录当前的账号/密码快照，作为后续变更判断的基线。</summary>
+    public void CaptureSensitiveSnapshot()
+        => _sensitiveSnapshot = Items
+            .Select(profile => new SensitiveSnapshot(profile.Id, profile.Account, profile.Password))
+            .ToList();
 
     /// <summary>是否可以启用加密。</summary>
     public bool CanEnableEncryption => ProfileEncryptionState.CanEnable(_profiles.Current);
@@ -104,6 +130,9 @@ public sealed partial class ProfilePageViewModel : ObservableObject
     public bool CanDisableEncryption => ProfileEncryptionState.CanDisable(_profiles.Current, _profiles.IsUnlocked);
 
     partial void OnSelectedChanged(AutomationProfile? value) => OnPropertyChanged(nameof(HasSelection));
+
+    /// <summary>一条档案的敏感字段快照。</summary>
+    private sealed record SensitiveSnapshot(string Id, string Account, string Password);
 
     /// <summary>新增一条空白档案。</summary>
     public void Add()
