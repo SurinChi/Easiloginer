@@ -32,7 +32,7 @@ public partial class ProfilePage : Page
         SyncPasswordBox();
     }
 
-    /// <summary>把当前选中档案的密码同步到 PasswordBox（避免来回触发 PasswordChanged）。</summary>
+    /// <summary>把当前选中档案的密码同步到两个输入框（避免来回触发变更事件）。</summary>
     private void SyncPasswordBox()
     {
         if (PasswordInput is null)
@@ -43,7 +43,9 @@ public partial class ProfilePage : Page
         _syncingPassword = true;
         try
         {
-            PasswordInput.Password = _viewModel.Selected?.Password ?? string.Empty;
+            var password = _viewModel.Selected?.Password ?? string.Empty;
+            PasswordInput.Password = password;
+            PasswordPlain.Text = password;
         }
         finally
         {
@@ -59,14 +61,70 @@ public partial class ProfilePage : Page
         }
 
         _viewModel.Selected.Password = PasswordInput.Password;
+
+        _syncingPassword = true;
+        try
+        {
+            PasswordPlain.Text = PasswordInput.Password;
+        }
+        finally
+        {
+            _syncingPassword = false;
+        }
     }
 
+    private void OnPlainTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_syncingPassword || _viewModel.Selected is null)
+        {
+            return;
+        }
+
+        _viewModel.Selected.Password = PasswordPlain.Text;
+
+        _syncingPassword = true;
+        try
+        {
+            PasswordInput.Password = PasswordPlain.Text;
+        }
+        finally
+        {
+            _syncingPassword = false;
+        }
+    }
+
+    /// <summary>在 PasswordBox 与明文 TextBox 之间切换；两者始终保存同一份密码。</summary>
     private void OnRevealClicked(object sender, RoutedEventArgs e)
     {
-        var reveal = PasswordInput.PasswordChar == '●';
-        PasswordInput.PasswordChar = reveal ? '\0' : '●';
+        var reveal = PasswordInput.Visibility == Visibility.Visible;
+
+        _syncingPassword = true;
+        try
+        {
+            if (reveal)
+            {
+                PasswordPlain.Text = PasswordInput.Password;
+            }
+            else
+            {
+                PasswordInput.Password = PasswordPlain.Text;
+            }
+        }
+        finally
+        {
+            _syncingPassword = false;
+        }
+
+        PasswordInput.Visibility = reveal ? Visibility.Collapsed : Visibility.Visible;
+        PasswordPlain.Visibility = reveal ? Visibility.Visible : Visibility.Collapsed;
         RevealButton.Content = reveal ? "🙈" : "👁";
         RevealButton.ToolTip = reveal ? "隐藏密码" : "显示密码";
+
+        if (reveal)
+        {
+            PasswordPlain.Focus();
+            PasswordPlain.CaretIndex = PasswordPlain.Text.Length;
+        }
     }
 
     private void OnAddClicked(object sender, RoutedEventArgs e) => _viewModel.Add();

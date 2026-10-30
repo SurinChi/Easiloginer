@@ -55,11 +55,15 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <PasswordBox x:Name="PasswordInput" Grid.Column="0" PasswordChar="●"
-                                 PasswordChanged="OnPasswordChanged" />
+                    <Grid Grid.Column="0">
+                        <PasswordBox x:Name="PasswordInput" PasswordChar="●"
+                                     PasswordChanged="OnPasswordChanged" />
+                        <TextBox x:Name="PasswordPlain" Visibility="Collapsed"
+                                 TextChanged="OnPlainTextChanged" />
+                    </Grid>
 
                     <Button x:Name="RevealButton" Grid.Column="1" Content="👁" Padding="12,0"
-                            Margin="8,0,0,0" ToolTip="显示 / 隐藏密码" Click="OnRevealClicked" />
+                            Margin="8,0,0,0" ToolTip="显示密码" Click="OnRevealClicked" />
                 </Grid>
 
                 <TextBlock Text="密码默认以圆点显示，点右侧眼睛可临时查看。启用主密码加密后，账号与密码以 ea$ 密文落盘。"
