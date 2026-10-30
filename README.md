@@ -5,7 +5,7 @@ EasiLoginer 是 EasiAuto 的 C# 重构项目，用于手动触发希沃白板自
 - **作者 / 维护者**：SurinChi
 - **上游项目**：[EasiAuto](https://github.com/hxabcd/EasiAuto)，作者 hxabcd
 - **许可证**：GNU General Public License v3.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)
-- **当前状态**：**M1–M7 完成（当前版本 0.0.3）**。
+- **当前状态**：**M1–M7 完成（当前版本 0.0.4）**。
   - 登录：固定位置（10.4s）、**UI Automation（5.8–6.9s 一次成功）**、**图像识别**（逐像素模板匹配，仅支持 1920×1080 100% 与 4K 200%）、令牌投递（管道桥 DLL 已随包提供）
   - 更新：读取本仓库的 GitHub Releases（`v0.0.1` 已验证端到端）
   - 数据保留：超过 N 天未启动自动清空数据并恢复初始状态（默认 90 天，最短 7 天，可在配置页关闭）
@@ -79,7 +79,7 @@ dotnet test  EasiLoginer.sln -c Release --no-build
 退出码：`0` 成功、`1` 失败或参数非法、`20–29` 为 `patch` 专用码
 （20 成功、21 操作失败、22 未找到希沃、29 未知异常）。
 
-> **版本**：首发 `0.0.1`，当前 `0.0.3`（由 SurinChi 决定，不使用文档示例中的 2.0.0）。
+> **版本**：首发 `0.0.1`，当前 `0.0.4`（由 SurinChi 决定，不使用文档示例中的 2.0.0）。
 
 ## 发布
 
@@ -87,7 +87,20 @@ dotnet test  EasiLoginer.sln -c Release --no-build
 build\publish.cmd
 ```
 
-产物：`..\EasiLoginer-dist\EasiLoginer_0.0.3.zip`（约 107 MB，自包含 win-x64，无需预装 .NET）。**输出在仓库之外**，避免构建物污染工作区。
+产物（都在仓库之外，避免污染工作区）：
+
+| 文件 | 说明 |
+|---|---|
+| `..\EasiLoginer-dist\EasiLoginer_0.0.4.zip` | 绿色版，约 107 MB，自包含 win-x64 |
+| `..\EasiLoginer-dist\EasiLoginer-Setup-0.0.4.exe` | **自解压安装向导**，单文件，内置同一份绿色版负载 |
+
+安装包（`EasiLoginer-Setup-0.0.4.exe`）：
+
+- 三步向导：选择安装位置 → 安装选项（桌面/开始菜单快捷方式、安装后启动）→ 解压安装；
+- 默认安装到 `%LOCALAPPDATA%\Programs\EasiLoginer`，**不需要管理员权限**；
+- 升级安装只覆盖程序文件，保留 `data\` 里的配置与档案；
+- 安装时创建「应用和功能」卸载项，卸载程序为安装目录下的 `Uninstall.exe`；
+- 支持静默安装：`EasiLoginer-Setup-0.0.4.exe --silent`。
 
 ZIP 顶层为 `EasiLoginer/`，内容：
 

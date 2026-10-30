@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasiLoginer.Application.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasiLoginer.UiTests", "tests\EasiLoginer.UiTests\EasiLoginer.UiTests.csproj", "{C6C3EF4B-1C68-46E4-83B9-77DF61ECBEB0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasiLoginer.Installer", "src\EasiLoginer.Installer\EasiLoginer.Installer.csproj", "{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -213,6 +215,18 @@ Global
 		{C6C3EF4B-1C68-46E4-83B9-77DF61ECBEB0}.Release|x64.Build.0 = Release|Any CPU
 		{C6C3EF4B-1C68-46E4-83B9-77DF61ECBEB0}.Release|x86.ActiveCfg = Release|Any CPU
 		{C6C3EF4B-1C68-46E4-83B9-77DF61ECBEB0}.Release|x86.Build.0 = Release|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Debug|x64.Build.0 = Debug|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Debug|x86.Build.0 = Debug|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Release|x64.ActiveCfg = Release|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Release|x64.Build.0 = Release|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Release|x86.ActiveCfg = Release|Any CPU
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -232,5 +246,6 @@ Global
 		{12815296-6F6E-4D0F-9E9F-7AF2D3237A69} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{64CA43C0-AE68-454B-B5E9-4A321D8DE0F2} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{C6C3EF4B-1C68-46E4-83B9-77DF61ECBEB0} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{6B7EE536-91EC-426F-BEC3-6FBE661A1B20} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

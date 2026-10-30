@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    自解压安装向导：把发布目录打包成 ZIP 嵌入本程序，运行时解压安装。
+    发布时由 build\publish.cmd 传入 -p:PayloadZip=<zip 路径>；不传时也能编译（无负载）。
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>EasiLoginer.Installer</RootNamespace>
+    <AssemblyName>EasiLoginer-Setup</AssemblyName>
+    <ApplicationIcon>Assets\easiloginer.ico</ApplicationIcon>
+
+    <!-- 安装器属于打包工具，不参与产品分层规则；关闭分析器避免与发布脚本耦合 -->
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\easiloginer.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(PayloadZip)"
+                      LogicalName="EasiLoginer.payload.zip"
+                      Condition="'$(PayloadZip)' != '' And Exists('$(PayloadZip)')" />
+  </ItemGroup>
+
+</Project>
