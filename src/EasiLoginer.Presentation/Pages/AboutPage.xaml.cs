@@ -11,6 +11,10 @@ public partial class AboutPage : Page
     {
         InitializeComponent();
 
+        // 页面高度必须钉在导航容器内，否则内部 ScrollViewer 会被撑成内容高度，
+        // 滚轮事件落不到它身上（关于页正文较长，需要能滚动）。
+        PageLayout.ConstrainToNavigationHost(this);
+
         var assembly = typeof(AboutPage).Assembly;
         var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
