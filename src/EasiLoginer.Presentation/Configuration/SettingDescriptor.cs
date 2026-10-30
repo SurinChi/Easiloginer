@@ -9,6 +9,9 @@ public enum SettingKind
     /// <summary>文本。</summary>
     Text,
 
+    /// <summary>字体：下拉选择系统已安装字体。</summary>
+    Font,
+
     /// <summary>数值（含小数）。</summary>
     Number,
 

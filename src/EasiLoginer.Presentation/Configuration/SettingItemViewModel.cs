@@ -58,11 +58,40 @@ public sealed partial class SettingItemViewModel : ObservableObject
     /// <summary>是否枚举下拉。</summary>
     public bool IsEnum => Descriptor.Kind == SettingKind.Enum;
 
+    /// <summary>是否字体下拉。</summary>
+    public bool IsFont => Descriptor.Kind == SettingKind.Font;
+
     /// <summary>是否文本输入（文本/数值/坐标/颜色）。</summary>
     public bool IsTextual => Descriptor.Kind is SettingKind.Text or SettingKind.Number or SettingKind.Point or SettingKind.Color;
 
     /// <summary>枚举显示文本。</summary>
     public IReadOnlyList<string> Options => Descriptor.Options ?? [];
+
+    /// <summary>
+    /// 字体下拉的选项：系统已安装字体；当前值不在其中时置于首位，避免把已配置的字体改掉。
+    /// </summary>
+    public IReadOnlyList<string> FontOptions
+    {
+        get
+        {
+            var current = TextValue;
+            if (string.IsNullOrWhiteSpace(current) ||
+                InstalledFonts.Contains(current, StringComparer.OrdinalIgnoreCase))
+            {
+                return InstalledFonts;
+            }
+
+            return [current, .. InstalledFonts];
+        }
+    }
+
+    private static readonly string[] InstalledFonts = BuildInstalledFonts();
+
+    private static string[] BuildInstalledFonts()
+        => System.Windows.Media.Fonts.SystemFontFamilies
+            .Select(family => family.Source)
+            .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
 
     /// <summary>把当前值写回配置；格式非法时抛 <see cref="FormatException"/>。</summary>
     public void Apply()

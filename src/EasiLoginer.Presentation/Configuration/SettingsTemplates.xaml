@@ -28,6 +28,10 @@
                                               SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
                                               Visibility="{Binding IsEnum, Converter={StaticResource BoolToVis}}" />
 
+                                    <ComboBox ItemsSource="{Binding FontOptions}"
+                                              SelectedItem="{Binding TextValue, Mode=TwoWay}"
+                                              Visibility="{Binding IsFont, Converter={StaticResource BoolToVis}}" />
+
                                     <TextBox Text="{Binding TextValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              Visibility="{Binding IsTextual, Converter={StaticResource BoolToVis}}" />
                                 </Grid>

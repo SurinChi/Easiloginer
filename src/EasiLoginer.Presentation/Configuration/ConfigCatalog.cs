@@ -203,7 +203,8 @@ public static class ConfigCatalog
 
         if (type == typeof(string))
         {
-            return SettingKind.Text;
+            // 字体名用下拉选择，避免手输错字导致横幅回退默认字体
+            return path.EndsWith("Font", StringComparison.Ordinal) ? SettingKind.Font : SettingKind.Text;
         }
 
         if (type == typeof(int) || type == typeof(double) || type == typeof(float))

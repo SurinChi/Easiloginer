@@ -51,6 +51,34 @@ public sealed class ConfigCatalogTests
         ConfigCatalog.Build().Select(descriptor => descriptor.Path).Should().NotContain(path);
     }
 
+    /// <summary>字体项必须是下拉（Font 类型），且选项来自系统字体。</summary>
+    [Fact]
+    public void 字体项是下拉()
+    {
+        var config = new Config();
+        var descriptor = ConfigCatalog.Build().Single(item => item.Path == "Banner.Style.TextFont");
+        descriptor.Kind.Should().Be(SettingKind.Font);
+
+        var item = new SettingItemViewModel(config, descriptor);
+        item.IsFont.Should().BeTrue();
+        item.IsTextual.Should().BeFalse();
+        item.FontOptions.Should().NotBeEmpty();
+    }
+
+    /// <summary>未安装的字体也会出现在选项里，避免保存时被改掉。</summary>
+    [Fact]
+    public void 当前字体保留在选项中()
+    {
+        var config = new Config();
+        config.Banner.Style.TextFont = "不存在的字体 XYZ";
+        var descriptor = ConfigCatalog.Build().Single(item => item.Path == "Banner.Style.TextFont");
+
+        var item = new SettingItemViewModel(config, descriptor);
+
+        item.TextValue.Should().Be("不存在的字体 XYZ");
+        item.FontOptions.Should().Contain("不存在的字体 XYZ");
+    }
+
     /// <summary>枚举项必须带显示文本。</summary>
     [Fact]
     public void 枚举项带有选项文本()
