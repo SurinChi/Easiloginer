@@ -29,6 +29,20 @@ internal static class CommandHandlers
     {
         try
         {
+            // 已在运行的主实例收到转发命令时，只能激活现有窗口：
+            // 同一 AppDomain 不允许创建第二个 Application（否则会 FTL 崩溃并杀掉主界面）。
+            if (System.Windows.Application.Current is EasiLoginer.Presentation.App running)
+            {
+                running.Dispatcher.Invoke(() =>
+                {
+                    running.MainWindow?.Activate();
+                    running.MainWindow?.Focus();
+                });
+
+                Log.Information("收到打开主界面请求：已激活运行中的窗口");
+                return ExitCodes.Success;
+            }
+
             var paths = AppPaths.Default;
             var configStore = new ConfigStore(paths, new SerilogLogger<ConfigStore>());
             var config = configStore.Load();
@@ -119,6 +133,20 @@ internal static class CommandHandlers
             store.Save(config);
 
             Log.Information("已重置首次向导标记，正在打开向导");
+
+            // 主实例已在运行时，直接在它的窗口上弹向导，避免创建第二个 Application
+            if (System.Windows.Application.Current is EasiLoginer.Presentation.App running)
+            {
+                running.Dispatcher.Invoke(() =>
+                {
+                    running.ShowOobeOnMainWindow();
+                    running.MainWindow?.Activate();
+                });
+
+                Log.Information("收到向导请求：已在运行中的窗口打开向导");
+                return ExitCodes.Success;
+            }
+
             return Settings();
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)

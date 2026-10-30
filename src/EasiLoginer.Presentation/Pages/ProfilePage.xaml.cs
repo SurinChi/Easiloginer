@@ -17,6 +17,7 @@ public partial class ProfilePage : Page
         InitializeComponent();
         _viewModel = new ProfilePageViewModel(services.Profiles, services.Login, services.Config, services.Display);
         DataContext = _viewModel;
+        PageLayout.ConstrainToNavigationHost(this);
     }
 
     private void OnAddClicked(object sender, RoutedEventArgs e) => _viewModel.Add();

@@ -32,6 +32,15 @@ public sealed class App : System.Windows.Application
     /// <summary>注入的服务。</summary>
     public AppServices Services { get; }
 
+    /// <summary>在已运行的主窗口上重新打开首次向导（供单实例转发调用）。</summary>
+    public void ShowOobeOnMainWindow()
+    {
+        if (MainWindow is MainWindow window)
+        {
+            window.ShowOobe();
+        }
+    }
+
     /// <inheritdoc />
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -43,7 +52,7 @@ public sealed class App : System.Windows.Application
         MainWindow = window;
         window.Show();
 
-        // 首次运行（或 IsOobeCompleted=false）时先走 7 步向导
+        // 首次运行（或 IsOobeCompleted=false）时先走 6 步向导
         if (!Services.Config.Current.Internal.IsOobeCompleted)
         {
             window.ShowOobe();

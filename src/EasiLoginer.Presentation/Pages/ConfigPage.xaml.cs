@@ -16,6 +16,7 @@ public partial class ConfigPage : Page
         InitializeComponent();
         _viewModel = new ConfigPageViewModel(services.Config);
         DataContext = _viewModel;
+        PageLayout.ConstrainToNavigationHost(this);
     }
 
     private void OnSaveClicked(object sender, RoutedEventArgs e) => _viewModel.Save();
