@@ -63,8 +63,9 @@ public partial class MainWindow : FluentWindow
         base.OnContentRendered(e);
 
         // NavigationView 初始化时可能默认选中 footer 项（关于），
-        // 因此在首帧渲染完成后（Idle）再显式导航到目标页（默认档案页）。
-        var page = _startPage ?? typeof(ProfilePage);
+        // 因此在首帧渲染完成后（Idle）再显式导航到目标页：
+        // 有档案 → 快捷登录；没有档案 → 档案页。
+        var page = _startPage ?? StartPagePolicy.Resolve(_services.Profiles.Current.Automations.Count);
         Dispatcher.BeginInvoke(
             new Action(() => RootNavigation.Navigate(page)),
             DispatcherPriority.ApplicationIdle);
