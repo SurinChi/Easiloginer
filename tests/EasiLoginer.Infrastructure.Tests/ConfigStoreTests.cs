@@ -40,7 +40,7 @@ public sealed class ConfigStoreTests : IDisposable
         var config = _store.Load();
 
         File.Exists(_paths.ConfigFile).Should().BeTrue();
-        config.Login.Method.Should().Be(LoginMethod.Fixed);
+        config.Login.Method.Should().Be(LoginMethod.Uia, "默认使用 UI Automation");
         config.App.TelemetryEnabled.Should().BeFalse("EasiLoginer 默认关闭遥测");
         config.Update.Mode.Should().Be(UpdateMode.Never, "首发默认不自动更新");
     }
@@ -54,7 +54,7 @@ public sealed class ConfigStoreTests : IDisposable
         var root = JsonNode.Parse(File.ReadAllText(_paths.ConfigFile))!.AsObject();
 
         root.ContainsKey("ClassIsland").Should().BeFalse("ClassIsland 段必须移除");
-        root["Login"]!["Method"]!.GetValue<int>().Should().Be(0);
+        root["Login"]!["Method"]!.GetValue<int>().Should().Be(2, "默认 UI Automation");
         root["Login"]!["Position"]!["AccountLoginTab"]!.AsArray().Select(node => node!.GetValue<int>())
             .Should().Equal(1090, 350);
         root["Banner"]!["Style"]!["TextColor"]!.GetValue<string>().Should().Be("#FFFFDE59");
@@ -201,7 +201,7 @@ public sealed class ConfigStoreTests : IDisposable
         config.Update.TargetUpdateChannel.Should().Be(UpdateChannel.Release);
         config.Update.TargetDownloadSource.Should().Be(DownloadSource.Auto);
         config.Update.Mode.Should().Be(UpdateMode.Never);
-        config.Login.Method.Should().Be(LoginMethod.Fixed);
+        config.Login.Method.Should().Be(LoginMethod.Uia, "默认使用 UI Automation");
     }
 
     /// <summary>损坏的配置不崩溃：备份为 .bak，用默认值启动（§7.2）。</summary>

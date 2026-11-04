@@ -159,7 +159,7 @@ public static class ConfigBounds
         if (!Enum.IsDefined(login.Method))
         {
             logger.LogWarning("配置项 Login.Method 取值非法（{Value}），已回退为默认值", (int)login.Method);
-            login.Method = LoginMethod.Fixed;
+            login.Method = new LoginConfig().Method;
         }
 
         var warning = config.Warning;

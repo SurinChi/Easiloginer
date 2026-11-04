@@ -6,11 +6,13 @@ EasiLoginer 是 EasiAuto 的 C# 重构项目，用于手动触发希沃白板自
 - **上游项目**：[EasiAuto](https://github.com/hxabcd/EasiAuto)，作者 hxabcd
 - **许可证**：GNU General Public License v3.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)
 - **当前状态**：**M1–M7 完成（当前版本 0.1.1）**。
-  - 登录：固定位置（10.4s）、**UI Automation（5.8–6.9s 一次成功）**、**图像识别**（逐像素模板匹配，仅支持 1920×1080 100% 与 4K 200%）、令牌投递（管道桥 DLL 已随包提供）
+  - 登录：**UI Automation（默认，5.8–6.9s 一次成功）**、固定位置（10.4s）、图像识别（逐像素模板匹配，仅支持 1920×1080 100% 与 4K 200%）、令牌投递（管道桥 DLL 已随包提供）
+  - 快捷登录：每个档案生成一个按钮，点击即运行该档案的登录流程
+  - 安装包：7-Zip SFX + LZMA2，约 55 MB（比 107 MB 的绿色版 ZIP 更小）
   - 更新：读取本仓库的 GitHub Releases（`v0.0.1` 已验证端到端）
   - 数据保留：超过 N 天未启动自动清空数据并恢复初始状态（默认 90 天，最短 7 天，可在配置页关闭）
   - CI：`.github/workflows/ci.yml`（windows-latest + .NET 10，构建 + 全部测试）
-  - **351 个测试全绿**（6 个测试项目）
+  - **387 个测试全绿**（6 个测试项目）
   - 明确不做：公告（无端点，也不再规划）；仍未做：主题令牌表、代码签名
 
 > **Smart App Control 与程序集命名**：本机 SAC 对**程序集身份** `EasiLoginer.Automation` 有拦截规则——
@@ -92,15 +94,15 @@ build\publish.cmd
 | 文件 | 说明 |
 |---|---|
 | `..\EasiLoginer-dist\EasiLoginer_0.1.1.zip` | 绿色版，约 107 MB，自包含 win-x64 |
-| `..\EasiLoginer-dist\EasiLoginer-Setup-0.1.1.exe` | **自解压安装向导**，单文件，内置同一份绿色版负载 |
+| `..\EasiLoginer-dist\EasiLoginer-Setup-0.1.1.exe` | **自解压安装包**（7-Zip SFX + LZMA2），约 55 MB，比 ZIP 更小 |
 
 安装包（`EasiLoginer-Setup-0.1.1.exe`）：
 
-- 三步向导：选择安装位置 → 安装选项（桌面/开始菜单快捷方式、安装后启动）→ 解压安装；
+- 7-Zip 自解压：选择目标目录 → 解压 → 自动创建桌面/开始菜单快捷方式并启动；
 - 默认安装到 `%LOCALAPPDATA%\Programs\EasiLoginer`，**不需要管理员权限**；
 - 升级安装只覆盖程序文件，保留 `data\` 里的配置与档案；
-- 安装时创建「应用和功能」卸载项，卸载程序为安装目录下的 `Uninstall.exe`；
-- 支持静默安装：`EasiLoginer-Setup-0.1.1.exe --silent`。
+- 安装时创建「应用和功能」卸载项，卸载程序为安装目录下的 `Uninstall.cmd`；
+- 构建需要本机安装 7-Zip（`build\publish.cmd` 自动检测；缺失时回退到较大的 WPF 向导安装包）。
 
 ZIP 顶层为 `EasiLoginer/`，内容：
 

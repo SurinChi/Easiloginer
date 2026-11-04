@@ -76,6 +76,7 @@ internal sealed class PageProvider(AppServices services) : INavigationViewPagePr
 {
     public object? GetPage(Type pageType) => pageType switch
     {
+        var type when type == typeof(QuickLoginPage) => new QuickLoginPage(services),
         var type when type == typeof(ConfigPage) => new ConfigPage(services),
         var type when type == typeof(ProfilePage) => new ProfilePage(services),
         var type when type == typeof(UpdatePage) => new UpdatePage(services),

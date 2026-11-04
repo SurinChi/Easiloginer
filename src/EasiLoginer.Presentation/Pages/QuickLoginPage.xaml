@@ -1,0 +1,38 @@
+<Page x:Class="EasiLoginer.Presentation.Pages.QuickLoginPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="快捷登录"
+      TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </Page.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
+        <StackPanel Margin="24" MaxWidth="760" HorizontalAlignment="Left">
+
+            <TextBlock Text="快捷登录" FontSize="28" FontWeight="SemiBold" />
+            <TextBlock Opacity="0.7" Margin="0,4,0,16" TextWrapping="Wrap"
+                       Text="每个档案对应一个按钮，点击后与在「档案」页点「运行登录」走同一条流程。" />
+
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Margin="0,0,0,10" Padding="20,12"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                FontSize="15" Click="OnProfileClicked">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Account}" Opacity="0.7" FontSize="12" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Opacity="0.65" Margin="0,6,0,0" TextWrapping="Wrap"
+                       Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}"
+                       Text="还没有档案。先到「档案」页添加一条，并在快捷登录页就会自动出现对应按钮。" />
+
+            <TextBlock Text="{Binding StatusText}" Margin="0,16,0,0" Opacity="0.85" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

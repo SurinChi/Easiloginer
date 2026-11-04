@@ -108,7 +108,7 @@ public sealed class LoginConfig
 {
     /// <summary>登录方式。</summary>
     [JsonPropertyName("Method")]
-    public LoginMethod Method { get; set; } = LoginMethod.Fixed;
+    public LoginMethod Method { get; set; } = LoginMethod.Uia;
 
     /// <summary>跳过一次登录（公开课等临时禁用场景）。</summary>
     [JsonPropertyName("SkipOnce")]
@@ -120,7 +120,7 @@ public sealed class LoginConfig
 
     /// <summary>终止 EasiAgent 进程。</summary>
     [JsonPropertyName("KillAgent")]
-    public bool KillAgent { get; set; }
+    public bool KillAgent { get; set; } = true;
 
     /// <summary>
     /// 强制兼容模式输入（剪贴板粘贴）。
