@@ -94,15 +94,16 @@ build\publish.cmd
 | 文件 | 说明 |
 |---|---|
 | `..\EasiLoginer-dist\EasiLoginer_0.1.1.zip` | 绿色版，约 107 MB，自包含 win-x64 |
-| `..\EasiLoginer-dist\EasiLoginer-Setup-0.1.1.exe` | **自解压安装包**（7-Zip SFX + LZMA2），约 55 MB，比 ZIP 更小 |
+| `..\EasiLoginer-dist\EasiLoginer-Setup-0.1.1.exe` | **安装向导**（Inno Setup + LZMA2），约 55 MB，比 ZIP 更小 |
 
 安装包（`EasiLoginer-Setup-0.1.1.exe`）：
 
-- 双击即自解压：7-Zip SFX 解压完成后自动打开**安装向导**（选择安装位置、快捷方式、是否启动）；
+- 标准安装向导：欢迎 → 安装位置 → 附加任务（桌面快捷方式）→ 安装进度 → 完成并启动；
 - 默认安装到 `%LOCALAPPDATA%\Programs\EasiLoginer`，**不需要管理员权限**；
 - 升级安装只覆盖程序文件，保留 `data\` 里的配置与档案；
-- 安装时创建「应用和功能」卸载项，卸载程序为安装目录下的 `Uninstall.cmd`；
-- 构建需要本机安装 7-Zip（仅打包机需要，最终用户无需安装）。
+- 在「应用和功能」里可正常卸载（Inno Setup 生成 `unins000.exe`）；
+- 静默安装：`EasiLoginer-Setup-0.1.1.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`；
+- 构建需要本机安装 **Inno Setup 6**（仅打包机需要，最终用户无需安装）。
 
 ZIP 顶层为 `EasiLoginer/`，内容：
 
