@@ -3,6 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="档案"
       TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" Padding="0,0,0,0">
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -78,4 +79,5 @@
             </StackPanel>
         </Grid>
     </Grid>
+    </ScrollViewer>
 </Page>

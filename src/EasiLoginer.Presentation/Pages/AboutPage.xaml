@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="关于"
       TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" Padding="24">
         <StackPanel MaxWidth="760" HorizontalAlignment="Left">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
                 <Image Width="64" Height="64" Margin="0,0,16,0"

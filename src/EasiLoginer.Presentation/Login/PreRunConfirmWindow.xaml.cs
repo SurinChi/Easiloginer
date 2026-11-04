@@ -25,7 +25,7 @@ public partial class PreRunConfirmWindow : FluentWindow
             : $"即将为 {request.AccountName} 运行希沃白板自动登录";
 
         _remaining = Math.Max(0, request.TimeoutSeconds);
-        CountdownText.Text = $"若 {_remaining} 秒内无操作将自动继续";
+        UpdateCountdown();
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += OnTick;
@@ -45,8 +45,12 @@ public partial class PreRunConfirmWindow : FluentWindow
             return;
         }
 
-        CountdownText.Text = $"若 {_remaining} 秒内无操作将自动继续";
+        UpdateCountdown();
     }
+
+    /// <summary>倒计时直接显示在「立即执行」按钮上。</summary>
+    private void UpdateCountdown()
+        => ProceedButton.Content = _remaining > 0 ? $"立即执行（{_remaining}s）" : "立即执行";
 
     private void OnProceedClicked(object sender, RoutedEventArgs e) => Finish(LoginConfirmationChoice.Proceed);
 

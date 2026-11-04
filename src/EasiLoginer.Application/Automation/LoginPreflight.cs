@@ -36,9 +36,6 @@ public enum PreflightOutcome
     /// <summary>继续登录。</summary>
     Proceed,
 
-    /// <summary>命中了「跳过一次」：已消费该标记。</summary>
-    SkippedOnce,
-
     /// <summary>用户取消。</summary>
     CancelledByUser,
 }
@@ -49,7 +46,7 @@ public enum PreflightOutcome
 public sealed record PreflightResult(PreflightOutcome Outcome, bool ConfigChanged);
 
 /// <summary>
-/// 登录前置检查：<c>SkipOnce</c> → 运行前确认（文档 §2.1 / §6.2）。
+/// 登录前置检查：<c>SkipOnce</c>（取消二次确认）→ 运行前确认（文档 §2.1 / §6.2）。
 /// </summary>
 /// <remarks>
 /// 档案解锁与凭据解析在组合根完成；这里只处理两件与配置/交互相关的判断。
@@ -81,11 +78,11 @@ public sealed class LoginPreflight
     {
         ArgumentNullException.ThrowIfNull(config);
 
+        // 勾选「取消二次确认」后，运行登录直接执行，不再弹确认框（设置保持有效）。
         if (config.Login.SkipOnce)
         {
-            config.Login.SkipOnce = false;
-            _logger.LogInformation("已命中「跳过一次」，本次不登录并清除标记");
-            return new PreflightResult(PreflightOutcome.SkippedOnce, ConfigChanged: true);
+            _logger.LogInformation("已启用「取消二次确认」，跳过运行前确认");
+            return new PreflightResult(PreflightOutcome.Proceed, ConfigChanged: false);
         }
 
         var warning = config.Warning;

@@ -8,18 +8,20 @@ namespace EasiLoginer.Application.Tests;
 /// <summary>登录前置：跳过一次与运行前确认（文档 §2.1 / §6.2）。</summary>
 public sealed class LoginPreflightTests
 {
-    /// <summary>命中 SkipOnce：清除标记、要求落盘、本次跳过。</summary>
+    /// <summary>勾选「取消二次确认」后直接继续，且设置保持有效（不再消费一次）。</summary>
     [Fact]
-    public async Task 跳过一次()
+    public async Task 取消二次确认()
     {
         var config = new Config();
         config.Login.SkipOnce = true;
+        var confirmation = new FakeConfirmation(LoginConfirmationChoice.Cancel);
 
-        var result = await CreatePreflight().RunAsync(config, null, "u", manual: false, CancellationToken.None);
+        var result = await CreatePreflight().RunAsync(config, confirmation, "u", manual: false, CancellationToken.None);
 
-        result.Outcome.Should().Be(PreflightOutcome.SkippedOnce);
-        result.ConfigChanged.Should().BeTrue();
-        config.Login.SkipOnce.Should().BeFalse("标记必须被消费掉，否则永远登录不了");
+        result.Outcome.Should().Be(PreflightOutcome.Proceed);
+        result.ConfigChanged.Should().BeFalse("这是持久设置，不应被清零");
+        config.Login.SkipOnce.Should().BeTrue();
+        confirmation.Calls.Should().Be(0, "勾选后不应再弹确认框");
     }
 
     /// <summary>关闭警告弹窗时直接继续，不调用确认通道。</summary>

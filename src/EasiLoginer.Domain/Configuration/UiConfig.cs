@@ -10,9 +10,9 @@ public sealed class WarningConfig
     [JsonPropertyName("Enabled")]
     public bool Enabled { get; set; } = true;
 
-    /// <summary>等待确认的最大时长（秒），范围 5–600。</summary>
+    /// <summary>等待确认的最大时长（秒），范围 5–600。默认 15 秒。</summary>
     [JsonPropertyName("Timeout")]
-    public int Timeout { get; set; } = 60;
+    public int Timeout { get; set; } = 15;
 
     /// <summary>最大推迟次数，范围 0–3。</summary>
     [JsonPropertyName("MaxDelays")]
@@ -89,9 +89,11 @@ public sealed class StatusOverlayConfig
 /// <summary>隐私保护遮罩，对应上游 <c>PrivacyMaskConfig</c>。</summary>
 public sealed class PrivacyMaskConfig
 {
-    /// <summary>启用遮罩。</summary>
+    /// <summary>
+    /// 启用遮罩。默认关闭：在智慧大屏等环境启用可能导致意料之外的问题。
+    /// </summary>
     [JsonPropertyName("Enabled")]
-    public bool Enabled { get; set; } = true;
+    public bool Enabled { get; set; }
 
     /// <summary>遮罩左上角物理坐标。</summary>
     [JsonPropertyName("MaskLeftTop")]

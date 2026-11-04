@@ -258,12 +258,11 @@ public sealed class ProfileTests : IDisposable
         JsonText().Should().Contain("ea2$abcdef", "迁移失败时不得覆盖原文件");
     }
 
-    /// <summary>账号或密码为空时拒绝保存（上游在序列化阶段抛错）。</summary>
+    /// <summary>账号必须填写；密码可以留空，登录前再校验。</summary>
     [Theory]
     [InlineData("", "pw")]
-    [InlineData("acc", "")]
     [InlineData("   ", "pw")]
-    public void 空账号或密码拒绝保存(string account, string password)
+    public void 空账号拒绝保存(string account, string password)
     {
         _repo.Load();
         _repo.UpsertAutomation(new AutomationProfile { Account = account, Password = password });
@@ -271,6 +270,18 @@ public sealed class ProfileTests : IDisposable
         var action = () => _repo.Save();
 
         action.Should().Throw<ProfileValidationException>();
+    }
+
+    /// <summary>密码留空允许保存，方便先建档案后补密码。</summary>
+    [Fact]
+    public void 空密码允许保存()
+    {
+        _repo.Load();
+        _repo.UpsertAutomation(new AutomationProfile { Account = "acc", Password = string.Empty });
+
+        _repo.Save();
+
+        JsonText().Should().Contain("\"account\": \"acc\"");
     }
 
     /// <summary>avatar 上游类型是 Any，可能是对象；读取不能崩，且原样保留。</summary>

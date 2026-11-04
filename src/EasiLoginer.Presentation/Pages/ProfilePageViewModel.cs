@@ -196,7 +196,7 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         }
         catch (ProfileValidationException exception)
         {
-            StatusText = $"保存失败：{exception.Message}（请补齐账号与密码后再保存）";
+            StatusText = $"保存失败：{exception.Message}（账号必填，密码可以留空）";
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -243,6 +243,13 @@ public sealed partial class ProfilePageViewModel : ObservableObject
     {
         if (Selected is null || IsBusy)
         {
+            return;
+        }
+
+        // 密码允许留空保存，但登录前必须填写
+        if (string.IsNullOrWhiteSpace(Selected.Password))
+        {
+            StatusText = "该档案未填写密码，无法执行登录。请补全密码后再运行。";
             return;
         }
 

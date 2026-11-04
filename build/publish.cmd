@@ -8,9 +8,9 @@ set "ROOT=%~dp0.."
 set "DIST=%ROOT%\..\EasiLoginer-dist"
 set "OUT=%DIST%\out"
 set "STAGE=%DIST%\stage\EasiLoginer"
-set "ZIP=%DIST%\EasiLoginer_0.0.4.zip"
+set "ZIP=%DIST%\EasiLoginer_0.1.1.zip"
 set "SETUP_OUT=%DIST%\setup"
-set "SETUP=%DIST%\EasiLoginer-Setup-0.0.4.exe"
+set "SETUP=%DIST%\EasiLoginer-Setup-0.1.1.exe"
 
 if exist "%OUT%" rmdir /s /q "%OUT%"
 if exist "%STAGE%" rmdir /s /q "%STAGE%"
@@ -20,7 +20,7 @@ if exist "%SETUP%" del /q "%SETUP%"
 if not exist "%DIST%" mkdir "%DIST%"
 
 echo [1/6] publish main app
-dotnet publish "%ROOT%\src\EasiLoginer.Host\EasiLoginer.Host.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=0.0.4 -p:AssemblyInformationalVersion=0.0.4 -o "%OUT%"
+dotnet publish "%ROOT%\src\EasiLoginer.Host\EasiLoginer.Host.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=0.1.1 -p:AssemblyInformationalVersion=0.1.1 -o "%OUT%"
 if errorlevel 1 exit /b 1
 
 echo [2/6] assemble portable folder
@@ -48,7 +48,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\build\make-zip.ps1" 
 if errorlevel 1 exit /b 1
 
 echo [6/6] build self-extracting installer
-dotnet publish "%ROOT%\src\EasiLoginer.Installer\EasiLoginer.Installer.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded -p:PayloadZip="%ZIP%" -p:Version=0.0.4 -p:AssemblyInformationalVersion=0.0.4 -o "%SETUP_OUT%"
+dotnet publish "%ROOT%\src\EasiLoginer.Installer\EasiLoginer.Installer.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded -p:PayloadZip="%ZIP%" -p:Version=0.1.1 -p:AssemblyInformationalVersion=0.1.1 -o "%SETUP_OUT%"
 if errorlevel 1 exit /b 1
 copy /y "%SETUP_OUT%\EasiLoginer-Setup.exe" "%SETUP%" >nul
 if errorlevel 1 exit /b 1

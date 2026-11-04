@@ -96,7 +96,14 @@ public static class LoginRunner
                 return (null, ExitCodes.Failure);
             }
 
-            // 前置：跳过一次 / 运行前确认（文档 §2.1 的五道前置）
+            // 密码允许留空保存，但登录前必须校验
+            if (string.IsNullOrWhiteSpace(credentials.Value.Password))
+            {
+                Log.Error("档案未填写密码，无法执行登录");
+                return (LoginOutcome.Failed, ExitCodes.Failure);
+            }
+
+            // 前置：取消二次确认 / 运行前确认（文档 §2.1 的五道前置）
             var preflight = new LoginPreflight(new SerilogLogger<LoginPreflight>());
             var preflightResult = await preflight
                 .RunAsync(config, confirmation, credentials.Value.Account, manual, cancellationToken)
@@ -107,7 +114,7 @@ public static class LoginRunner
                 configStore.Save(config);
             }
 
-            if (preflightResult.Outcome is PreflightOutcome.SkippedOnce or PreflightOutcome.CancelledByUser)
+            if (preflightResult.Outcome is PreflightOutcome.CancelledByUser)
             {
                 Log.Information("前置检查未通过：{Outcome}", preflightResult.Outcome);
                 return (LoginOutcome.Cancelled, ExitCodes.Success);

@@ -23,7 +23,7 @@
             </StackPanel>
         </StackPanel>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
             <ItemsControl ItemsSource="{Binding Groups}"
                           ItemTemplate="{StaticResource SettingsGroupTemplate}" />
         </ScrollViewer>

@@ -46,7 +46,7 @@ public static class ConfigCatalog
     private static readonly Dictionary<string, string> Titles = new(StringComparer.Ordinal)
     {
         ["Login.Method"] = "登录方式",
-        ["Login.SkipOnce"] = "跳过一次",
+        ["Login.SkipOnce"] = "取消二次确认（勾选后运行登录不再弹确认）",
         ["Login.SkipIfLoggedIn"] = "已登录则跳过",
         ["Login.KillAgent"] = "终止 EasiAgent 服务",
         ["Login.ForceCompatibilityMode"] = "强制兼容模式输入",
@@ -89,7 +89,7 @@ public static class ConfigCatalog
         ["App.LogEnabled"] = "启用日志记录",
         ["App.ResetDataAfterDays"] = "未启动清理（天，0 关闭，最短 7）",
         ["App.TelemetryEnabled"] = "参与匿名使用情况分析",
-        ["Experimental.PrivacyMask.Enabled"] = "启用隐私保护遮罩",
+        ["Experimental.PrivacyMask.Enabled"] = "启用隐私保护遮罩（智慧大屏上可能导致异常）",
         ["Experimental.PrivacyMask.MaskLeftTop"] = "遮罩位置",
         ["Experimental.PrivacyMask.MaskSize"] = "遮罩大小",
         ["Profile.SkipVerify"] = "保存档案时跳过校验",

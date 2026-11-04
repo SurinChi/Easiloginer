@@ -250,7 +250,9 @@ public sealed class FixedPositionStrategyTests
     public async Task 隐私遮罩按缩放显示()
     {
         var presenter = new RecordingPresenter();
-        var context = TestContexts.Create(TestConfigs.Create(), presenter);
+        var config = TestConfigs.Create();
+        config.Experimental.PrivacyMask.Enabled = true;
+        var context = TestContexts.Create(config, presenter);
 
         await CreateStrategy(new ScreenMetrics(new PixelPoint(1920, 1080), 1.25, 60))
             .LoginAsync(context, CancellationToken.None);
