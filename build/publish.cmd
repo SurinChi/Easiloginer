@@ -48,18 +48,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\build\make-zip.ps1" 
 if errorlevel 1 exit /b 1
 
 echo [6/6] build self-extracting installer
-if exist "%ProgramFiles%\7-Zip\7z.exe" (
-  echo   using 7-Zip SFX ^(LZMA2^)
-  powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\build\make-sfx.ps1" -Stage "%STAGE%" -Out "%SETUP%" -Version 0.1.1 -SevenZip "%ProgramFiles%\7-Zip\7z.exe"
-  if errorlevel 1 exit /b 1
-) else (
-  echo   WARNING: 7-Zip not found, falling back to the WPF installer ^(larger^)
-  dotnet publish "%ROOT%\src\EasiLoginer.Installer\EasiLoginer.Installer.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded -p:PayloadZip="%ZIP%" -p:Version=0.1.1 -p:AssemblyInformationalVersion=0.1.1 -o "%SETUP_OUT%"
-  if errorlevel 1 exit /b 1
-  copy /y "%SETUP_OUT%\EasiLoginer-Setup.exe" "%SETUP%" >nul
-  if errorlevel 1 exit /b 1
+if not exist "%ProgramFiles%\7-Zip\7z.exe" (
+  echo   ERROR: 7-Zip not found. Install 7-Zip to build the self-extracting installer.
+  echo   The portable ZIP is ready at %ZIP%
+  exit /b 1
 )
-
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\build\make-sfx.ps1" -Stage "%STAGE%" -Out "%SETUP%" -Version 0.1.1 -SevenZip "%ProgramFiles%\7-Zip\7z.exe"
+if errorlevel 1 exit /b 1
 echo Done: %ZIP%
 echo Done: %SETUP%
 exit /b 0

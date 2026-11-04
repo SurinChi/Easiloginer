@@ -98,11 +98,11 @@ build\publish.cmd
 
 安装包（`EasiLoginer-Setup-0.1.1.exe`）：
 
-- 7-Zip 自解压：选择目标目录 → 解压 → 自动创建桌面/开始菜单快捷方式并启动；
+- 双击即自解压：7-Zip SFX 解压完成后自动打开**安装向导**（选择安装位置、快捷方式、是否启动）；
 - 默认安装到 `%LOCALAPPDATA%\Programs\EasiLoginer`，**不需要管理员权限**；
 - 升级安装只覆盖程序文件，保留 `data\` 里的配置与档案；
 - 安装时创建「应用和功能」卸载项，卸载程序为安装目录下的 `Uninstall.cmd`；
-- 构建需要本机安装 7-Zip（`build\publish.cmd` 自动检测；缺失时回退到较大的 WPF 向导安装包）。
+- 构建需要本机安装 7-Zip（仅打包机需要，最终用户无需安装）。
 
 ZIP 顶层为 `EasiLoginer/`，内容：
 

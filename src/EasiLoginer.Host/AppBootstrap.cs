@@ -73,8 +73,8 @@ internal static class AppBootstrap
         var root = CommandFactory.Create();
         var parseResult = root.Parse(args);
 
-        // patch 绕过单实例（文档 §6.3）：它可以提权运行，不能与主实例抢管道
-        if (IsPatch(parseResult))
+        // patch / install 绕过单实例：前者可能提权运行，后者要在应用运行时覆盖文件
+        if (BypassesSingleInstance(parseResult))
         {
             return await parseResult.InvokeAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         }
@@ -93,8 +93,10 @@ internal static class AppBootstrap
         return await parseResult.InvokeAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
-    private static bool IsPatch(System.CommandLine.ParseResult parseResult)
-        => string.Equals(parseResult.CommandResult.Command.Name, "patch", StringComparison.OrdinalIgnoreCase);
+    private static bool BypassesSingleInstance(System.CommandLine.ParseResult parseResult)
+        => parseResult.CommandResult.Command.Name is var name &&
+           (string.Equals(name, "patch", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(name, "install", StringComparison.OrdinalIgnoreCase));
 
     private static async Task<int> ForwardAsync(
         System.CommandLine.ParseResult parseResult,

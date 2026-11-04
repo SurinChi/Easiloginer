@@ -24,6 +24,31 @@ internal static class CommandHandlers
     /// <summary>更新检查共用的 HTTP 客户端（GitHub API 要求 User-Agent，超时保守）。</summary>
     private static readonly HttpClient UpdateHttpClient = new() { Timeout = TimeSpan.FromSeconds(20) };
 
+    /// <summary>安装向导：把当前目录的文件安装到本机（由 SFX 解压后调用）。</summary>
+    public static int Install()
+    {
+        var exitCode = ExitCodes.Success;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var app = new System.Windows.Application { ShutdownMode = System.Windows.ShutdownMode.OnMainWindowClose };
+                app.Run(new EasiLoginer.Presentation.Installer.InstallWizardWindow());
+            }
+            catch (Exception exception)
+            {
+                Log.Fatal(exception, "安装向导异常退出");
+                exitCode = ExitCodes.Failure;
+            }
+        });
+
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+
+        return exitCode;
+    }
+
     /// <summary>打开主界面。</summary>
     public static int Settings()
     {

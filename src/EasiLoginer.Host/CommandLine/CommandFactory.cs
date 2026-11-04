@@ -21,6 +21,7 @@ internal static class CommandFactory
         root.Add(CreateLoginCommand());
         root.Add(CreateOobeCommand());
         root.Add(CreateSkipCommand());
+        root.Add(CreateInstallCommand());
         root.Add(CreatePatchCommand());
         return root;
     }
@@ -66,6 +67,13 @@ internal static class CommandFactory
     {
         var command = new Command("skip", "跳过一次自动登录（写 SkipOnce 后退出）");
         command.SetAction((_, _) => Task.FromResult(CommandHandlers.Skip()));
+        return command;
+    }
+
+    private static Command CreateInstallCommand()
+    {
+        var command = new Command("install", "从当前目录安装到本机（SFX 解压后自动调用）");
+        command.SetAction((_, _) => Task.FromResult(CommandHandlers.Install()));
         return command;
     }
 

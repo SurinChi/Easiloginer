@@ -3,8 +3,8 @@
     用 7-Zip 生成自解压安装包（LZMA2），体积约为 ZIP 的一半。
 
 .DESCRIPTION
-    相比内嵌 ZIP 的 WPF 向导（ZIP + 自带运行时 ≈ 173 MB），SFX 方案
-    只压缩负载本身（≈55 MB），解压后运行 install.cmd 创建快捷方式与卸载项。
+    解压后自动运行 `EasiLoginer.exe --install`，由程序内的安装向导
+    选择目标目录、创建快捷方式并写卸载项。
 #>
 param(
     [Parameter(Mandatory = $true)][string]$Stage,
@@ -33,65 +33,12 @@ try {
     Write-Host "  copying payload..."
     Copy-Item (Join-Path $stagePath "*") $payload -Recurse -Force
 
-    # 安装脚本：创建快捷方式、卸载项，并启动程序
-    $installPs1 = @'
-$ErrorActionPreference = "Stop"
-$dir = $PSScriptRoot
-$exe = Join-Path $dir "EasiLoginer.exe"
-if (-not (Test-Path $exe)) { throw "EasiLoginer.exe missing" }
-
-$desktop = [Environment]::GetFolderPath("DesktopDirectory")
-$programs = [Environment]::GetFolderPath("Programs")
-$shell = New-Object -ComObject WScript.Shell
-
-foreach ($target in @((Join-Path $desktop "EasiLoginer.lnk"), (Join-Path $programs "EasiLoginer.lnk"))) {
-    $link = $shell.CreateShortcut($target)
-    $link.TargetPath = $exe
-    $link.WorkingDirectory = $dir
-    $link.IconLocation = $exe
-    $link.Description = "EasiLoginer"
-    $link.Save()
-}
-
-$uninstall = Join-Path $dir "Uninstall.cmd"
-$lines = @(
-    "@echo off",
-    "reg delete `"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\EasiLoginer`" /f >nul 2>&1",
-    "del /q `"$desktop\EasiLoginer.lnk`" >nul 2>&1",
-    "del /q `"$programs\EasiLoginer.lnk`" >nul 2>&1",
-    "start `"`" /min cmd /c `"timeout /t 2 >nul & rd /s /q `"`"%~dp0`"`"`"",
-    "exit /b 0"
-)
-[System.IO.File]::WriteAllText($uninstall, ($lines -join "`r`n") + "`r`n", [System.Text.Encoding]::ASCII)
-
-$version = (Get-Item $exe).VersionInfo.ProductVersion
-$key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\EasiLoginer"
-New-Item -Path $key -Force | Out-Null
-Set-ItemProperty $key DisplayName "EasiLoginer"
-Set-ItemProperty $key DisplayVersion $version
-Set-ItemProperty $key Publisher "SurinChi"
-Set-ItemProperty $key InstallLocation $dir
-Set-ItemProperty $key DisplayIcon $exe
-Set-ItemProperty $key UninstallString ('"' + $uninstall + '"')
-Set-ItemProperty $key NoModify 1 -Type DWord
-Set-ItemProperty $key NoRepair 1 -Type DWord
-
-Start-Process -FilePath $exe -WorkingDirectory $dir
-'@
-    $installCmd = @"
-@echo off
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0install.ps1"
-exit /b 0
-"@
-
-    [System.IO.File]::WriteAllText((Join-Path $payload "install.ps1"), $installPs1, (New-Object System.Text.UTF8Encoding($true)))
-    [System.IO.File]::WriteAllText((Join-Path $payload "install.cmd"), $installCmd, [System.Text.Encoding]::ASCII)
-
     $sfxConfig = @"
 ;!@Install@!UTF-8!
 Title="EasiLoginer $Version"
-BeginPrompt="安装 EasiLoginer $Version 到所选目录？"
-RunProgram="install.cmd"
+BeginPrompt="即将解压 EasiLoginer $Version，解压完成后会自动打开安装向导。是否继续？"
+ExtractDialogText="请选择解压位置（安装向导随后会让你选择正式安装目录）"
+RunProgram="EasiLoginer.exe install"
 ;!@InstallEnd@!
 "@
     [System.IO.File]::WriteAllText($config, $sfxConfig.TrimStart(), [System.Text.Encoding]::UTF8)
