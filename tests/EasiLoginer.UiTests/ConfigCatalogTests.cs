@@ -34,6 +34,17 @@ public sealed class ConfigCatalogTests
         descriptor.Group.Should().Be("Banner");
     }
 
+    /// <summary>启动页面是可选的枚举项。</summary>
+    [Fact]
+    public void 启动页面可选()
+    {
+        var descriptor = ConfigCatalog.Build().Single(item => item.Path == "App.StartPage");
+
+        descriptor.Kind.Should().Be(SettingKind.Enum);
+        descriptor.Title.Should().Be("启动页面");
+        descriptor.Options.Should().Contain(["自动（有档案进快捷登录）", "快捷登录", "档案", "配置"]);
+    }
+
     /// <summary>已移除的遥测开关不再出现在目录里。</summary>
     [Fact]
     public void 遥测开关已隐藏()

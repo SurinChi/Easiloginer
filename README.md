@@ -5,7 +5,7 @@ EasiLoginer 是 EasiAuto 的 C# 重构项目，用于手动触发希沃白板自
 - **作者 / 维护者**：SurinChi
 - **上游项目**：[EasiAuto](https://github.com/hxabcd/EasiAuto)，作者 hxabcd
 - **许可证**：GNU General Public License v3.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)
-- **当前状态**：**M1–M7 完成（当前版本 0.1.1）**。
+- **当前状态**：**M1–M7 完成（当前版本 0.1.2）**。
   - 登录：**UI Automation（默认，5.8–6.9s 一次成功）**、固定位置（10.4s）、图像识别（逐像素模板匹配，仅支持 1920×1080 100% 与 4K 200%）、令牌投递（管道桥 DLL 已随包提供）
   - 快捷登录：每个档案生成一个按钮，点击即运行该档案的登录流程；有档案时应用启动默认进入本页
   - 安装包：7-Zip SFX + LZMA2，约 55 MB（比 107 MB 的绿色版 ZIP 更小）
@@ -81,7 +81,22 @@ dotnet test  EasiLoginer.sln -c Release --no-build
 退出码：`0` 成功、`1` 失败或参数非法、`20–29` 为 `patch` 专用码
 （20 成功、21 操作失败、22 未找到希沃、29 未知异常）。
 
-> **版本**：首发 `0.0.1`，当前 `0.1.1`（由 SurinChi 决定，不使用文档示例中的 2.0.0）。
+> **版本**：首发 `0.0.1`，当前 `0.1.2`（由 SurinChi 决定，不使用文档示例中的 2.0.0）。
+
+## 更新通道
+
+- **稳定通道（release）**：只读取 GitHub 的非预发布版本（`/releases/latest`），在「更新」页检查并下载安装包；
+- **测试通道（dev）**：读取全部发布（含预发布）并**取版本最高的一条**，草稿版本忽略；
+- 两个通道都只在本机版本更低时提示更新；下载后校验大小与 SHA-256，再手动运行安装程序。
+
+发布规则（维护者）：
+
+| 目的 | Tag 示例 | GitHub 标记 |
+|---|---|---|
+| 正式版 | `v0.1.2` | 不勾选 pre-release |
+| 测试版 | `v0.1.3b1` / `v0.1.3rc1` | 勾选 **pre-release** |
+
+版本号必须能被 PEP 440 解析（`0.1.3b1`、`0.1.3rc1`、`0.1.3.dev1` 都合法），稳定通道不会收到 `b`/`rc`/`dev` 版本。
 
 ## 发布
 
@@ -93,16 +108,16 @@ build\publish.cmd
 
 | 文件 | 说明 |
 |---|---|
-| `..\EasiLoginer-dist\EasiLoginer_0.1.1.zip` | 绿色版，约 107 MB，自包含 win-x64 |
-| `..\EasiLoginer-dist\EasiLoginer-Setup-0.1.1.exe` | **安装向导**（Inno Setup + LZMA2），约 55 MB，比 ZIP 更小 |
+| `..\EasiLoginer-dist\EasiLoginer_0.1.2.zip` | 绿色版，约 107 MB，自包含 win-x64 |
+| `..\EasiLoginer-dist\EasiLoginer-Setup-0.1.2.exe` | **安装向导**（Inno Setup + LZMA2），约 55 MB，比 ZIP 更小 |
 
-安装包（`EasiLoginer-Setup-0.1.1.exe`）：
+安装包（`EasiLoginer-Setup-0.1.2.exe`）：
 
 - 标准安装向导：欢迎 → 安装位置 → 附加任务（桌面快捷方式）→ 安装进度 → 完成并启动；
 - 默认安装到 `%LOCALAPPDATA%\Programs\EasiLoginer`，**不需要管理员权限**；
 - 升级安装只覆盖程序文件，保留 `data\` 里的配置与档案；
 - 在「应用和功能」里可正常卸载（Inno Setup 生成 `unins000.exe`）；
-- 静默安装：`EasiLoginer-Setup-0.1.1.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`；
+- 静默安装：`EasiLoginer-Setup-0.1.2.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`；
 - 构建需要本机安装 **Inno Setup 6**（仅打包机需要，最终用户无需安装）。
 
 ZIP 顶层为 `EasiLoginer/`，内容：

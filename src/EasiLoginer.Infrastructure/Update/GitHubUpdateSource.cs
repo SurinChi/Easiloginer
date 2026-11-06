@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using EasiLoginer.Application.Update;
 using EasiLoginer.Domain.Configuration;
+using EasiLoginer.Domain.Versioning;
 
 namespace EasiLoginer.Infrastructure.Update;
 
@@ -73,15 +74,47 @@ public sealed class GitHubUpdateSource : IUpdateSource
         }
     }
 
+    /// <summary>
+    /// Dev 通道：在全部发布（含预发布）里挑版本最高的一条，而不是简单取第一条；
+    /// 这样"先发 dev、后发稳定版"的顺序不会让 Dev 用户错过新版本。
+    /// </summary>
     private static string? ConvertReleaseList(string payload, UpdateChannel channel)
     {
         using var document = JsonDocument.Parse(payload);
-        if (document.RootElement.ValueKind != JsonValueKind.Array || document.RootElement.GetArrayLength() == 0)
+        if (document.RootElement.ValueKind != JsonValueKind.Array)
         {
             return null;
         }
 
-        return BuildManifest(document.RootElement[0], channel);
+        JsonElement? best = null;
+        Pep440Version? bestVersion = null;
+
+        foreach (var release in document.RootElement.EnumerateArray())
+        {
+            if (release.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            if (release.TryGetProperty("draft", out var draft) && draft.ValueKind == JsonValueKind.True)
+            {
+                continue;
+            }
+
+            var tag = release.TryGetProperty("tag_name", out var tagElement) ? tagElement.GetString() : null;
+            if (string.IsNullOrWhiteSpace(tag) || !Pep440Version.TryParse(tag, out var version))
+            {
+                continue;
+            }
+
+            if (bestVersion is null || version.CompareTo(bestVersion) > 0)
+            {
+                bestVersion = version;
+                best = release;
+            }
+        }
+
+        return best is null ? null : BuildManifest(best.Value, channel);
     }
 
     private static string? ConvertSingleRelease(string payload, UpdateChannel channel)

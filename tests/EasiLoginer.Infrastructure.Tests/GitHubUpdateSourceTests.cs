@@ -50,14 +50,16 @@ public sealed class GitHubUpdateSourceTests
         asset.GetProperty("source").GetString().Should().Be("github");
     }
 
-    /// <summary>Dev 通道取列表第一条。</summary>
+    /// <summary>Dev 通道取版本最高的一条（含预发布），而不是列表第一条。</summary>
     [Fact]
-    public async Task 开发通道取列表首条()
+    public async Task 开发通道取版本最高()
     {
         const string payload = """
             [
+              { "tag_name": "0.0.2", "body": "stable", "assets": [] },
               { "tag_name": "0.0.3b1", "body": "beta", "assets": [] },
-              { "tag_name": "0.0.2", "body": "stable", "assets": [] }
+              { "tag_name": "0.0.4rc1", "body": "rc", "assets": [] },
+              { "tag_name": "nightly", "body": "无法解析的标签", "assets": [] }
             ]
             """;
 
@@ -67,8 +69,27 @@ public sealed class GitHubUpdateSourceTests
 
         json.Should().NotBeNull();
         using var document = JsonDocument.Parse(json!);
-        document.RootElement.GetProperty("version").GetString().Should().Be("0.0.3b1");
+        document.RootElement.GetProperty("version").GetString().Should().Be("0.0.4rc1");
         document.RootElement.GetProperty("channel").GetString().Should().Be("dev");
+    }
+
+    /// <summary>草稿版本不参与 Dev 通道选择。</summary>
+    [Fact]
+    public async Task 开发通道忽略草稿()
+    {
+        const string payload = """
+            [
+              { "tag_name": "0.0.5", "draft": true, "assets": [] },
+              { "tag_name": "0.0.3", "assets": [] }
+            ]
+            """;
+
+        var source = CreateSource(_ => Json(HttpStatusCode.OK, payload));
+
+        var json = await source.FetchManifestJsonAsync(UpdateChannel.Dev, CancellationToken.None);
+
+        using var document = JsonDocument.Parse(json!);
+        document.RootElement.GetProperty("version").GetString().Should().Be("0.0.3");
     }
 
     /// <summary>没有任何发布（404）视为"无更新源"。</summary>

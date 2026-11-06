@@ -11,9 +11,11 @@ namespace EasiLoginer.Presentation;
 /// <param name="Login">登录执行器。</param>
 /// <param name="Display">屏幕度量（覆盖层按物理像素定位后换算 DIP）。</param>
 /// <param name="Update">更新清单来源（GitHub Releases）。</param>
+/// <param name="Downloader">更新包下载器。</param>
 public sealed record AppServices(
     IConfigService Config,
     IProfileRepository Profiles,
     ILoginRunner Login,
     IDisplayMetrics Display,
-    IUpdateSource Update);
+    IUpdateSource Update,
+    IUpdateDownloader Downloader);

@@ -86,6 +86,7 @@ public static class ConfigCatalog
         ["StatusOverlay.Enabled"] = "启用状态浮窗",
         ["App.MaxRetries"] = "最大重试次数",
         ["App.Theme"] = "应用主题",
+        ["App.StartPage"] = "启动页面",
         ["App.LogEnabled"] = "启用日志记录",
         ["App.ResetDataAfterDays"] = "未启动清理（天，0 关闭，最短 7）",
         ["App.TelemetryEnabled"] = "参与匿名使用情况分析",
@@ -104,6 +105,7 @@ public static class ConfigCatalog
     {
         [typeof(LoginMethod)] = ["固定位置", "图像识别", "自动定位", "令牌投递"],
         [typeof(ThemeOptions)] = ["跟随系统", "浅色", "深色"],
+        [typeof(StartPageOptions)] = ["自动（有档案进快捷登录）", "快捷登录", "档案", "配置"],
         [typeof(UpdateMode)] = ["从不自动更新", "检查并通知", "检查并下载", "检查并安装"],
         [typeof(UpdateChannel)] = ["稳定通道", "测试通道"],
         [typeof(DownloadSource)] = ["自动选择", "GitHub", "ghproxy", "ghfast"],

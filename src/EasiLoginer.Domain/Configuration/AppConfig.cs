@@ -27,6 +27,10 @@ public sealed class AppConfig
     [JsonPropertyName("TelemetryEnabled")]
     public bool TelemetryEnabled { get; set; }
 
+    /// <summary>应用启动时进入的页面（默认自动）。</summary>
+    [JsonPropertyName("StartPage")]
+    public StartPageOptions StartPage { get; set; } = StartPageOptions.Auto;
+
     /// <summary>
     /// 超过指定天数未启动时清空全部数据并恢复初始状态；0 表示禁用。
     /// </summary>

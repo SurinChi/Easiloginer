@@ -55,7 +55,8 @@ internal static class CommandHandlers
                 profiles,
                 new LoginRunnerAdapter(),
                 new WindowsDisplayMetrics(),
-                new GitHubUpdateSource(UpdateHttpClient));
+                new GitHubUpdateSource(UpdateHttpClient),
+                new UpdateDownloader(UpdateHttpClient));
 
             var exitCode = 0;
             var thread = new Thread(() =>

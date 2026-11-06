@@ -8,9 +8,9 @@ set "ROOT=%~dp0.."
 set "DIST=%ROOT%\..\EasiLoginer-dist"
 set "OUT=%DIST%\out"
 set "STAGE=%DIST%\stage\EasiLoginer"
-set "ZIP=%DIST%\EasiLoginer_0.1.1.zip"
+set "ZIP=%DIST%\EasiLoginer_0.1.2.zip"
 set "SETUP_OUT=%DIST%\setup"
-set "SETUP=%DIST%\EasiLoginer-Setup-0.1.1.exe"
+set "SETUP=%DIST%\EasiLoginer-Setup-0.1.2.exe"
 set "PAYLOAD=%DIST%\payload.7z"
 set "TOOLS=%DIST%\tools"
 
@@ -24,7 +24,7 @@ if exist "%TOOLS%" rmdir /s /q "%TOOLS%"
 if not exist "%DIST%" mkdir "%DIST%"
 
 echo [1/7] publish main app
-dotnet publish "%ROOT%\src\EasiLoginer.Host\EasiLoginer.Host.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=0.1.1 -p:AssemblyInformationalVersion=0.1.1 -o "%OUT%"
+dotnet publish "%ROOT%\src\EasiLoginer.Host\EasiLoginer.Host.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=0.1.2 -p:AssemblyInformationalVersion=0.1.2 -o "%OUT%"
 if errorlevel 1 exit /b 1
 
 echo [2/7] assemble portable folder

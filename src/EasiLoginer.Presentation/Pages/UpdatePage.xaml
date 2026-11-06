@@ -21,12 +21,22 @@
             <TextBlock Text="更新" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,6" />
             <TextBlock x:Name="VersionText" Opacity="0.75" Margin="0,0,0,8" />
             <TextBlock TextWrapping="Wrap" Opacity="0.85"
-                       Text="更新来自本项目的 GitHub Releases（SurinChi/EasiLoginer）。Stable 通道取最新正式版，Dev 通道取最新一次发布（可能为预发布）。本程序只读取自己的发布，不使用上游 EasiAuto 的清单或资产。" />
+                       Text="更新来自本项目的 GitHub Releases（SurinChi/EasiLoginer）。Stable 通道只取正式版；Dev 通道在全部发布（含预发布）中取版本最高者。本程序只读取自己的发布，不使用上游 EasiAuto 的清单或资产。" />
+
+            <TextBlock TextWrapping="Wrap" Opacity="0.7" Margin="0,10,0,0"
+                       Text="通道规则：稳定通道只提供正式版（GitHub 非预发布）；测试通道会在正式版与预发布中取版本最高者，适合想尝鲜的人。两者都只在本机版本更低时提示更新。" />
 
             <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                 <Button x:Name="CheckButton" Content="检查更新" Padding="18,6" Click="OnCheckClicked" />
+                <Button x:Name="DownloadButton" Content="下载更新" Padding="18,6" Margin="10,0,0,0"
+                        Visibility="Collapsed" Click="OnDownloadClicked" />
+                <Button x:Name="InstallButton" Content="运行安装程序" Padding="18,6" Margin="10,0,0,0"
+                        Visibility="Collapsed" Click="OnInstallClicked" />
                 <TextBlock x:Name="StatusText" VerticalAlignment="Center" Margin="14,0,0,0" Opacity="0.85" TextWrapping="Wrap" />
             </StackPanel>
+
+            <ProgressBar x:Name="DownloadProgress" Height="6" Margin="0,12,0,0"
+                         Minimum="0" Maximum="100" Visibility="Collapsed" />
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">

@@ -141,6 +141,48 @@ public sealed class ConfigStoreTests : IDisposable
         rewritten["Internal"]!.AsObject().ContainsKey("IsAutomationPageNoticeShown").Should().BeFalse();
     }
 
+    /// <summary>旧版本配置没有 StartPage 时回退为「自动」，其余值保持不变。</summary>
+    [Fact]
+    public void 旧配置缺少启动页面时用自动()
+    {
+        WriteJson("""
+        {
+            "App": { "Theme": "Dark", "LogEnabled": false },
+            "Login": { "Method": 2, "SkipOnce": false }
+        }
+        """);
+
+        var config = _store.Load();
+
+        config.App.StartPage.Should().Be(StartPageOptions.Auto);
+        config.App.Theme.Should().Be(ThemeOptions.Dark);
+        config.App.LogEnabled.Should().BeFalse();
+    }
+
+    /// <summary>启动页面取值非法时回退为自动，不阻止启动。</summary>
+    [Fact]
+    public void 非法启动页面回退自动()
+    {
+        WriteJson("""
+        {
+            "App": { "StartPage": "somewhereElse" }
+        }
+        """);
+
+        _store.Load().App.StartPage.Should().Be(StartPageOptions.Auto);
+    }
+
+    /// <summary>启动页面可写入并读回。</summary>
+    [Fact]
+    public void 启动页面往返()
+    {
+        var config = _store.Load();
+        config.App.StartPage = StartPageOptions.Config;
+        _store.Save(config);
+
+        _store.Load().App.StartPage.Should().Be(StartPageOptions.Config);
+    }
+
     /// <summary>未知字段忽略，缺失字段保留默认值（向前/向后兼容）。</summary>
     [Fact]
     public void 未知字段忽略且缺失字段用默认值()

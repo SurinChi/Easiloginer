@@ -18,6 +18,27 @@ public enum LoginMethod
     Token = 3,
 }
 
+/// <summary>应用启动时进入的页面；JSON 中写字符串。</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<StartPageOptions>))]
+public enum StartPageOptions
+{
+    /// <summary>自动：有档案进快捷登录，没有档案进档案页。</summary>
+    [JsonStringEnumMemberName("auto")]
+    Auto,
+
+    /// <summary>快捷登录。</summary>
+    [JsonStringEnumMemberName("quickLogin")]
+    QuickLogin,
+
+    /// <summary>档案页。</summary>
+    [JsonStringEnumMemberName("profile")]
+    Profile,
+
+    /// <summary>配置页。</summary>
+    [JsonStringEnumMemberName("config")]
+    Config,
+}
+
 /// <summary>应用主题，对应上游 <c>ThemeOptions</c>；JSON 中写字符串。</summary>
 [JsonConverter(typeof(JsonStringEnumConverter<ThemeOptions>))]
 public enum ThemeOptions
