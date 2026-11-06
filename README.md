@@ -1,43 +1,152 @@
 # EasiLoginer
 
-EasiLoginer 是 EasiAuto 的 C# 重构项目，用于手动触发希沃白板自动登录。
+[![CI](https://github.com/SurinChi/Easiloginer/actions/workflows/ci.yml/badge.svg)](https://github.com/SurinChi/Easiloginer/actions/workflows/ci.yml)
 
-- **作者 / 维护者**：SurinChi
-- **上游项目**：[EasiAuto](https://github.com/hxabcd/EasiAuto)，作者 hxabcd
-- **许可证**：GNU General Public License v3.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)
-- **当前状态**：**M1–M7 完成（当前版本 0.1.2）**。
-  - 登录：**UI Automation（默认，5.8–6.9s 一次成功）**、固定位置（10.4s）、图像识别（逐像素模板匹配，仅支持 1920×1080 100% 与 4K 200%）、令牌投递（管道桥 DLL 已随包提供）
-  - 快捷登录：每个档案生成一个按钮，点击即运行该档案的登录流程；有档案时应用启动默认进入本页
-  - 安装包：7-Zip SFX + LZMA2，约 55 MB（比 107 MB 的绿色版 ZIP 更小）
-  - 更新：读取本仓库的 GitHub Releases（`v0.0.1` 已验证端到端）
-  - 数据保留：超过 N 天未启动自动清空数据并恢复初始状态（默认 90 天，最短 7 天，可在配置页关闭）
-  - CI：`.github/workflows/ci.yml`（windows-latest + .NET 10，构建 + 全部测试）
-  - **387 个测试全绿**（6 个测试项目）
-  - 明确不做：公告（无端点，也不再规划）；仍未做：主题令牌表、代码签名
+一个**手动触发**的希沃白板自动登录工具：点一下按钮，它替你启动希沃、填好账号密码、点登录。
 
-> **Smart App Control 与程序集命名**：本机 SAC 对**程序集身份** `EasiLoginer.Automation` 有拦截规则——
-> 无论内容/版本/路径如何，加载它都会返回 `0x800711C7`（An Application Control policy has blocked this file）。
-> 同源码换个程序集名即可正常加载，因此自动化程序集改名为 **`EasiLoginer.AutomationKit`**
-> （项目名、命名空间、目录结构均不变；见 `src/EasiLoginer.Automation/EasiLoginer.Automation.csproj` 注释）。
-> 正式分发仍应做代码签名（文档 §12.5），否则 SAC 机器上的用户可能遇到同类拦截。
+不驻留后台、不监视进程和文件、没有定时任务；除「检查更新」外不发起任何网络请求。
 
-## 与上游的关系
+![快捷登录](docs/screenshots/quick-login.png)
 
-EasiLoginer 基于 EasiAuto 的产品行为与数据格式进行 C# 重写，继续以 GPLv3 开源。
-上游的版权与来源声明保留在 `NOTICE` 中；本项目新增 `Copyright (C) 2026 SurinChi`。
+## 功能
 
-本项目**不支持 ClassIsland**，登录仅由用户在应用内、命令行或快捷方式手动触发。
+- **四种登录方式**：UI Automation（默认，最稳）、固定位置、图像识别、令牌投递
+- **快捷登录页**：每个档案一个按钮，按科目点名登录；有档案时启动直接进这一页
+- **档案管理**：多档案、备注、可选的**主密码加密**（账号密码以 `ea$` 密文落盘）
+- **密码脱敏**：密码始终以圆点显示，点右侧眼睛可临时查看明文
+- **流程可控**：超时、坐标缩放、隐私遮罩、警示横幅、状态浮窗、重试次数都可调
+- **希沃集成**：检测安装路径、修补登录桥、终止 EasiAgent、查杀残留进程
+- **更新检查**：从 GitHub Releases 检查、下载安装包并校验 SHA-256
+- **本地优先**：没有账号体系、没有公告推送、不做遥测
 
-## 设计文档
+## 安装与运行
 
-- [EasiLoginer C# 重构框架](EasiLoginer-CSharp-重构框架.md)
+### 安装包（推荐）
 
-## 开发
+下载 `EasiLoginer-Setup-<版本>.exe`，双击后按向导安装：
+
+- 欢迎 → 安装位置 → 附加任务（桌面快捷方式）→ 安装进度 → 完成并启动
+- 默认安装到 `%LOCALAPPDATA%\Programs\EasiLoginer`，**不需要管理员权限**
+- 升级安装只覆盖程序文件，保留 `data\` 里的配置与档案
+- 在「设置 → 应用 → 已安装的应用」里可正常卸载
+
+静默安装：
+
+```cmd
+EasiLoginer-Setup-0.1.2.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+```
+
+### 绿色版
+
+下载 `EasiLoginer_<版本>.zip`，解压到任意目录，双击 `EasiLoginer.exe` 即可。程序自包含 .NET 运行时，无需预装。
+
+### 系统要求
+
+- Windows 10 1809（x64）或更高版本
+- 已安装希沃白板 5（用于登录）
+
+## 使用说明
+
+### 1. 首次启动
+
+第一次运行会打开 6 步设置向导：用户协议 → 外观 → 登录方式 → 希沃白板 → 系统集成 → 完成。设置项随时可以在「配置」页修改。
+
+### 2. 添加档案
+
+在「档案」页点「添加」，填写档案名与希沃账号密码，然后「保存档案」。密码允许先留空，登录前会提示补全。
+
+![档案](docs/screenshots/profile.png)
+
+多个账号可以建多条档案；给档案起一个科目名（如「高等数学」），快捷登录页就会按名字排序展示。
+
+### 3. 日常登录
+
+- **快捷登录页**：单击对应科目的按钮，直接走完整登录流程；
+- **档案页**：选中档案后点「运行登录」；
+- 两者都会先弹出运行前确认（可配置时长与推迟次数），确认后才启动希沃。
+
+> 如果在配置里勾选了「取消二次确认」，点击按钮将直接执行，不再弹确认框。
+
+### 4. 登录方式怎么选
+
+| 方式 | 适用场景 |
+|---|---|
+| **UI Automation**（默认） | 绝大多数情况首选，按控件定位，最稳定 |
+| 固定位置 | 希沃界面没变但不支持 UI Automation 时的兜底 |
+| 图像识别 | 模板匹配，仅支持 1920×1080@100% 与 3840×2160@200% |
+| 令牌投递 | 最快，但需要先「修补希沃白板」（管理员权限，可撤销） |
+
+### 5. 主密码加密
+
+在档案页点「启用加密」设置主密码后，账号与密码以 `ea$` 密文保存。
+
+- 查看档案、运行登录**不需要**主密码；
+- **修改账号/密码、删除档案**时才要求验证；
+- 忘记主密码无法恢复，请自行备份或牢记。
+
+### 6. 配置页
+
+![配置](docs/screenshots/config.png)
+
+常用项：
+
+- **启动页面**：自动（有档案进快捷登录）/ 快捷登录 / 档案 / 配置
+- **取消二次确认**：勾选后运行登录不再弹确认框
+- **隐私保护遮罩**：默认关闭；在智慧大屏上启用可能导致意料之外的显示问题
+- **未启动清理（天）**：超过指定天数未启动会清空全部数据，`0` 关闭，最短 7 天
+- **警示横幅 / 状态浮窗**：文字、颜色、字号、位置都可调
+- **字体**：从系统已安装字体中下拉选择
+
+### 7. 更新
+
+![更新](docs/screenshots/update.png)
+
+「更新」页检查 GitHub Releases：
+
+- **稳定通道**：只提供正式版；
+- **测试通道**：在正式版与预发布中取版本最高者；
+- 发现新版本后可直接下载（显示进度、校验 SHA-256），完成后点「运行安装程序」。
+
+### 8. 卸载
+
+「设置 → 应用 → EasiLoginer → 卸载」。卸载会删除整个安装目录，**包括 `data\` 中的配置与档案**；需要保留时请先备份。
+
+## 数据与隐私
+
+所有数据都在程序目录的 `data\` 下：
+
+| 文件 | 说明 |
+|---|---|
+| `config.json` | 全部设置，与上游 EasiAuto 格式兼容 |
+| `profile.json` | 档案（启用主密码后账号密码为密文） |
+| `state.json` | 上次启动时间（用于「未启动清理」） |
+| `logs/` | 本地日志，不上传 |
+| `cache/`、`avatars/` | 运行缓存 |
+
+- **没有任何遥测**：崩溃与诊断只写本地日志；
+- 程序不会在后台联网：只有你点「检查更新」或「下载更新」时才访问 GitHub；
+- 想保留数据：复制 `data\` 即可；换机器时把它放回程序目录。
+
+## 命令行
+
+| 命令 | 说明 |
+|---|---|
+| 无参数 / `settings` | 打开主界面 |
+| `login -i <档案ID>` | 用指定档案登录 |
+| `login -a <账号> -p <密码>` | 用账号密码登录（与 `-i` 互斥） |
+| `login ... -m` | 跳过运行前确认弹窗 |
+| `skip` | 开启「取消二次确认」后退出 |
+| `oobe` | 重新进入首次设置向导 |
+| `patch --on` / `patch --off` | 修补 / 撤销希沃登录桥（绕过单实例） |
+
+退出码：`0` 成功、`1` 失败或参数非法、`20–29` 为 `patch` 专用码。
+
+## 从源码构建
 
 ### 环境
 
-- **.NET 10 SDK**（本仓库 `global.json` 锁定 `10.0.402`，`rollForward: latestFeature`）
-- 若 SDK 安装在用户目录（如 `%USERPROFILE%\.dotnet`），构建前需把该目录加入 `PATH`：
+- **.NET 10 SDK**：仓库 `global.json` 锁定 `10.0.402`（`rollForward: latestFeature`）
+- SDK 若安装在用户目录（如 `%USERPROFILE%\.dotnet`），先加入 PATH：
 
 ```powershell
 $env:PATH = "$env:USERPROFILE\.dotnet;$env:PATH"
@@ -50,116 +159,76 @@ dotnet build EasiLoginer.sln -c Release
 dotnet test  EasiLoginer.sln -c Release --no-build
 ```
 
-零警告是硬要求（`Directory.Build.props` 已开 `TreatWarningsAsErrors`）。
+`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 402 个测试。
 
-### 分层强制
-
-`tests/EasiLoginer.Architecture.Tests` 以**只读 PE 元数据**的方式检查依赖方向，
-不加载被测程序集。原因：开启 Smart App Control 的机器上，`Assembly.Load`
-会按哈希口碑拦截新编译的无签名程序集（`0x800711C7`），导致测试随机失败；
-只读元数据不执行代码，结果确定且更快。
-
-规则与文档 §4.3 一致：Domain 仅依赖 BCL、Application 只依赖 Domain、
-实现层互不引用、Presentation 不直接引用实现层、任何层都不反向引用 Host。
-
-
-## 命令行
-
-登录**只由用户手动触发**：应用内「运行」、命令行、快捷方式。不存在定时、计划任务、
-文件/进程监视等自动触发路径，也不读取 ClassIsland 配置。
-
-| 命令 | 说明 |
-|---|---|
-| 无参数 / `settings` | 打开主界面 |
-| `login -i <档案ID>` | 用档案登录 |
-| `login -a <账号> -p <密码>` | 用账号密码登录（`-i` 与 `-a` 互斥） |
-| `login ... -m` | 跳过运行前确认弹窗 |
-| `skip` | 写一次 SkipOnce 后退出 |
-| `oobe` | 重新进入首次设置向导 |
-| `patch --on` / `patch --off` | 修补 / 撤销希沃登录桥（绕过单实例） |
-
-退出码：`0` 成功、`1` 失败或参数非法、`20–29` 为 `patch` 专用码
-（20 成功、21 操作失败、22 未找到希沃、29 未知异常）。
-
-> **版本**：首发 `0.0.1`，当前 `0.1.2`（由 SurinChi 决定，不使用文档示例中的 2.0.0）。
-
-## 更新通道
-
-- **稳定通道（release）**：只读取 GitHub 的非预发布版本（`/releases/latest`），在「更新」页检查并下载安装包；
-- **测试通道（dev）**：读取全部发布（含预发布）并**取版本最高的一条**，草稿版本忽略；
-- 两个通道都只在本机版本更低时提示更新；下载后校验大小与 SHA-256，再手动运行安装程序。
-
-发布规则（维护者）：
-
-| 目的 | Tag 示例 | GitHub 标记 |
-|---|---|---|
-| 正式版 | `v0.1.2` | 不勾选 pre-release |
-| 测试版 | `v0.1.3b1` / `v0.1.3rc1` | 勾选 **pre-release** |
-
-版本号必须能被 PEP 440 解析（`0.1.3b1`、`0.1.3rc1`、`0.1.3.dev1` 都合法），稳定通道不会收到 `b`/`rc`/`dev` 版本。
-
-## 发布
+### 打包发布
 
 ```cmd
 build\publish.cmd
 ```
 
-产物（都在仓库之外，避免污染工作区）：
+打包机额外需要：
+
+- **7-Zip**（生成 LZMA2 负载）
+- **Inno Setup 6**（生成安装向导）
+
+产物在仓库外的 `..\EasiLoginer-dist\`：
 
 | 文件 | 说明 |
 |---|---|
-| `..\EasiLoginer-dist\EasiLoginer_0.1.2.zip` | 绿色版，约 107 MB，自包含 win-x64 |
-| `..\EasiLoginer-dist\EasiLoginer-Setup-0.1.2.exe` | **安装向导**（Inno Setup + LZMA2），约 55 MB，比 ZIP 更小 |
+| `EasiLoginer_<版本>.zip` | 绿色版，自包含 win-x64 |
+| `EasiLoginer-Setup-<版本>.exe` | 安装向导，内置同一份程序 |
 
-安装包（`EasiLoginer-Setup-0.1.2.exe`）：
+## 项目结构
 
-- 标准安装向导：欢迎 → 安装位置 → 附加任务（桌面快捷方式）→ 安装进度 → 完成并启动；
-- 默认安装到 `%LOCALAPPDATA%\Programs\EasiLoginer`，**不需要管理员权限**；
-- 升级安装只覆盖程序文件，保留 `data\` 里的配置与档案；
-- 在「应用和功能」里可正常卸载（Inno Setup 生成 `unins000.exe`）；
-- 静默安装：`EasiLoginer-Setup-0.1.2.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`；
-- 构建需要本机安装 **Inno Setup 6**（仅打包机需要，最终用户无需安装）。
-
-ZIP 顶层为 `EasiLoginer/`，内容：
-
-| 路径 | 说明 |
+| 目录 | 说明 |
 |---|---|
-| `EasiLoginer.exe` + 运行时 | 自包含发布，双击即用 |
-| `LICENSE` / `NOTICE` / `THIRD-PARTY-NOTICES.md` / `README.md` | 开源声明随包分发（GPLv3 要求） |
-| `data/` | 运行时生成 `config.json`、`profile.json`、日志与缓存 |
-| `resources/` | 图标与希沃界面模板（当前为空占位） |
-| `vendors/DLLPatcher/DllPatcher.exe` | 由 `src/EasiLoginer.Patcher` 发布 |
+| `src/EasiLoginer.Domain` | 纯领域模型：配置、档案、版本、坐标，不依赖任何平台代码 |
+| `src/EasiLoginer.Application` | 登录流程编排、更新检查、抽象接口 |
+| `src/EasiLoginer.Infrastructure` | 配置/档案存储、IPC、更新下载、Windows 适配 |
+| `src/EasiLoginer.Integrations.EasiNote` | 希沃安装检测、修补、进程控制 |
+| `src/EasiLoginer.Automation` | 四种登录策略与图像匹配（程序集名 `EasiLoginer.AutomationKit`） |
+| `src/EasiLoginer.Presentation` | WPF + WPF-UI 界面：快捷登录、档案、配置、更新、关于 |
+| `src/EasiLoginer.Host` | 进程入口、命令行、单实例、日志 |
+| `src/EasiLoginer.Patcher` | 独立的白板修补器（随包分发） |
+| `tests/` | 6 个测试项目：领域、应用、基础设施、集成、界面、分层规则 |
+| `docs/screenshots/` | README 使用的界面截图 |
 
-发布参数与文档 §12.1 一致：`-c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=embedded`，`PublishSingleFile=false`、`PublishTrimmed=false`。
+架构约束由 `tests/EasiLoginer.Architecture.Tests` 以只读 PE 元数据强制（Domain 仅依赖 BCL、Application 不碰 UI/网络、实现层互不引用、任何层不反向依赖 Host）。
 
-> `vendors\SeewoPipeBridge.dll`（22 016 字节，SHA256 `73e31471…d35b4`）已随仓库提供，发布脚本会自动复制进 ZIP 的 `vendors/`。详见 [vendors/README.md](vendors/README.md)。
+## 常见问题
 
-ZIP 由 `build/make-zip.ps1` 生成：条目一律使用正斜杠、保留顶层目录、包含空目录，符合 ZIP 规范。
+**Windows 提示「已保护你的电脑」或直接拒绝运行？**
+发布包未做代码签名。SmartScreen 可点「更多信息 → 仍要运行」；开启 **Smart App Control** 的机器可能直接拦截（`0x800711C7`），这属于系统策略，需要签名或临时关闭 SAC 才能解决。
 
-## 界面资源
+**点击运行登录没有任何反应？**
+确认希沃白板已安装，并在配置页检查「自定义路径」是否正确；日志在 `data\logs\`。
 
-| 资源 | 位置 | 说明 |
-|---|---|---|
-| 应用图标（PNG） | [src/EasiLoginer.Presentation/Assets/easiloginer.png](src/EasiLoginer.Presentation/Assets/easiloginer.png) | 窗口图标与关于页图标（pack URI 引用），也是设计源图 |
-| 应用图标（ICO） | [src/EasiLoginer.Host/Assets/easiloginer.ico](src/EasiLoginer.Host/Assets/easiloginer.ico) | exe 图标（`<ApplicationIcon>`），含 16/24/32/48/64/128/256 七种尺寸（由上面的 PNG 生成） |
-| 导航图标 | `MainWindow.xaml` 内的 `DrawingImage` | GitHub Octicons（MIT）：`gear-24`、`person-24`、`download-24`、`info-24`，以矢量路径内联，无需字体或第三方 DLL |
+**登录方式选哪个？**
+默认的 UI Automation 最稳；若希沃界面更新后失效，可临时切到固定位置。
 
-替换应用图标：同时替换 `Assets/easiloginer.png`，并据其重新生成 `Assets/easiloginer.ico`（多尺寸 ICO），两处保持一致。
+**图像识别为什么不可用？**
+只支持 1920×1080@100% 与 3840×2160@200%，其他显示环境会直接提示不支持。
 
-导航图标的着色使用 `{DynamicResource TextFillColorPrimaryBrush}`，随明暗主题自动适配；尺寸固定 16 DIP，与 WPF-UI 导航默认一致。署名见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
+**令牌投递提示缺少组件？**
+需要先在配置页「修补希沃白板」（管理员权限），修补可随时撤销。
 
-## 数据保留与清理
+**升级后数据还在吗？**
+在。覆盖安装只替换程序文件，`data\` 保留；卸载才会删除整个目录。
 
-应用**只写本地文件**，不做任何遥测上报（Sentry 已移除，`App.TelemetryEnabled` 仅为与上游配置兼容而保留）。
+**为什么启动后数据没了？**
+检查「未启动清理（天）」设置：超过设定天数未启动会自动清空数据。
 
-超过配置天数未启动时，下次启动会**清空 `data/` 下的全部数据**（配置、档案、日志、缓存），恢复首次安装状态：
+## 上游与许可
 
-- 配置项：`App.ResetDataAfterDays`（配置页 → 应用设置 →「未启动清理」）；
-- 默认 **90 天**（约 3 个月）；
-- 填 `0` 表示关闭；
-- 启用时**最短 7 天**，填更小的值会按 7 天处理（防止"启动即清空"）；
-- 判断依据是 `data/state.json` 里记录的上次启动时间，与实际运行时长无关。
+- 本项目与其配置、档案格式**双向兼容**，加密档案可交叉解密；
+- 产品行为参考并重写了 [EasiAuto](https://github.com/hxabcd/EasiAuto)（作者 hxabcd）的实现，遵循 **GNU GPLv3**；
+- 上游版权与来源声明保留在 [NOTICE](NOTICE)，第三方依赖见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)；
+- 本项目不支持 ClassIsland，也不会读写其配置；
+- 设计文档见 [EasiLoginer C# 重构框架](EasiLoginer-CSharp-重构框架.md)。
 
-## 第三方依赖
+Copyright (C) 2026 SurinChi。完整许可文本见 [LICENSE](LICENSE)。
 
-发布前需根据锁定版本生成 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
+## 反馈
+
+问题与建议请提交到 [Issues](https://github.com/SurinChi/Easiloginer/issues)。
