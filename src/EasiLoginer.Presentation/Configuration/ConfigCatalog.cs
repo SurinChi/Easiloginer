@@ -46,7 +46,7 @@ public static class ConfigCatalog
     private static readonly Dictionary<string, string> Titles = new(StringComparer.Ordinal)
     {
         ["Login.Method"] = "登录方式",
-        ["Login.SkipOnce"] = "取消二次确认（勾选后运行登录不再弹确认）",
+        ["Login.SkipOnce"] = "取消二次确认",
         ["Login.SkipIfLoggedIn"] = "已登录则跳过",
         ["Login.KillAgent"] = "终止 EasiAgent 服务",
         ["Login.ForceCompatibilityMode"] = "强制兼容模式输入",
@@ -88,9 +88,9 @@ public static class ConfigCatalog
         ["App.Theme"] = "应用主题",
         ["App.StartPage"] = "启动页面",
         ["App.LogEnabled"] = "启用日志记录",
-        ["App.ResetDataAfterDays"] = "未启动清理（天，0 关闭，最短 7）",
+        ["App.ResetDataAfterDays"] = "未启动清理（天）",
         ["App.TelemetryEnabled"] = "参与匿名使用情况分析",
-        ["Experimental.PrivacyMask.Enabled"] = "启用隐私保护遮罩（智慧大屏上可能导致异常）",
+        ["Experimental.PrivacyMask.Enabled"] = "启用隐私保护遮罩",
         ["Experimental.PrivacyMask.MaskLeftTop"] = "遮罩位置",
         ["Experimental.PrivacyMask.MaskSize"] = "遮罩大小",
         ["Profile.SkipVerify"] = "保存档案时跳过校验",
@@ -109,6 +109,14 @@ public static class ConfigCatalog
         [typeof(UpdateMode)] = ["从不自动更新", "检查并通知", "检查并下载", "检查并安装"],
         [typeof(UpdateChannel)] = ["稳定通道", "测试通道"],
         [typeof(DownloadSource)] = ["自动选择", "GitHub", "ghproxy", "ghfast"],
+    };
+
+    /// <summary>标题下方的二级说明：把"括号里的解释"从标题里挪出来。</summary>
+    private static readonly Dictionary<string, string> Hints = new(StringComparer.Ordinal)
+    {
+        ["Login.SkipOnce"] = "勾选后运行登录不再弹确认",
+        ["App.ResetDataAfterDays"] = "0 关闭，最短 7 天",
+        ["Experimental.PrivacyMask.Enabled"] = "智慧大屏上可能导致异常",
     };
 
     /// <summary>数值范围（与上游 pydantic 的 ge/le 一致）。</summary>
@@ -184,6 +192,7 @@ public static class ConfigCatalog
             var title = Titles.TryGetValue(path, out var mapped) ? mapped : property.Name;
             var options = kind == SettingKind.Enum ? GetEnumLabels(property.PropertyType) : null;
             Ranges.TryGetValue(path, out var range);
+            Hints.TryGetValue(path, out var hint);
 
             descriptors.Add(new SettingDescriptor(
                 path,
@@ -192,7 +201,8 @@ public static class ConfigCatalog
                 kind.Value,
                 options,
                 range.Min,
-                range.Max));
+                range.Max,
+                hint));
         }
     }
 

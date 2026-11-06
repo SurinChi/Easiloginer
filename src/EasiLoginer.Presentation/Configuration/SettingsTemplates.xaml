@@ -18,7 +18,12 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Hint}" TextWrapping="Wrap"
+                                               FontSize="12" Opacity="0.6" Margin="0,2,0,0"
+                                               Visibility="{Binding HasHint, Converter={StaticResource BoolToVis}}" />
+                                </StackPanel>
 
                                 <Grid Grid.Column="1">
                                     <CheckBox IsChecked="{Binding BoolValue, Mode=TwoWay}"

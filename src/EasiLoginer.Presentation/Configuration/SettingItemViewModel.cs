@@ -52,6 +52,12 @@ public sealed partial class SettingItemViewModel : ObservableObject
     /// <summary>标题。</summary>
     public string Title => Descriptor.Title;
 
+    /// <summary>标题下方的二级说明（没有则为空）。</summary>
+    public string Hint => Descriptor.Hint ?? string.Empty;
+
+    /// <summary>是否有二级说明。</summary>
+    public bool HasHint => !string.IsNullOrEmpty(Descriptor.Hint);
+
     /// <summary>是否布尔开关。</summary>
     public bool IsBool => Descriptor.Kind == SettingKind.Boolean;
 

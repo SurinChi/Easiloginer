@@ -11,7 +11,7 @@
 
             <TextBlock Text="快捷登录" FontSize="28" FontWeight="SemiBold" />
             <TextBlock Opacity="0.7" Margin="0,4,0,16" TextWrapping="Wrap"
-                       Text="每个档案对应一个按钮，点击后与在「档案」页点「运行登录」走同一条流程。" />
+                       Text="请单击想要登录的科目" />
 
             <ItemsControl ItemsSource="{Binding Items}">
                 <ItemsControl.ItemTemplate>

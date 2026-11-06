@@ -34,6 +34,25 @@ public sealed class ConfigCatalogTests
         descriptor.Group.Should().Be("Banner");
     }
 
+    /// <summary>括号里的解释变成二级说明，标题只保留必要的计数单位。</summary>
+    [Fact]
+    public void 括号提示改为二级文字()
+    {
+        var items = ConfigCatalog.Build().ToDictionary(item => item.Path);
+
+        items["Login.SkipOnce"].Title.Should().Be("取消二次确认");
+        items["Login.SkipOnce"].Hint.Should().Be("勾选后运行登录不再弹确认");
+
+        items["Experimental.PrivacyMask.Enabled"].Title.Should().Be("启用隐私保护遮罩");
+        items["Experimental.PrivacyMask.Enabled"].Hint.Should().Contain("智慧大屏");
+
+        // 计数单位保留在标题里，仅把补充说明放进二级文字
+        items["App.ResetDataAfterDays"].Title.Should().Be("未启动清理（天）");
+        items["App.ResetDataAfterDays"].Hint.Should().Be("0 关闭，最短 7 天");
+        items["Warning.Timeout"].Title.Should().Be("超时时长（秒）");
+        items["Warning.Timeout"].Hint.Should().BeNullOrEmpty();
+    }
+
     /// <summary>启动页面是可选的枚举项。</summary>
     [Fact]
     public void 启动页面可选()

@@ -33,6 +33,7 @@ public enum SettingKind
 /// <param name="Options">枚举项显示文本（仅枚举）。</param>
 /// <param name="Min">数值下限（仅数值）。</param>
 /// <param name="Max">数值上限（仅数值）。</param>
+/// <param name="Hint">标题下方的二级说明文字。</param>
 public sealed record SettingDescriptor(
     string Path,
     string Group,
@@ -40,7 +41,8 @@ public sealed record SettingDescriptor(
     SettingKind Kind,
     IReadOnlyList<string>? Options = null,
     double? Min = null,
-    double? Max = null);
+    double? Max = null,
+    string? Hint = null);
 
 /// <summary>一个设置分组（显示用）。</summary>
 /// <param name="Key">分组键。</param>
