@@ -22,7 +22,10 @@ internal static class ProfileLoginRunner
         ArgumentNullException.ThrowIfNull(profile);
 
         var scale = display.Capture().Scale;
-        var presenter = new WpfLoginPresenter(display, BannerOptions.FromConfig(config.Current.Banner, scale));
+        var presenter = new WpfLoginPresenter(
+            display,
+            BannerOptions.FromConfig(config.Current.Banner, scale),
+            config.Current.StatusOverlay.Enabled);
         var options = new LoginRunOptions(presenter, new WpfLoginConfirmation());
 
         return await login

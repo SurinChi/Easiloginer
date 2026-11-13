@@ -1,0 +1,62 @@
+<ui:FluentWindow x:Class="EasiLoginer.Presentation.Announcements.AnnouncementWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="公告"
+                 Width="600" MaxHeight="620" SizeToContent="Height"
+                 ResizeMode="NoResize"
+                 WindowStartupLocation="CenterOwner"
+                 ShowInTaskbar="False"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="None"
+                 Background="{DynamicResource ApplicationBackgroundBrush}"
+                 TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <ui:FluentWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="公告" ShowMaximize="False" ShowMinimize="False" />
+
+        <DockPanel Grid.Row="1" Margin="24,8,24,20">
+            <StackPanel DockPanel.Dock="Bottom">
+                <CheckBox x:Name="DontShowAgain" Content="不再提示这些公告" Margin="0,14,0,0" />
+                <Button Content="关闭" Padding="24,8" HorizontalAlignment="Right"
+                        Margin="0,14,0,0" Click="OnCloseClicked" />
+            </StackPanel>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" MaxHeight="420">
+                <ItemsControl x:Name="ItemsHost">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,12" Padding="14" CornerRadius="8"
+                                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="4" CornerRadius="2" Margin="0,2,10,2"
+                                                Background="{Binding Accent}" />
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16"
+                                                   TextWrapping="Wrap" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <TextBlock Text="{Binding Body}" TextWrapping="Wrap" Opacity="0.88"
+                                               Margin="14,8,0,0" />
+
+                                    <Button Content="查看详情" Padding="12,4" Margin="14,10,0,0"
+                                            HorizontalAlignment="Left" Tag="{Binding Url}"
+                                            Visibility="{Binding HasLink, Converter={StaticResource BoolToVisibility}}"
+                                            Click="OnOpenLinkClicked" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </DockPanel>
+    </Grid>
+</ui:FluentWindow>

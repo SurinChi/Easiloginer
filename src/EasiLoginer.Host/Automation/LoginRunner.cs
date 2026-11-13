@@ -35,6 +35,15 @@ namespace EasiLoginer.Host.Automation;
 /// </remarks>
 public static class LoginRunner
 {
+    /// <summary>
+    /// 进程级登录闸门：同一时刻只允许一条登录管线。
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Application.Automation.AutomationCoordinator"/> 的互斥在实例上，而每条登录都会
+    /// 新建一个实例，所以真正的跨入口（快捷登录页 / 档案页 / 命令行 / IPC 转发）互斥只能放在组合根。
+    /// </remarks>
+    private static readonly SemaphoreSlim LoginGate = new(1, 1);
+
     /// <summary>执行一次手动登录，返回进程退出码（CLI 用）。</summary>
     public static async Task<int> RunAsync(
         string? profileId,
@@ -103,57 +112,32 @@ public static class LoginRunner
                 return (LoginOutcome.Failed, ExitCodes.Failure);
             }
 
-            // 前置：取消二次确认 / 运行前确认（文档 §2.1 的五道前置）
-            var preflight = new LoginPreflight(new SerilogLogger<LoginPreflight>());
-            var preflightResult = await preflight
-                .RunAsync(config, confirmation, credentials.Value.Account, manual, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (preflightResult.ConfigChanged)
+            // 同一时刻只允许一条管线：第二个入口（另一页 / 命令行 / IPC）立即返回「已取消」，
+            // 而不是把希沃进程再杀一遍、再把两套账号输入叠到同一个窗口里。
+            if (!await LoginGate.WaitAsync(0, cancellationToken).ConfigureAwait(false))
             {
-                configStore.Save(config);
-            }
-
-            if (preflightResult.Outcome is PreflightOutcome.CancelledByUser)
-            {
-                Log.Information("前置检查未通过：{Outcome}", preflightResult.Outcome);
+                Log.Warning("已有一个登录任务在执行，本次请求被忽略");
                 return (LoginOutcome.Cancelled, ExitCodes.Success);
             }
 
             try
             {
-                LoginMethodSupport.EnsureImplemented(config.Login.Method);
+                return await RunPreflightAndPipelineAsync(
+                        paths,
+                        config,
+                        configStore,
+                        profiles,
+                        credentials.Value,
+                        manual,
+                        presenter,
+                        confirmation,
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
-            catch (NotSupportedException exception)
+            finally
             {
-                Log.Error(exception, "登录方式不可用");
-                return (null, ExitCodes.Failure);
+                LoginGate.Release();
             }
-
-            var outcome = await RunPipelineAsync(
-                    paths,
-                    config,
-                    profiles,
-                    credentials.Value,
-                    manual,
-                    presenter ?? NullLoginPresenter.Instance,
-                    cancellationToken)
-                .ConfigureAwait(false);
-
-            // 统计计数需要落盘
-            configStore.Save(config);
-
-            Log.Information("登录结果：{Outcome}", outcome);
-
-            var exitCode = outcome switch
-            {
-                // 用户主动停止或"已登录跳过"都不算失败
-                LoginOutcome.Success => ExitCodes.Success,
-                LoginOutcome.Cancelled => ExitCodes.Success,
-                _ => ExitCodes.Failure,
-            };
-
-            return (outcome, exitCode);
         }
         catch (ProfileLoadException exception)
         {
@@ -165,6 +149,77 @@ public static class LoginRunner
             Log.Error(exception, "登录失败");
             return (null, ExitCodes.Failure);
         }
+    }
+
+    private static async Task<(LoginOutcome? Outcome, int ExitCode)> RunPreflightAndPipelineAsync(
+        AppPaths paths,
+        Config config,
+        ConfigStore configStore,
+        JsonProfileRepository profiles,
+        (string Account, string Password) credentials,
+        bool manual,
+        ILoginPresenter? presenter,
+        ILoginConfirmation? confirmation,
+        CancellationToken cancellationToken)
+    {
+        // 前置：取消二次确认 / 运行前确认（文档 §2.1 的五道前置）
+        var preflight = new LoginPreflight(new SerilogLogger<LoginPreflight>());
+
+        // 关掉「显示用户名」时不要把这个信息带到教室大屏上
+        var shownAccount = config.Warning.ShowUserName ? credentials.Account : null;
+        var preflightResult = await preflight
+            .RunAsync(config, confirmation, shownAccount, manual, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (preflightResult.ConfigChanged)
+        {
+            configStore.Save(config);
+        }
+
+        if (preflightResult.Outcome is PreflightOutcome.CancelledByUser)
+        {
+            Log.Information("前置检查未通过：{Outcome}", preflightResult.Outcome);
+            return (LoginOutcome.Cancelled, ExitCodes.Success);
+        }
+
+        try
+        {
+            LoginMethodSupport.EnsureImplemented(config.Login.Method);
+        }
+        catch (NotSupportedException exception)
+        {
+            Log.Error(exception, "登录方式不可用");
+            return (null, ExitCodes.Failure);
+        }
+
+        // 管线里有同步阻塞调用（杀进程 + WaitForExit、启动进程、注册表/HID 枚举）。
+        // 放到线程池执行，避免界面路径下把这几十秒卡在 WPF Dispatcher 上（文档 §6.7）。
+        var outcome = await Task
+            .Run(() => RunPipelineAsync(
+                    paths,
+                    config,
+                    profiles,
+                    credentials,
+                    manual,
+                    presenter ?? NullLoginPresenter.Instance,
+                    cancellationToken),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        // 统计计数需要落盘
+        configStore.Save(config);
+
+        Log.Information("登录结果：{Outcome}", outcome);
+
+        var exitCode = outcome switch
+        {
+            // 用户主动停止或"已登录跳过"都不算失败
+            LoginOutcome.Success => ExitCodes.Success,
+            LoginOutcome.Cancelled => ExitCodes.Success,
+            _ => ExitCodes.Failure,
+        };
+
+        return (outcome, exitCode);
     }
 
     private static (string Account, string Password)? ResolveCredentials(
@@ -220,7 +275,7 @@ public static class LoginRunner
             processes, windows, new SerilogLogger<EasiNoteProcessController>());
 
         var patcher = new EasiNotePatcher(
-            System.IO.Path.Combine(paths.BaseDirectory, "vendors"),
+            paths.VendorsDirectory,
             new PatcherProcessRunner(),
             new SerilogLogger<EasiNotePatcher>());
 

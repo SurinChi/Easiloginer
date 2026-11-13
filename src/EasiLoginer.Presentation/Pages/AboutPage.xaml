@@ -18,10 +18,18 @@
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,16"
                        Text="一个手动触发的希沃白板自动登录工具：点一下按钮，它替你走完启动、填账号、点登录的流程。不驻留后台、不监控事件、不自动执行。" />
 
-            <TextBlock Text="它能做什么" FontSize="18" FontWeight="SemiBold" Margin="0,4,0,8" />
+            <TextBlock Text="公告" FontSize="18" FontWeight="SemiBold" Margin="0,4,0,8" />
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="AnnouncementButton" Content="查看公告" Padding="16,6"
+                        Click="OnAnnouncementsClicked" />
+                <TextBlock x:Name="AnnouncementStatus" VerticalAlignment="Center" Margin="12,0,0,0"
+                           Opacity="0.7" Text="版本更新与使用须知会显示在这里。" />
+            </StackPanel>
+
+            <TextBlock Text="它能做什么" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,8" />
 
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
-                       Text="• 四种登录方式：固定位置、图像识别（模板匹配）、UI Automation、令牌投递，可在配置页随时切换。" />
+                       Text="• 四种登录方式：固定位置、图像识别（模板匹配）、UI Automation、令牌投递，可在设置页随时切换。" />
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
                        Text="• 档案管理：保存多个账号；可选用主密码加密，账号密码以 ea$ 密文落盘，敏感操作每次都要求验证。" />
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
@@ -31,11 +39,11 @@
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
                        Text="• 更新检查：读取 GitHub Releases，对比版本并在更新页给出下载地址。" />
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
-                       Text="• 本地优先：没有账号体系、没有公告推送、不做任何遥测上报；除检查更新外不发起网络请求。" />
+                       Text="• 本地优先：没有账号体系、不做任何遥测上报；只有检查更新与拉取公告会访问网络。" />
 
             <TextBlock Text="触发方式" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,8" />
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
-                       Text="登录只由你发起：应用内的「运行登录」按钮、命令行 EasiLoginer.exe login，或指向它的快捷方式；也可以用 EasiLoginer.exe skip 跳过下一次。" />
+                       Text="登录只由你发起：应用内的「运行登录」按钮、命令行 EasiLoginer.exe login，或指向它的快捷方式；也可以用 EasiLoginer.exe skip 开启「取消二次确认」。" />
 
             <TextBlock Text="兼容与来源" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,8" />
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"

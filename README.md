@@ -4,20 +4,21 @@
 
 一个**手动触发**的希沃白板自动登录工具：点一下按钮，它替你启动希沃、填好账号密码、点登录。
 
-不驻留后台、不监视进程和文件、没有定时任务；除「检查更新」外不发起任何网络请求。
+不驻留后台、不监视进程和文件、没有定时任务；除「检查更新」与拉取应用内公告外不发起任何网络请求。
 
 ![快捷登录](docs/screenshots/quick-login.png)
 
 ## 功能
 
 - **四种登录方式**：UI Automation（默认，最稳）、固定位置、图像识别、令牌投递
-- **快捷登录页**：每个档案一个按钮，按科目点名登录；有档案时启动直接进这一页
+- **快捷登录页**：每个档案一张横向卡片，按科目点名登录；有档案时启动直接进这一页
 - **档案管理**：多档案、备注、可选的**主密码加密**（账号密码以 `ea$` 密文落盘）
 - **密码脱敏**：密码始终以圆点显示，点右侧眼睛可临时查看明文
 - **流程可控**：超时、坐标缩放、隐私遮罩、警示横幅、状态浮窗、重试次数都可调
 - **希沃集成**：检测安装路径、修补登录桥、终止 EasiAgent、查杀残留进程
 - **更新检查**：从 GitHub Releases 检查、下载安装包并校验 SHA-256
-- **本地优先**：没有账号体系、没有公告推送、不做遥测
+- **应用内公告**：启动时读取一次公告，发布新版本或维护通知无需重新发版
+- **本地优先**：没有账号体系、不做遥测
 
 ## 安装与运行
 
@@ -33,7 +34,7 @@
 静默安装：
 
 ```cmd
-EasiLoginer-Setup-0.1.2.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+EasiLoginer-Setup-0.1.3.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 ```
 
 ### 绿色版
@@ -49,7 +50,7 @@ EasiLoginer-Setup-0.1.2.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 
 ### 1. 首次启动
 
-第一次运行会打开 6 步设置向导：用户协议 → 外观 → 登录方式 → 希沃白板 → 系统集成 → 完成。设置项随时可以在「配置」页修改。
+第一次运行会打开 6 步设置向导：用户协议 → 外观 → 登录方式 → 希沃白板 → 系统集成 → 完成。设置项随时可以在「设置」页修改。
 
 ### 2. 添加档案
 
@@ -74,7 +75,7 @@ EasiLoginer-Setup-0.1.2.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 | **UI Automation**（默认） | 绝大多数情况首选，按控件定位，最稳定 |
 | 固定位置 | 希沃界面没变但不支持 UI Automation 时的兜底 |
 | 图像识别 | 模板匹配，仅支持 1920×1080@100% 与 3840×2160@200% |
-| 令牌投递 | 最快，但需要先「修补希沃白板」（管理员权限，可撤销） |
+| 令牌投递 | 最快，但需要先修补希沃白板（见下方命令行 `patch --on`，可随时撤销） |
 
 ### 5. 主密码加密
 
@@ -84,13 +85,15 @@ EasiLoginer-Setup-0.1.2.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 - **修改账号/密码、删除档案**时才要求验证；
 - 忘记主密码无法恢复，请自行备份或牢记。
 
-### 6. 配置页
+### 6. 设置页
 
-![配置](docs/screenshots/config.png)
+![设置](docs/screenshots/config.png)
+
+顶部按功能分成「登录」「提醒与遮罩」「应用与外观」三栏，改完点「保存」即可。
 
 常用项：
 
-- **启动页面**：自动（有档案进快捷登录）/ 快捷登录 / 档案 / 配置
+- **启动页面**：自动（有档案进快捷登录）/ 快捷登录 / 档案 / 设置
 - **取消二次确认**：勾选后运行登录不再弹确认框
 - **隐私保护遮罩**：默认关闭；在智慧大屏上启用可能导致意料之外的显示问题
 - **未启动清理（天）**：超过指定天数未启动会清空全部数据，`0` 关闭，最短 7 天
@@ -124,8 +127,18 @@ EasiLoginer-Setup-0.1.2.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 | `cache/`、`avatars/` | 运行缓存 |
 
 - **没有任何遥测**：崩溃与诊断只写本地日志；
-- 程序不会在后台联网：只有你点「检查更新」或「下载更新」时才访问 GitHub；
+- 程序不会在后台联网：只有「检查更新」「下载更新」以及拉取一次应用内公告时才访问 GitHub；
+- 公告只发一次 `GET`，不携带账号、设备或使用信息；自动检查最多每 6 小时一次，也可在「关于」页手动查看；
 - 想保留数据：复制 `data\` 即可；换机器时把它放回程序目录。
+
+### 应用内公告（维护者）
+
+公告文件固定为仓库里的 [`announcements/announcements.json`](announcements/announcements.json)：
+
+- 修改并提交到 `main` 即完成投放，不需要重新打包；GitHub raw 通常 5 分钟内生效；
+- 完整字段、时间窗口、版本区间、排序与条数规则见 [`announcements/README.md`](announcements/README.md)；
+- 本地预览：把同样的 JSON 放到程序目录的 `announcements\announcements.json`，应用会优先读取它；
+- 公告文件保持 `{"schema":1,"announcements":[]}` 就是「没有公告」。
 
 ## 命令行
 
@@ -137,7 +150,7 @@ EasiLoginer-Setup-0.1.2.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 | `login ... -m` | 跳过运行前确认弹窗 |
 | `skip` | 开启「取消二次确认」后退出 |
 | `oobe` | 重新进入首次设置向导 |
-| `patch --on` / `patch --off` | 修补 / 撤销希沃登录桥（绕过单实例） |
+| `patch --on` / `patch --off` | 修补 / 撤销希沃登录桥（绕过单实例；需要写入安装目录的权限） |
 
 退出码：`0` 成功、`1` 失败或参数非法、`20–29` 为 `patch` 专用码。
 
@@ -159,7 +172,7 @@ dotnet build EasiLoginer.sln -c Release
 dotnet test  EasiLoginer.sln -c Release --no-build
 ```
 
-`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 402 个测试。
+`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 437 个测试。
 
 ### 打包发布
 
@@ -188,10 +201,11 @@ build\publish.cmd
 | `src/EasiLoginer.Infrastructure` | 配置/档案存储、IPC、更新下载、Windows 适配 |
 | `src/EasiLoginer.Integrations.EasiNote` | 希沃安装检测、修补、进程控制 |
 | `src/EasiLoginer.Automation` | 四种登录策略与图像匹配（程序集名 `EasiLoginer.AutomationKit`） |
-| `src/EasiLoginer.Presentation` | WPF + WPF-UI 界面：快捷登录、档案、配置、更新、关于 |
+| `src/EasiLoginer.Presentation` | WPF + WPF-UI 界面：快捷登录、档案、设置、更新、关于 |
 | `src/EasiLoginer.Host` | 进程入口、命令行、单实例、日志 |
 | `src/EasiLoginer.Patcher` | 独立的白板修补器（随包分发） |
 | `tests/` | 6 个测试项目：领域、应用、基础设施、集成、界面、分层规则 |
+| `announcements/` | 应用内公告：格式说明与对外发布的 `announcements.json` |
 | `docs/screenshots/` | README 使用的界面截图 |
 
 架构约束由 `tests/EasiLoginer.Architecture.Tests` 以只读 PE 元数据强制（Domain 仅依赖 BCL、Application 不碰 UI/网络、实现层互不引用、任何层不反向依赖 Host）。
@@ -202,7 +216,7 @@ build\publish.cmd
 发布包未做代码签名。SmartScreen 可点「更多信息 → 仍要运行」；开启 **Smart App Control** 的机器可能直接拦截（`0x800711C7`），这属于系统策略，需要签名或临时关闭 SAC 才能解决。
 
 **点击运行登录没有任何反应？**
-确认希沃白板已安装，并在配置页检查「自定义路径」是否正确；日志在 `data\logs\`。
+确认希沃白板已安装，并在设置页检查「自定义路径」是否正确；日志在 `data\logs\`。
 
 **登录方式选哪个？**
 默认的 UI Automation 最稳；若希沃界面更新后失效，可临时切到固定位置。
@@ -210,8 +224,8 @@ build\publish.cmd
 **图像识别为什么不可用？**
 只支持 1920×1080@100% 与 3840×2160@200%，其他显示环境会直接提示不支持。
 
-**令牌投递提示缺少组件？**
-需要先在配置页「修补希沃白板」（管理员权限），修补可随时撤销。
+**令牌投递提示未修补？**
+先退出希沃白板，再执行 `EasiLoginer.exe patch --on`（需要写入安装目录的权限，通常要管理员；退出码 `20` 成功、`21` 失败、`22` 未找到希沃）。撤销用 `patch --off`。
 
 **升级后数据还在吗？**
 在。覆盖安装只替换程序文件，`data\` 保留；卸载才会删除整个目录。

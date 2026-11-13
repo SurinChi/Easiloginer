@@ -116,6 +116,10 @@ public sealed class InternalConfig
     [JsonPropertyName("LastUpdateCheckTime")]
     public DateTimeOffset? LastUpdateCheckTime { get; set; }
 
+    /// <summary>上次拉取公告的时间（用于限制自动检查频率）。</summary>
+    [JsonPropertyName("LastAnnouncementCheckTime")]
+    public DateTimeOffset? LastAnnouncementCheckTime { get; set; }
+
     /// <summary>已忽略的公告 ID。</summary>
     [JsonPropertyName("HiddenAnnouncementIds")]
     public List<string> HiddenAnnouncementIds { get; set; } = [];

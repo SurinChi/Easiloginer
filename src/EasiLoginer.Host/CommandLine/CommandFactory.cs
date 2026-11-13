@@ -64,7 +64,7 @@ internal static class CommandFactory
 
     private static Command CreateSkipCommand()
     {
-        var command = new Command("skip", "跳过一次自动登录（写 SkipOnce 后退出）");
+        var command = new Command("skip", "开启「取消二次确认」（运行登录不再弹确认框）");
         command.SetAction((_, _) => Task.FromResult(CommandHandlers.Skip()));
         return command;
     }
@@ -78,9 +78,10 @@ internal static class CommandFactory
         command.Add(on);
         command.Add(off);
 
-        command.SetAction((parseResult, _) => Task.FromResult(CommandHandlers.Patch(
+        command.SetAction((parseResult, cancellationToken) => CommandHandlers.PatchAsync(
             parseResult.GetValue(on),
-            parseResult.GetValue(off))));
+            parseResult.GetValue(off),
+            cancellationToken));
 
         return command;
     }

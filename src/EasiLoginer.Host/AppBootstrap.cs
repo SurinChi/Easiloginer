@@ -87,7 +87,8 @@ internal static class AppBootstrap
 
         await using var server = new ArgvPipeServer(
             IpcNames.ArgvPipe,
-            (frame, token) => HandleForwardedAsync(root, frame, token));
+            (frame, token) => HandleForwardedAsync(root, frame, token),
+            exception => Log.Error(exception, "argv 转发处理失败"));
 
         server.Start();
         return await parseResult.InvokeAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -128,14 +129,56 @@ internal static class AppBootstrap
         ArgvFrame frame,
         CancellationToken cancellationToken)
     {
-        var argv = frame.Argv.Length > 1 ? frame.Argv[1..] : [];
-        Log.Information("收到转发命令：{Argv}", string.Join(' ', argv));
+        var argv = frame.Argv is { Length: > 1 } ? frame.Argv[1..] : [];
 
-        var exitCode = await root
-            .Parse(argv)
-            .InvokeAsync(cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
+        // 命令行里可能带 -p <密码>：日志必须脱敏（文档 §7.3「日志不出现明文账号密码」）
+        // 空参数等同于「打开主界面」，日志里也要看得出这一点。
+        Log.Information("收到转发命令：{Argv}", argv.Length == 0 ? "(无参数，打开主界面)" : string.Join(' ', MaskSensitiveArgv(argv)));
 
-        Log.Information("转发命令执行完成，退出码 {ExitCode}", exitCode);
+        try
+        {
+            var exitCode = await root
+                .Parse(argv)
+                .InvokeAsync(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            Log.Information("转发命令执行完成，退出码 {ExitCode}", exitCode);
+        }
+        catch (OperationCanceledException)
+        {
+            Log.Information("转发命令被取消");
+        }
+    }
+
+    /// <summary>把 <c>-p/--password</c>（以及 <c>-a/--account</c>）后面的值替换成星号。</summary>
+    private static string[] MaskSensitiveArgv(string[] argv)
+    {
+        string[] sensitive = ["-p", "--password", "-a", "--account"];
+        var masked = new string[argv.Length];
+
+        for (var index = 0; index < argv.Length; index++)
+        {
+            var argument = argv[index];
+            masked[index] = argument;
+
+            var separator = argument.IndexOf('=');
+            var name = separator >= 0 ? argument[..separator] : argument;
+
+            if (!sensitive.Contains(name, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (separator >= 0)
+            {
+                masked[index] = name + "=***";
+            }
+            else if (index + 1 < argv.Length)
+            {
+                masked[++index] = "***";
+            }
+        }
+
+        return masked;
     }
 }

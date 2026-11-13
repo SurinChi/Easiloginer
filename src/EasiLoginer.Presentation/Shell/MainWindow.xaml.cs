@@ -71,6 +71,9 @@ public partial class MainWindow : FluentWindow
         Dispatcher.BeginInvoke(
             new Action(() => RootNavigation.Navigate(page)),
             DispatcherPriority.ApplicationIdle);
+
+        // 公告：后台读取，成功且有内容时才弹窗；失败完全静默，不阻塞启动
+        _ = Announcements.AnnouncementCenter.AutoCheckAsync(_services, this);
     }
 }
 
@@ -83,7 +86,7 @@ internal sealed class PageProvider(AppServices services) : INavigationViewPagePr
         var type when type == typeof(ConfigPage) => new ConfigPage(services),
         var type when type == typeof(ProfilePage) => new ProfilePage(services),
         var type when type == typeof(UpdatePage) => new UpdatePage(services),
-        var type when type == typeof(AboutPage) => new AboutPage(),
+        var type when type == typeof(AboutPage) => new AboutPage(services),
         _ => null,
     };
 }

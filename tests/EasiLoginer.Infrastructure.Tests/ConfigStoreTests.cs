@@ -276,4 +276,38 @@ public sealed class ConfigStoreTests : IDisposable
         Directory.CreateDirectory(_paths.DataDirectory);
         File.WriteAllText(_paths.ConfigFile, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     }
+
+    /// <summary>嵌套段被显式写成 null 时用默认值补齐，而不是空引用崩溃（应用必须能启动）。</summary>
+    [Fact]
+    public void 嵌套段为null时用默认值()
+    {
+        WriteJson("""{"Login":{"Timeout":null,"EasiNote":null,"Position":null},"Banner":{"Style":null},"StatusOverlay":null}""");
+
+        var config = _store.Load();
+
+        config.Login.Timeout.LaunchPollingTimeout.Should().Be(30);
+        config.Login.EasiNote.WindowTitle.Should().Be("希沃白板");
+        config.Banner.Style.Fps.Should().Be(60);
+        config.StatusOverlay.Enabled.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// 读取被瞬时占用时只以默认值运行，绝不覆盖原文件：一次占用不该清空用户全部设置。
+    /// </summary>
+    [Fact]
+    public void 读取被占用时不覆盖原文件()
+    {
+        const string original = """{"App":{"MaxRetries":5}}""";
+        WriteJson(original);
+
+        Config config;
+        using (new FileStream(_paths.ConfigFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            config = _store.Load();
+        }
+
+        config.App.MaxRetries.Should().Be(2, "读不到就只能用默认值");
+        File.ReadAllText(_paths.ConfigFile).Should().Contain("MaxRetries", "原文件必须原封不动");
+        File.Exists(_paths.ConfigFile + ".bak").Should().BeFalse();
+    }
 }

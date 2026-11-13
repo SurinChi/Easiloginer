@@ -7,7 +7,6 @@ using EasiLoginer.Application.Profiles;
 using EasiLoginer.Domain.Automation;
 using EasiLoginer.Domain.Profiles;
 using EasiLoginer.Presentation.Login;
-using EasiLoginer.Presentation.Overlays;
 using EasiLoginer.Presentation.Profiles;
 
 namespace EasiLoginer.Presentation.Pages;
@@ -73,15 +72,29 @@ public sealed partial class ProfilePageViewModel : ObservableObject
     public bool RequiresMasterPassword => _profiles.Current.EncryptionEnabled;
 
     /// <summary>校验主密码；成功则解锁。</summary>
+    /// <remarks>
+    /// 校验可能触发仓储从磁盘重建档案列表（锁定 → 解锁）。重建会换掉编辑器当前绑定的对象，
+    /// 所以已经解锁时编辑中的实例要在校验后放回仓储，否则刚输入的改动会在点「保存」时消失。
+    /// </remarks>
     public bool VerifyMasterPassword(string password)
     {
-        var ok = _profiles.Unlock(password);
-        if (ok)
+        var edited = _profiles.IsUnlocked ? Items.ToList() : null;
+
+        if (!_profiles.Unlock(password))
         {
-            RefreshEncryptionState();
+            return false;
         }
 
-        return ok;
+        if (edited is not null)
+        {
+            foreach (var profile in edited)
+            {
+                _profiles.UpsertAutomation(profile);
+            }
+        }
+
+        RefreshEncryptionState();
+        return true;
     }
 
     /// <summary>
@@ -176,8 +189,12 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         Selected = Items.FirstOrDefault();
     }
 
-    /// <summary>保存档案。</summary>
-    public void Save()
+    /// <summary>保存档案，返回是否真的写盘成功。</summary>
+    /// <remarks>
+    /// 调用方必须检查返回值：保存失败时继续登录只会用磁盘上的旧数据，
+    /// 用户却以为改动已经生效（旧实现正是这样误报「已保存」的）。
+    /// </remarks>
+    public bool Save()
     {
         // 编辑器绑定的是 Items 里的实例；新行可能还没进 Current，这里再兜一次。
         if (Selected is not null)
@@ -189,6 +206,7 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         {
             _profiles.Save(ProfileChangeReason.AutomationSaved);
             StatusText = $"已保存（共 {_profiles.Current.Automations.Count} 条档案）。";
+            return true;
         }
         catch (ProfileLockedException)
         {
@@ -202,6 +220,8 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         {
             StatusText = $"保存失败：无法写入文件（{exception.Message}）";
         }
+
+        return false;
     }
 
     /// <summary>启用主密码加密。</summary>
@@ -222,6 +242,7 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         }
 
         RefreshEncryptionState();
+        CaptureSensitiveSnapshot();
     }
 
     /// <summary>解锁当前会话。</summary>
@@ -229,6 +250,9 @@ public sealed partial class ProfilePageViewModel : ObservableObject
     {
         StatusText = _profiles.Unlock(masterPassword) ? "已解锁。" : "主密码错误。";
         RefreshEncryptionState();
+
+        // 解锁后密码从空串变成真实值；不重建基线会让「只改了名称」也被判定为敏感改动
+        CaptureSensitiveSnapshot();
     }
 
     /// <summary>关闭加密（恢复明文保存）。</summary>
@@ -236,6 +260,7 @@ public sealed partial class ProfilePageViewModel : ObservableObject
     {
         StatusText = _profiles.DisableEncryption(masterPassword) ? "已关闭加密。" : "主密码错误。";
         RefreshEncryptionState();
+        CaptureSensitiveSnapshot();
     }
 
     /// <summary>运行选中档案的登录（手动触发）。</summary>
@@ -253,17 +278,22 @@ public sealed partial class ProfilePageViewModel : ObservableObject
             return;
         }
 
-        Save();
+        // 保存失败（例如另一条档案账号为空导致整份校验不通过）时不能继续：
+        // 登录路径会重新从磁盘读取，用旧凭据登录，用户却以为是刚改的密码。
+        if (!Save())
+        {
+            return;
+        }
 
         IsBusy = true;
         StatusText = "正在登录……";
 
         try
         {
-            var scale = _display.Capture().Scale;
-            var presenter = new WpfLoginPresenter(_display, BannerOptions.FromConfig(_config.Current.Banner, scale));
-            var options = new LoginRunOptions(presenter, new WpfLoginConfirmation());
-            var outcome = await _login.RunForProfileAsync(Selected.Id, options, CancellationToken.None);
+            var outcome = await ProfileLoginRunner
+                .RunAsync(Selected, _login, _config, _display, CancellationToken.None)
+                .ConfigureAwait(true);
+
             StatusText = outcome switch
             {
                 LoginOutcome.Success => "登录成功。",

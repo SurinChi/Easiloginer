@@ -57,4 +57,73 @@ public sealed class IpcTests
         var frame = await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
         frame.Argv.Should().Equal("EasiLoginer.exe", "login", "-i", "profile-1");
     }
+
+    /// <summary>
+    /// 处理回调抛异常时监听循环必须继续：否则一次坏命令会让单实例转发永久失效。
+    /// </summary>
+    [Fact]
+    public async Task 回调异常不终止监听()
+    {
+        var pipeName = "EasiLoginer_Test_" + Guid.NewGuid().ToString("N");
+        var calls = 0;
+        var errors = 0;
+        var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        await using var server = new ArgvPipeServer(
+            pipeName,
+            (_, _) =>
+            {
+                if (Interlocked.Increment(ref calls) == 1)
+                {
+                    throw new InvalidOperationException("模拟一次命令失败");
+                }
+
+                second.TrySetResult();
+                return Task.CompletedTask;
+            },
+            _ => Interlocked.Increment(ref errors));
+        server.Start();
+
+        var firstSent = await ArgvPipeClient.TrySendAsync(
+            pipeName, new ArgvFrame(["EasiLoginer.exe", "settings"]), TimeSpan.FromSeconds(5), CancellationToken.None);
+        var secondSent = await ArgvPipeClient.TrySendAsync(
+            pipeName, new ArgvFrame(["EasiLoginer.exe", "settings"]), TimeSpan.FromSeconds(5), CancellationToken.None);
+
+        firstSent.Should().BeTrue();
+        secondSent.Should().BeTrue();
+        await second.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        errors.Should().Be(1);
+    }
+
+    /// <summary>argv 为 null 的非法帧必须被丢弃，不能把服务端循环打断（NullReferenceException）。</summary>
+    [Fact]
+    public async Task 空argv的帧被忽略()
+    {
+        var pipeName = "EasiLoginer_Test_" + Guid.NewGuid().ToString("N");
+        var calls = 0;
+        var received = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        await using var server = new ArgvPipeServer(pipeName, (_, _) =>
+        {
+            Interlocked.Increment(ref calls);
+            received.TrySetResult();
+            return Task.CompletedTask;
+        });
+        server.Start();
+
+        // 直接写一个畸形帧
+        await using (var client = new System.IO.Pipes.NamedPipeClientStream(
+            ".", pipeName, System.IO.Pipes.PipeDirection.Out, System.IO.Pipes.PipeOptions.Asynchronous))
+        {
+            await client.ConnectAsync(5000);
+            await System.Text.Json.JsonSerializer.SerializeAsync(client, new { argv = (string[]?)null });
+        }
+
+        var sent = await ArgvPipeClient.TrySendAsync(
+            pipeName, new ArgvFrame(["EasiLoginer.exe", "skip"]), TimeSpan.FromSeconds(5), CancellationToken.None);
+
+        sent.Should().BeTrue();
+        await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        calls.Should().Be(1, "非法帧不应进入业务回调");
+    }
 }

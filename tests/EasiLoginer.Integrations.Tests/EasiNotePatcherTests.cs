@@ -207,6 +207,53 @@ public sealed class EasiNotePatcherTests : IDisposable
         (await patcher.UnpatchAsync(_executable)).Should().BeTrue();
     }
 
+    /// <summary>目标目录里没有 EasiNote.Account.dll 时不能报「修补成功」。</summary>
+    [Fact]
+    public async Task 缺少账号DLL时失败()
+    {
+        File.Delete(Path.Combine(_mainDirectory, "EasiNote.Account.dll"));
+
+        var patched = await CreatePatcher(new FakeRunner(_ => Success())).PatchAsync(_executable);
+
+        patched.Should().BeFalse("没有可修补的目标就不能返回成功，否则与 IsPatched 的结论矛盾");
+        CreatePatcher(new FakeRunner(_ => Success())).IsPatched(_executable).Should().BeFalse();
+    }
+
+    /// <summary>补丁器退出 0 但没有真正改写 DLL 时，同样算失败。</summary>
+    [Fact]
+    public async Task 退出码为零但未写入标记时失败()
+    {
+        var patched = await CreatePatcher(new FakeRunner(_ => Success())).PatchAsync(_executable);
+
+        patched.Should().BeFalse();
+    }
+
+    /// <summary>撤销后要把机器上原有的管道桥恢复回去，而不是留在 .bak 里。</summary>
+    [Fact]
+    public async Task 撤销恢复原有的管道桥()
+    {
+        var bridgePath = Path.Combine(_mainDirectory, "SeewoPipeBridge.dll");
+        var accountPath = Path.Combine(_mainDirectory, "EasiNote.Account.dll");
+        File.WriteAllText(bridgePath, "OLD-BRIDGE");
+
+        var patcher = CreatePatcher(new FakeRunner(path =>
+        {
+            File.WriteAllText(path, PatchedAccountContent);
+            return Success();
+        }));
+
+        await patcher.PatchAsync(_executable);
+        File.ReadAllText(bridgePath).Should().Be(BridgeContent);
+
+        // 真实的 DllPatcher 在改写前会留下 .bak，这里补齐同样的前提
+        File.WriteAllText(accountPath + ".bak", "ACCOUNT");
+
+        (await patcher.UnpatchAsync(_executable)).Should().BeTrue();
+
+        File.ReadAllText(bridgePath).Should().Be("OLD-BRIDGE");
+        File.Exists(bridgePath + ".bak").Should().BeFalse();
+    }
+
     private EasiNotePatcher CreatePatcher(IPatcherProcessRunner runner)
         => new(_vendors, runner, NullLogger<EasiNotePatcher>.Instance);
 

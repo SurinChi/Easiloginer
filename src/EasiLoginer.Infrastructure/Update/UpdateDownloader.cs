@@ -91,8 +91,16 @@ public sealed class UpdateDownloader : IUpdateDownloader
             File.Move(temporaryPath, finalPath, overwrite: true);
             return new UpdateDownloadResult(finalPath, received);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // 用户取消：如实上抛（调用方据此回到可重试状态），同时清掉半成品
+            TryDelete(temporaryPath);
+            throw;
+        }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
+            // 非用户取消的 TaskCanceledException 是 HttpClient 超时
+            TryDelete(temporaryPath);
             throw new IOException($"下载失败：{exception.Message}", exception);
         }
         catch

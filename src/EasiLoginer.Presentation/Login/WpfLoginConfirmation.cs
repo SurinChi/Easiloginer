@@ -31,7 +31,7 @@ public sealed class WpfLoginConfirmation : ILoginConfirmation
             window.Owner = owner;
         }
 
-        window.ShowDialog();
-        return window.Choice;
+        var confirmed = window.ShowDialog() == true;
+        return confirmed ? window.Choice : LoginConfirmationChoice.Cancel;
     }
 }

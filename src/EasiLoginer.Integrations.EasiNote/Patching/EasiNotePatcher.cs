@@ -134,7 +134,10 @@ public sealed class EasiNotePatcher : IEasiNotePatcher
             var accountDll = System.IO.Path.Combine(mainDirectory, AccountDllFileName);
             if (!File.Exists(accountDll))
             {
-                _logger.LogDebug("跳过不存在的 {Path}", accountDll);
+                // 没有可修补的目标就不能报成功：否则 CLI 退出码/界面提示会和
+                // TokenLoginStrategy 的「未修补」判断自相矛盾。
+                _logger.LogWarning("目标目录缺少 {Name}：{Path}", AccountDllFileName, accountDll);
+                allPatched = false;
                 continue;
             }
 
@@ -151,7 +154,16 @@ public sealed class EasiNotePatcher : IEasiNotePatcher
 
             if (result.ExitCode == 0)
             {
-                _logger.LogInformation("已修补：{Path}", accountDll);
+                // 退出码 0 只说明补丁器没报错，还要复核目标文件真的带上了标记
+                if (ContainsMarkers(accountDll))
+                {
+                    _logger.LogInformation("已修补：{Path}", accountDll);
+                }
+                else
+                {
+                    _logger.LogError("DllPatcher 退出码为 0，但 {Path} 未包含修补标记", accountDll);
+                    allPatched = false;
+                }
             }
             else
             {
@@ -183,22 +195,8 @@ public sealed class EasiNotePatcher : IEasiNotePatcher
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var bridge = System.IO.Path.Combine(mainDirectory, PipeBridgeFileName);
-            if (File.Exists(bridge))
-            {
-                try
-                {
-                    File.Delete(bridge);
-                    _logger.LogInformation("已移除：{Path}", bridge);
-                }
-                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-                {
-                    _logger.LogError(exception, "移除失败：{Path}", bridge);
-                    allUnpatched = false;
-                    continue;
-                }
-            }
-
+            // 先恢复被改写的程序集，最后再删管道桥：桥一旦先删掉，Account.dll 还留着
+            // StartBridge 引用就成了「不可启动」的中间状态，白板会直接加载失败。
             var newtonsoft = System.IO.Path.Combine(mainDirectory, NewtonsoftFileName);
             if (File.Exists(newtonsoft) && ContainsMarker(newtonsoft, PipeBridgeMarker) && !RestoreFromBackup(newtonsoft))
             {
@@ -207,9 +205,26 @@ public sealed class EasiNotePatcher : IEasiNotePatcher
             }
 
             var account = System.IO.Path.Combine(mainDirectory, AccountDllFileName);
-            if (File.Exists(account) && File.Exists(account + ".bak") && !RestoreFromBackup(account))
+
+            if (File.Exists(account) && ContainsMarkers(account) && !RestoreFromBackup(account))
             {
-                _logger.LogWarning("恢复 {Name} 失败", AccountDllFileName);
+                // 程序集没恢复成功就绝不能删桥：那会让希沃加载一个引用了不存在 DLL 的程序集
+                _logger.LogWarning("恢复 {Name} 失败（缺少 {Backup}），已保留管道桥以免希沃无法启动", AccountDllFileName, AccountDllFileName + ".bak");
+                allUnpatched = false;
+                continue;
+            }
+
+            var bridge = System.IO.Path.Combine(mainDirectory, PipeBridgeFileName);
+            if (File.Exists(bridge) && !DeleteFile(bridge))
+            {
+                allUnpatched = false;
+                continue;
+            }
+
+            // 部署时若覆盖过机器上原有的桥，撤销后要把它恢复回去
+            if (File.Exists(bridge + ".bak") && !RestoreFromBackup(bridge))
+            {
+                _logger.LogWarning("恢复原有的 {Name} 失败", PipeBridgeFileName);
                 allUnpatched = false;
             }
         }
@@ -278,11 +293,14 @@ public sealed class EasiNotePatcher : IEasiNotePatcher
             {
                 if (File.Exists(backup))
                 {
-                    File.Delete(backup);
+                    // 已有备份：保留第一次（真正的原始文件），不要被后续覆盖冲掉
+                    _logger.LogDebug("备份已存在，保留原备份：{Path}", backup);
                 }
-
-                File.Move(destination, backup);
-                _logger.LogInformation("已备份：{Path}", backup);
+                else
+                {
+                    File.Move(destination, backup);
+                    _logger.LogInformation("已备份：{Path}", backup);
+                }
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
@@ -321,6 +339,21 @@ public sealed class EasiNotePatcher : IEasiNotePatcher
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
+            return false;
+        }
+    }
+
+    private bool DeleteFile(string path)
+    {
+        try
+        {
+            File.Delete(path);
+            _logger.LogInformation("已移除：{Path}", path);
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogError(exception, "移除失败：{Path}", path);
             return false;
         }
     }

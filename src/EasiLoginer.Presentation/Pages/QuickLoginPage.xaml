@@ -7,21 +7,29 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Page.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly">
-        <StackPanel Margin="24" MaxWidth="760" HorizontalAlignment="Left">
+        <StackPanel Margin="24">
 
             <TextBlock Text="快捷登录" FontSize="28" FontWeight="SemiBold" />
             <TextBlock Opacity="0.7" Margin="0,4,0,16" TextWrapping="Wrap"
                        Text="请单击想要登录的科目" />
 
+            <!-- 横向铺开：每个档案一张等宽卡片，按行排列并自动换行 -->
             <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Button Margin="0,0,0,10" Padding="20,12"
-                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                                FontSize="15" Click="OnProfileClicked">
+                        <Button Width="216" MinHeight="76" Margin="0,0,12,12" Padding="16,10"
+                                HorizontalAlignment="Left" HorizontalContentAlignment="Left"
+                                FontSize="15" ToolTip="{Binding Account}" Click="OnProfileClicked">
                             <StackPanel>
-                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding Account}" Opacity="0.7" FontSize="12" Margin="0,3,0,0" />
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="16"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Account}" Opacity="0.7" FontSize="12"
+                                           Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                         </Button>
                     </DataTemplate>
@@ -30,7 +38,7 @@
 
             <TextBlock Opacity="0.65" Margin="0,6,0,0" TextWrapping="Wrap"
                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}"
-                       Text="还没有档案。先到「档案」页添加一条，并在快捷登录页就会自动出现对应按钮。" />
+                       Text="还没有档案。先到「档案」页添加一条，快捷登录页会自动出现对应的按钮。" />
 
             <TextBlock Text="{Binding StatusText}" Margin="0,16,0,0" Opacity="0.85" TextWrapping="Wrap" />
         </StackPanel>

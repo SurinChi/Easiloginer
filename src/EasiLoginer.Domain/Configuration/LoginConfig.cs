@@ -110,7 +110,9 @@ public sealed class LoginConfig
     [JsonPropertyName("Method")]
     public LoginMethod Method { get; set; } = LoginMethod.Uia;
 
-    /// <summary>跳过一次登录（公开课等临时禁用场景）。</summary>
+    /// <summary>
+    /// 取消运行前的二次确认（勾选后运行登录不再弹确认框）。字段名沿用上游的 <c>SkipOnce</c>。
+    /// </summary>
     [JsonPropertyName("SkipOnce")]
     public bool SkipOnce { get; set; }
 

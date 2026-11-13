@@ -20,25 +20,42 @@ public sealed class WpfLoginPresenter : ILoginPresenter
     private readonly Dispatcher _dispatcher;
     private readonly double _scale;
     private readonly BannerOptions? _bannerOptions;
+    private readonly bool _showStatusOverlay;
     private PrivacyMaskWindow? _mask;
     private StatusOverlayWindow? _overlay;
     private BannerWindow? _banner;
 
     /// <summary>在 UI 线程创建呈现器。</summary>
-    public WpfLoginPresenter(IDisplayMetrics display, BannerOptions? bannerOptions = null)
+    /// <param name="display">屏幕度量，用于把物理像素换算成 DIP。</param>
+    /// <param name="bannerOptions">警示横幅选项；为 <see langword="null"/> 时不显示横幅。</param>
+    /// <param name="showStatusOverlay">是否显示状态浮窗（对应 <c>StatusOverlay.Enabled</c>）。</param>
+    public WpfLoginPresenter(IDisplayMetrics display, BannerOptions? bannerOptions = null, bool showStatusOverlay = true)
     {
         ArgumentNullException.ThrowIfNull(display);
 
         _dispatcher = Dispatcher.CurrentDispatcher;
         _scale = display.Capture().Scale is > 0 and var scale ? scale : 1.0;
         _bannerOptions = bannerOptions;
+        _showStatusOverlay = showStatusOverlay;
     }
 
     /// <inheritdoc />
-    public void OnTaskChanged(string task) => Post(() => EnsureOverlay().SetTask(task));
+    public void OnTaskChanged(string task) => Post(() =>
+    {
+        if (_showStatusOverlay)
+        {
+            EnsureOverlay().SetTask(task);
+        }
+    });
 
     /// <inheritdoc />
-    public void OnProgressChanged(string progress) => Post(() => EnsureOverlay().SetProgress(progress));
+    public void OnProgressChanged(string progress) => Post(() =>
+    {
+        if (_showStatusOverlay)
+        {
+            EnsureOverlay().SetProgress(progress);
+        }
+    });
 
     /// <inheritdoc />
     public void ShowPrivacyMask(int x, int y, int width, int height) => Post(() =>
@@ -77,6 +94,11 @@ public sealed class WpfLoginPresenter : ILoginPresenter
     /// <inheritdoc />
     public void OnFinished(LoginOutcome outcome, string? error) => Post(() =>
     {
+        if (!_showStatusOverlay)
+        {
+            return;
+        }
+
         var overlay = EnsureOverlay();
         overlay.SetFinal(outcome, error);
 

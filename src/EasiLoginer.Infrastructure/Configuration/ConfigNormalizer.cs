@@ -41,7 +41,7 @@ public static class ConfigNormalizer
         CoerceStringEnum(root, "Update", "TargetUpdateChannel", ChannelValues, "release");
         CoerceStringEnum(root, "Update", "TargetDownloadSource", SourceValues, "auto");
 
-        // 5. 值为 null 的段视为缺失，让默认值生效
+        // 5. 值为 null 的段视为缺失，让默认值生效（递归：`{"Login":{"Timeout":null}}` 同样要清掉）
         RemoveNullSections(root);
     }
 
@@ -77,13 +77,32 @@ public static class ConfigNormalizer
         }
     }
 
-    private static void RemoveNullSections(JsonObject root)
+    private static void RemoveNullSections(JsonNode node)
     {
-        foreach (var name in root.Select(pair => pair.Key).ToArray())
+        if (node is JsonObject obj)
         {
-            if (root[name] is null)
+            foreach (var name in obj.Select(pair => pair.Key).ToArray())
             {
-                root.Remove(name);
+                if (obj[name] is null)
+                {
+                    obj.Remove(name);
+                    continue;
+                }
+
+                RemoveNullSections(obj[name]!);
+            }
+
+            return;
+        }
+
+        if (node is JsonArray array)
+        {
+            foreach (var item in array)
+            {
+                if (item is not null)
+                {
+                    RemoveNullSections(item);
+                }
             }
         }
     }
