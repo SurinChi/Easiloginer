@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Threading;
 using Wpf.Ui.Controls;
@@ -12,6 +13,7 @@ public partial class PreRunConfirmWindow : FluentWindow
 {
     private readonly DispatcherTimer _timer;
     private int _remaining;
+    private bool _finished;
 
     /// <summary>创建弹窗。</summary>
     public PreRunConfirmWindow(LoginConfirmationRequest request)
@@ -32,8 +34,11 @@ public partial class PreRunConfirmWindow : FluentWindow
         _timer.Start();
     }
 
-    /// <summary>用户的选择；倒计时结束视为立即执行。</summary>
-    public LoginConfirmationChoice Choice { get; private set; } = LoginConfirmationChoice.Proceed;
+    /// <summary>
+    /// 用户的选择。默认是取消：只有经 <see cref="Finish"/> 明确选择才会变成「立即执行」，
+    /// 关闭窗口（Alt+F4、主窗口被关闭等）一律按取消处理。
+    /// </summary>
+    public LoginConfirmationChoice Choice { get; private set; } = LoginConfirmationChoice.Cancel;
 
     private void OnTick(object? sender, EventArgs e)
     {
@@ -48,6 +53,21 @@ public partial class PreRunConfirmWindow : FluentWindow
         UpdateCountdown();
     }
 
+    /// <inheritdoc />
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        base.OnClosing(e);
+
+        _timer.Stop();
+
+        if (!_finished)
+        {
+            // 未点按钮就关闭：按取消处理，绝不能默默继续登录
+            _finished = true;
+            Choice = LoginConfirmationChoice.Cancel;
+        }
+    }
+
     /// <summary>倒计时直接显示在「立即执行」按钮上。</summary>
     private void UpdateCountdown()
         => ProceedButton.Content = _remaining > 0 ? $"立即执行（{_remaining}s）" : "立即执行";
@@ -60,8 +80,24 @@ public partial class PreRunConfirmWindow : FluentWindow
 
     private void Finish(LoginConfirmationChoice choice)
     {
+        if (_finished)
+        {
+            return;
+        }
+
+        _finished = true;
         _timer.Stop();
         Choice = choice;
-        Close();
+
+        // ShowDialog 只有 DialogResult 为 true 时才返回 true，供调用方区分「选择」与「直接关窗」
+        try
+        {
+            DialogResult = true;
+        }
+        catch (InvalidOperationException)
+        {
+            // 非模态显示时 DialogResult 不可用，退化为普通关闭
+            Close();
+        }
     }
 }

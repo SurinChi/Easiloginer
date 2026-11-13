@@ -30,14 +30,21 @@ public partial class OobeWizardWindow : FluentWindow
     /// <inheritdoc />
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
-        // 直接关窗也视为"跳过"：写 IsOobeCompleted=true，避免每次启动都弹向导
-        if (!_viewModel.Completed)
+        // 直接关窗也视为"跳过"：写 IsOobeCompleted=true，避免每次启动都弹向导。
+        // 但用户协议尚未同意时不能这样收尾——否则「必须同意才能继续」形同虚设；
+        // 此时只是本次不设置，下次启动会再次弹出向导。
+        if (!_viewModel.Completed && CanSkipWizard)
         {
             _viewModel.SkipWizard();
         }
 
         base.OnClosing(e);
     }
+
+    /// <summary>协议页未同意时，既不能跳过向导，也不能通过关闭窗口绕过。</summary>
+    private bool CanSkipWizard
+        => _viewModel.AgreementAccepted ||
+           _viewModel.Steps.All(step => step.Kind != WizardStepKind.Agreement);
 
     private void Render()
     {
@@ -72,7 +79,7 @@ public partial class OobeWizardWindow : FluentWindow
         }
 
         PreviousButton.IsEnabled = !_viewModel.IsFirst;
-        SkipButton.IsEnabled = !_viewModel.IsLast;
+        SkipButton.IsEnabled = !_viewModel.IsLast && step.Skippable && CanSkipWizard;
         NextButton.Content = _viewModel.IsLast ? "完成" : "下一步";
         UpdateNextAvailability();
     }
@@ -175,7 +182,7 @@ public partial class OobeWizardWindow : FluentWindow
     {
         var panel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(0, 16, 0, 0) };
 
-        var configOption = new RadioButton { Content = "完成后查看配置", IsChecked = _viewModel.FinishPageIndex == 0, Margin = new Thickness(0, 0, 0, 6) };
+        var configOption = new RadioButton { Content = "完成后查看设置", IsChecked = _viewModel.FinishPageIndex == 0, Margin = new Thickness(0, 0, 0, 6) };
         var profileOption = new RadioButton { Content = "完成后管理档案", IsChecked = _viewModel.FinishPageIndex == 1 };
 
         configOption.Checked += (_, _) => _viewModel.FinishPageIndex = 0;
@@ -208,6 +215,11 @@ public partial class OobeWizardWindow : FluentWindow
 
     private void OnSkipClicked(object sender, RoutedEventArgs e)
     {
+        if (!CanSkipWizard)
+        {
+            return;
+        }
+
         _viewModel.SkipWizard();
         FinishToProfile = false;
         DialogResult = true;

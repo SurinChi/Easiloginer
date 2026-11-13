@@ -112,6 +112,12 @@ public sealed class SeewoAuthClient
             using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
             response = document.RootElement.Clone();
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // 调用方取消要原样上抛：包装成网络异常会让登录管线先重试、甚至在取消前
+            // 把用户的希沃白板杀掉（见 LoginPipeline.RestartEasiNote）。
+            throw;
+        }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException)
         {
             throw new SeewoNetworkException($"网络请求失败：{exception.Message}", exception);
@@ -147,6 +153,10 @@ public sealed class SeewoAuthClient
             using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             return UserProfile.FromResponse(document.RootElement);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException)
         {

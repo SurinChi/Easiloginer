@@ -44,7 +44,7 @@ public sealed class GitHubUpdateSource : IUpdateSource
     public async Task<string?> FetchManifestJsonAsync(UpdateChannel channel, CancellationToken cancellationToken)
     {
         var url = channel == UpdateChannel.Dev
-            ? $"{ApiRoot}/{_owner}/{_repository}/releases?per_page=1"
+            ? $"{ApiRoot}/{_owner}/{_repository}/releases?per_page=100"
             : $"{ApiRoot}/{_owner}/{_repository}/releases/latest";
 
         try

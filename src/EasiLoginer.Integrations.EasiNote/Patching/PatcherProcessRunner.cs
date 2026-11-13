@@ -20,6 +20,9 @@ public interface IPatcherProcessRunner
 /// <summary>用 <see cref="System.Diagnostics.Process"/> 运行补丁器：无窗口、30 秒超时。</summary>
 public sealed class PatcherProcessRunner : IPatcherProcessRunner
 {
+    /// <summary>补丁器无法启动时使用的退出码（与超时的 -1 区分）。</summary>
+    public const int StartFailedExitCode = -2;
+
     /// <inheritdoc />
     public async Task<PatcherRunResult> RunAsync(
         string executablePath,
@@ -38,9 +41,22 @@ public sealed class PatcherProcessRunner : IPatcherProcessRunner
         };
         startInfo.ArgumentList.Add(argument);
 
-        using var process = System.Diagnostics.Process.Start(startInfo)
-            ?? throw new InvalidOperationException($"无法启动补丁器：{executablePath}");
+        System.Diagnostics.Process process;
+        try
+        {
+            process = System.Diagnostics.Process.Start(startInfo)
+                ?? throw new InvalidOperationException($"无法启动补丁器：{executablePath}");
+        }
+        catch (Exception exception) when (exception is System.ComponentModel.Win32Exception
+                                              or FileNotFoundException
+                                              or InvalidOperationException)
+        {
+            // 补丁器被 AV 隔离、文件损坏或路径失效：按「补丁失败」返回，
+            // 不要把异常穿透 PatchAsync 的 bool 契约。
+            return new PatcherRunResult(StartFailedExitCode, exception.Message, TimedOut: false);
+        }
 
+        using var scope = process;
         using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutSource.CancelAfter(timeout);
 
@@ -55,6 +71,17 @@ public sealed class PatcherProcessRunner : IPatcherProcessRunner
         {
             TryKill(process);
             return new PatcherRunResult(-1, string.Empty, TimedOut: true);
+        }
+        catch (OperationCanceledException)
+        {
+            // 用户取消：补丁器必须跟着结束，否则它会在后台继续改写 DLL
+            TryKill(process);
+            throw;
+        }
+        catch
+        {
+            TryKill(process);
+            throw;
         }
     }
 

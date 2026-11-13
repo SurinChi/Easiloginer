@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using EasiLoginer.Domain.Configuration;
 using EasiLoginer.Infrastructure.Paths;
+using EasiLoginer.Infrastructure.Storage;
 
 namespace EasiLoginer.Infrastructure.Configuration;
 
@@ -21,6 +22,10 @@ namespace EasiLoginer.Infrastructure.Configuration;
 /// </remarks>
 public sealed class ConfigStore
 {
+    /// <summary>读取被瞬时占用时的重试次数与间隔。</summary>
+    private const int ReadAttempts = 4;
+    private static readonly TimeSpan ReadRetryDelay = TimeSpan.FromMilliseconds(50);
+
     private readonly AppPaths _paths;
     private readonly ILogger<ConfigStore> _logger;
 
@@ -47,18 +52,30 @@ public sealed class ConfigStore
             return defaults;
         }
 
-        string text;
-        try
+        // 读取失败大多是瞬时的（编辑器占用、杀软扫描、另一实例正在 File.Replace），
+        // 先重试；仍然失败时只以默认值启动，绝不覆盖原文件，否则一次占用就清空用户全部设置。
+        string? text = null;
+        Exception? readFailure = null;
+        for (var attempt = 1; attempt <= ReadAttempts && text is null; attempt++)
         {
-            text = File.ReadAllText(configPath, Encoding.UTF8);
+            try
+            {
+                text = File.ReadAllText(configPath, Encoding.UTF8);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                readFailure = exception;
+                if (attempt < ReadAttempts)
+                {
+                    Thread.Sleep(ReadRetryDelay);
+                }
+            }
         }
-        catch (IOException exception)
+
+        if (text is null)
         {
-            return RecoverFromFailure("读取配置失败", exception);
-        }
-        catch (UnauthorizedAccessException exception)
-        {
-            return RecoverFromFailure("读取配置被拒绝", exception);
+            _logger.LogError(readFailure, "读取配置失败（已重试 {Attempts} 次），本次以默认值运行，原文件保持不变", ReadAttempts);
+            return new Config();
         }
 
         try
@@ -84,18 +101,7 @@ public sealed class ConfigStore
 
         Directory.CreateDirectory(_paths.DataDirectory);
         var json = JsonSerializer.Serialize(config, ConfigJson.Options);
-
-        var temporary = _paths.ConfigFile + ".tmp";
-        File.WriteAllText(temporary, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-
-        if (File.Exists(_paths.ConfigFile))
-        {
-            File.Replace(temporary, _paths.ConfigFile, destinationBackupFileName: null);
-        }
-        else
-        {
-            File.Move(temporary, _paths.ConfigFile);
-        }
+        AtomicFile.WriteAllText(_paths.ConfigFile, json);
     }
 
     private static Config Deserialize(string text)
@@ -128,7 +134,16 @@ public sealed class ConfigStore
         }
 
         var defaults = new Config();
-        Save(defaults);
+        try
+        {
+            Save(defaults);
+        }
+        catch (Exception saveException) when (saveException is IOException or UnauthorizedAccessException)
+        {
+            // 恢复动作本身失败时仍要能启动：默认值只留在内存里
+            _logger.LogError(saveException, "写入默认配置失败，本次以内存中的默认值运行");
+        }
+
         return defaults;
     }
 }
@@ -147,6 +162,25 @@ public static class ConfigBounds
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNull(logger);
+
+        // 手写/半损坏的 config.json 可能把某个段显式写成 null；先兜住，避免整份配置因为
+        // 一次空值解引用而让应用起不来（文档 §7.2 要求「不因一个坏值丢失全部配置」）。
+        config.Login ??= new LoginConfig();
+        config.Login.EasiNote ??= new EasiNoteConfig();
+        config.Login.Timeout ??= new TimeoutConfig();
+        config.Login.Position ??= new PositionConfig();
+        config.Warning ??= new WarningConfig();
+        config.Banner ??= new BannerConfig();
+        config.Banner.Style ??= new BannerStyleConfig();
+        config.StatusOverlay ??= new StatusOverlayConfig();
+        config.App ??= new AppConfig();
+        config.Experimental ??= new ExperimentalConfig();
+        config.Experimental.PrivacyMask ??= new PrivacyMaskConfig();
+        config.Profile ??= new ProfileConfig();
+        config.Update ??= new UpdateConfig();
+        config.Debug ??= new DebugConfig();
+        config.Internal ??= new InternalConfig();
+        config.Statistics ??= new StatisticsConfig();
 
         var login = config.Login;
         login.Timeout.Terminate = Clamp(logger, "Login.Timeout.Terminate", login.Timeout.Terminate, 0, 60);

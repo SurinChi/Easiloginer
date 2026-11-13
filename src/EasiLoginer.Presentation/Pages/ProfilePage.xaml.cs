@@ -149,12 +149,23 @@ public partial class ProfilePage : Page
             return;
         }
 
-        _viewModel.Save();
-        _viewModel.CaptureSensitiveSnapshot();
-        SyncPasswordBox();
+        if (_viewModel.Save())
+        {
+            _viewModel.CaptureSensitiveSnapshot();
+            SyncPasswordBox();
+        }
     }
 
-    private async void OnRunClicked(object sender, RoutedEventArgs e) => await _viewModel.RunAsync();
+    private async void OnRunClicked(object sender, RoutedEventArgs e)
+    {
+        // 「运行登录」同样会写盘，敏感改动必须先过主密码关，和「保存档案」保持一致
+        if (_viewModel.RequiresMasterPassword && _viewModel.HasSensitiveChanges() && !EnsureMasterPassword())
+        {
+            return;
+        }
+
+        await _viewModel.RunAsync();
+    }
 
     /// <summary>涉及账号密码的操作前验证主密码；未设主密码时直接放行。</summary>
     private bool EnsureMasterPassword()

@@ -3,7 +3,7 @@
 ; 编译：build\publish.cmd 第 6 步自动调用 ISCC。
 
 #define MyAppName "EasiLoginer"
-#define MyAppVersion "0.1.2"
+#define MyAppVersion "0.1.3"
 #define MyAppPublisher "SurinChi"
 #define MyAppExeName "EasiLoginer.exe"
 #define MyAppId "{{6B1F3C24-8E7A-4D69-9A62-3F5C0E1D9A71}"
@@ -37,7 +37,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 AppMutex=EasiLoginerMutex
 CloseApplications=yes
 RestartApplications=no
-VersionInfoVersion=0.1.2.0
+VersionInfoVersion=0.1.3.0
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} 安装程序
 VersionInfoProductName={#MyAppName}

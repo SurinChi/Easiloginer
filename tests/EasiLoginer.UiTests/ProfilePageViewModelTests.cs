@@ -130,6 +130,52 @@ public sealed class ProfilePageViewModelTests
         viewModel.HasSensitiveChanges().Should().BeTrue();
     }
 
+    /// <summary>校验主密码（会触发仓储重建列表）之后，未保存的编辑不能丢。</summary>
+    [Fact]
+    public void 校验主密码保留未保存的编辑()
+    {
+        var repository = new FakeProfileRepository { EncryptionEnabled = true, Unlocked = true, ReloadOnUnlock = true };
+        var viewModel = CreateViewModel(repository);
+        viewModel.Add();
+        viewModel.Selected!.Account = "13800000000";
+        viewModel.Selected.Password = "新密码";
+
+        viewModel.VerifyMasterPassword("pw").Should().BeTrue();
+
+        repository.Current.Automations.Single().Password.Should().Be("新密码");
+        viewModel.Selected!.Password.Should().Be("新密码");
+    }
+
+    /// <summary>保存失败时必须返回 false，调用方才能中止后续动作。</summary>
+    [Fact]
+    public void 保存失败返回false()
+    {
+        var repository = new FakeProfileRepository { FailSave = true };
+        var viewModel = CreateViewModel(repository);
+        viewModel.Add();
+        viewModel.Selected!.Account = "13800000000";
+
+        viewModel.Save().Should().BeFalse();
+        viewModel.StatusText.Should().Contain("保存失败");
+    }
+
+    /// <summary>保存失败时「运行登录」不能继续，否则会拿磁盘上的旧凭据登录。</summary>
+    [Fact]
+    public async Task 保存失败时不启动登录()
+    {
+        var repository = new FakeProfileRepository { FailSave = true };
+        var runner = new NoopLoginRunner();
+        var viewModel = new ProfilePageViewModel(
+            repository, runner, new FakeConfigService(), new FakeDisplayMetrics());
+        viewModel.Add();
+        viewModel.Selected!.Account = "13800000000";
+        viewModel.Selected.Password = "pw";
+
+        await viewModel.RunAsync();
+
+        runner.Calls.Should().Be(0);
+    }
+
     private static ProfilePageViewModel CreateViewModel(FakeProfileRepository repository)
         => new(repository, new NoopLoginRunner(), new FakeConfigService(), new FakeDisplayMetrics());
 
@@ -149,6 +195,12 @@ public sealed class ProfilePageViewModelTests
 
         public int SaveCalls { get; private set; }
 
+        /// <summary>为 true 时模拟保存被校验拒绝。</summary>
+        public bool FailSave { get; set; }
+
+        /// <summary>为 true 时模拟解锁触发的整表重建（仓储会把对象换成新实例）。</summary>
+        public bool ReloadOnUnlock { get; set; }
+
         public int LockCalls { get; private set; }
 
         public int ReloadCalls { get; private set; }
@@ -157,11 +209,34 @@ public sealed class ProfilePageViewModelTests
 
         public Profile Load() => Current;
 
-        public void Save(ProfileChangeReason reason = ProfileChangeReason.ProfileChanged) => SaveCalls++;
+        public void Save(ProfileChangeReason reason = ProfileChangeReason.ProfileChanged)
+        {
+            if (FailSave)
+            {
+                throw new ProfileValidationException("账号不能为空。");
+            }
+
+            SaveCalls++;
+        }
 
         public bool Unlock(string masterPassword)
         {
             Unlocked = string.Equals(masterPassword, "pw", StringComparison.Ordinal);
+
+            if (Unlocked && ReloadOnUnlock)
+            {
+                // 模拟 JsonProfileRepository.Unlock → Reload：用新的实例替换整份列表
+                Current.Automations = Current.Automations
+                    .Select(item => new AutomationProfile
+                    {
+                        Id = item.Id,
+                        Name = item.Name,
+                        Account = item.Account,
+                        Password = string.Empty,
+                    })
+                    .ToList();
+            }
+
             return Unlocked;
         }
 
@@ -229,8 +304,14 @@ public sealed class ProfilePageViewModelTests
 
     private sealed class NoopLoginRunner : ILoginRunner
     {
+        /// <summary>实际调用次数：用来断言「保存失败时没有启动登录」。</summary>
+        public int Calls { get; private set; }
+
         public Task<LoginOutcome> RunForProfileAsync(string profileId, LoginRunOptions options, CancellationToken cancellationToken)
-            => Task.FromResult(LoginOutcome.Cancelled);
+        {
+            Calls++;
+            return Task.FromResult(LoginOutcome.Cancelled);
+        }
     }
 
     private sealed class FakeConfigService : IConfigService

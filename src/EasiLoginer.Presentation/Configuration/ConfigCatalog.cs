@@ -41,6 +41,9 @@ public static class ConfigCatalog
         "Login.Position.LoginWindowSize",
         "Update.LastVersion",
         "App.TelemetryEnabled",
+
+        // 上游字段保留读写，但当前没有任何实现消费它：与其给用户一个无效开关，不如先隐藏
+        "Profile.SkipVerify",
     };
 
     private static readonly Dictionary<string, string> Titles = new(StringComparer.Ordinal)
@@ -105,7 +108,7 @@ public static class ConfigCatalog
     {
         [typeof(LoginMethod)] = ["固定位置", "图像识别", "自动定位", "令牌投递"],
         [typeof(ThemeOptions)] = ["跟随系统", "浅色", "深色"],
-        [typeof(StartPageOptions)] = ["自动（有档案进快捷登录）", "快捷登录", "档案", "配置"],
+        [typeof(StartPageOptions)] = ["自动（有档案进快捷登录）", "快捷登录", "档案", "设置"],
         [typeof(UpdateMode)] = ["从不自动更新", "检查并通知", "检查并下载", "检查并安装"],
         [typeof(UpdateChannel)] = ["稳定通道", "测试通道"],
         [typeof(DownloadSource)] = ["自动选择", "GitHub", "ghproxy", "ghfast"],
@@ -137,6 +140,14 @@ public static class ConfigCatalog
         ["App.ResetDataAfterDays"] = (0, 3650),
     };
 
+    /// <summary>顶部导航的功能分类：一个分类可以合并多个配置段。</summary>
+    private static readonly (string Title, string[] Groups)[] Categories =
+    [
+        ("登录", ["Login"]),
+        ("提醒与遮罩", ["Warning", "Banner", "StatusOverlay", "Experimental"]),
+        ("应用与外观", ["App"]),
+    ];
+
     /// <summary>生成全部分组与设置项描述。</summary>
     public static IReadOnlyList<SettingDescriptor> Build()
     {
@@ -156,6 +167,49 @@ public static class ConfigCatalog
         }
 
         return descriptors;
+    }
+
+    /// <summary>
+    /// 按功能把设置项分成几类，供设置页顶部的分类导航使用。
+    /// </summary>
+    /// <remarks>
+    /// 「更新」分组由更新页承载，不出现在设置页；未归类的分组会落到「其他」，
+    /// 以后新增配置段不会因为忘了登记分类而在界面上凭空消失。
+    /// </remarks>
+    public static IReadOnlyList<SettingsCategory> BuildCategories()
+    {
+        var descriptors = Build()
+            .Where(descriptor => !string.Equals(descriptor.Group, "Update", StringComparison.Ordinal))
+            .ToList();
+
+        var categories = new List<SettingsCategory>();
+        var grouped = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var (title, groups) in Categories)
+        {
+            var items = descriptors
+                .Where(descriptor => groups.Contains(descriptor.Group, StringComparer.Ordinal))
+                .ToList();
+
+            if (items.Count == 0)
+            {
+                continue;
+            }
+
+            categories.Add(new SettingsCategory(title, items));
+            grouped.UnionWith(groups);
+        }
+
+        var rest = descriptors
+            .Where(descriptor => !grouped.Contains(descriptor.Group))
+            .ToList();
+
+        if (rest.Count > 0)
+        {
+            categories.Add(new SettingsCategory("其他", rest));
+        }
+
+        return categories;
     }
 
     /// <summary>取分组标题。</summary>

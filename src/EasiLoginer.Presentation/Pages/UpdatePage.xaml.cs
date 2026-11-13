@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using EasiLoginer.Application.Update;
@@ -9,7 +8,7 @@ using EasiLoginer.Domain.Versioning;
 
 namespace EasiLoginer.Presentation.Pages;
 
-/// <summary>更新页：版本、检查/下载/启动安装，以及「更新设置」分组（从配置页迁来）。</summary>
+/// <summary>更新页：版本、检查/下载/启动安装，以及「更新设置」分组（从设置页迁来）。</summary>
 public partial class UpdatePage : Page
 {
     private readonly AppServices? _services;
@@ -31,7 +30,7 @@ public partial class UpdatePage : Page
             PageLayout.ConstrainToNavigationHost(this);
         }
 
-        VersionText.Text = $"当前版本：{CurrentVersionText()}";
+        VersionText.Text = $"当前版本：{AppVersion.Text}";
         StatusText.Text = "点击「检查更新」从 GitHub Releases 获取最新版本";
     }
 
@@ -54,7 +53,7 @@ public partial class UpdatePage : Page
 
         try
         {
-            var version = Pep440Version.Parse(CurrentVersionText());
+            var version = Pep440Version.Parse(AppVersion.Text);
             var channel = _services.Config.Current.Update.TargetUpdateChannel;
             var checker = new UpdateChecker(_services.Update);
             var result = await checker.CheckAsync(version, channel, CancellationToken.None);
@@ -112,7 +111,11 @@ public partial class UpdatePage : Page
             var result = await _services.Downloader.DownloadAsync(_pendingAsset, progress, CancellationToken.None);
             _downloadedPath = result.FilePath;
             DownloadProgress.Value = 100;
-            StatusText.Text = $"已下载并通过校验：{result.FilePath}";
+
+            // 只有清单确实给了 SHA-256 才能说「通过校验」
+            StatusText.Text = string.IsNullOrWhiteSpace(_pendingAsset.Sha256)
+                ? $"已下载（发布方未提供 SHA-256，未做摘要校验）：{result.FilePath}"
+                : $"已下载并通过校验：{result.FilePath}";
             DownloadButton.Visibility = Visibility.Collapsed;
             InstallButton.Visibility = Visibility.Visible;
         }
@@ -170,20 +173,5 @@ public partial class UpdatePage : Page
                    asset.Url.Contains("Setup", StringComparison.OrdinalIgnoreCase))
                ?? assets.FirstOrDefault(asset => asset.Url.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                ?? assets.FirstOrDefault(asset => asset.Url.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static string CurrentVersionText()
-    {
-        var assembly = typeof(UpdatePage).Assembly;
-        var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-
-        if (!string.IsNullOrWhiteSpace(informational))
-        {
-            // 只取版本本身，忽略可能的 "+<commit>" 后缀
-            return informational.Split('+')[0];
-        }
-
-        var version = assembly.GetName().Version;
-        return version is null ? "0.0.1" : $"{version.Major}.{version.Minor}.{version.Build}";
     }
 }

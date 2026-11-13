@@ -16,7 +16,7 @@ public sealed class ConfigCatalogTests
     {
         var groups = ConfigCatalog.Build().Select(descriptor => descriptor.Group).Distinct().ToArray();
 
-        groups.Should().Contain(["Login", "Warning", "Banner", "StatusOverlay", "App", "Experimental", "Profile", "Update"]);
+        groups.Should().Contain(["Login", "Warning", "Banner", "StatusOverlay", "App", "Experimental", "Update"]);
         groups.Should().NotContain("ClassIsland");
         groups.Should().NotContain("Debug");
         groups.Should().NotContain("Internal");
@@ -61,7 +61,7 @@ public sealed class ConfigCatalogTests
 
         descriptor.Kind.Should().Be(SettingKind.Enum);
         descriptor.Title.Should().Be("启动页面");
-        descriptor.Options.Should().Contain(["自动（有档案进快捷登录）", "快捷登录", "档案", "配置"]);
+        descriptor.Options.Should().Contain(["自动（有档案进快捷登录）", "快捷登录", "档案", "设置"]);
     }
 
     /// <summary>已移除的遥测开关不再出现在目录里。</summary>
@@ -71,11 +71,22 @@ public sealed class ConfigCatalogTests
         ConfigCatalog.Build().Select(item => item.Path).Should().NotContain("App.TelemetryEnabled");
     }
 
+    /// <summary>
+    /// 还没有实现消费方的开关不能出现在界面上：用户改了却没有任何效果，
+    /// 比看不到这个选项更糟（<c>Profile.SkipVerify</c> 目前就属于这一类）。
+    /// </summary>
+    [Fact]
+    public void 无实现的开关不暴露()
+    {
+        ConfigCatalog.Build().Select(item => item.Path).Should().NotContain("Profile.SkipVerify");
+    }
+
     /// <summary>隐藏项不出现在界面目录中。</summary>
     [Theory]
     [InlineData("Login.Position.BaseSize")]
     [InlineData("Login.Position.LoginWindowSize")]
     [InlineData("Update.LastVersion")]
+    [InlineData("Profile.SkipVerify")]
     public void 隐藏项被排除(string path)
     {
         ConfigCatalog.Build().Select(descriptor => descriptor.Path).Should().NotContain(path);

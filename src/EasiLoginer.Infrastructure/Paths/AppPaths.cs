@@ -57,6 +57,14 @@ public sealed class AppPaths
     /// <summary>随包分发的第三方二进制（补丁源文件）。</summary>
     public string VendorsDirectory => Path.Combine(BaseDirectory, "vendors");
 
+    /// <summary>
+    /// 可选的本地公告清单（存在时优先于远程清单，便于离线预览与测试）。
+    /// </summary>
+    /// <remarks>
+    /// 发布包默认不包含此文件；只有在需要覆盖远程公告时才手动放入。
+    /// </remarks>
+    public string AnnouncementsFile => Path.Combine(BaseDirectory, "announcements", "announcements.json");
+
     /// <summary>创建全部可变目录（幂等）。</summary>
     public void EnsureWritableDirectories()
     {

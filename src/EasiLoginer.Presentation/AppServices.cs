@@ -1,4 +1,5 @@
 using EasiLoginer.Application.Abstractions;
+using EasiLoginer.Application.Announcements;
 using EasiLoginer.Application.Automation;
 using EasiLoginer.Application.Profiles;
 using EasiLoginer.Application.Update;
@@ -12,10 +13,12 @@ namespace EasiLoginer.Presentation;
 /// <param name="Display">屏幕度量（覆盖层按物理像素定位后换算 DIP）。</param>
 /// <param name="Update">更新清单来源（GitHub Releases）。</param>
 /// <param name="Downloader">更新包下载器。</param>
+/// <param name="Announcements">应用内公告。</param>
 public sealed record AppServices(
     IConfigService Config,
     IProfileRepository Profiles,
     ILoginRunner Login,
     IDisplayMetrics Display,
     IUpdateSource Update,
-    IUpdateDownloader Downloader);
+    IUpdateDownloader Downloader,
+    AnnouncementService Announcements);

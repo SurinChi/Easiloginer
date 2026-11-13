@@ -6,11 +6,16 @@ using EasiLoginer.Host.Automation;
 using EasiLoginer.Host.Lifecycle;
 using EasiLoginer.Host.Logging;
 using EasiLoginer.Host.Services;
+using EasiLoginer.Application.Announcements;
+using EasiLoginer.Infrastructure.Announcements;
 using EasiLoginer.Infrastructure.Configuration;
 using EasiLoginer.Infrastructure.Paths;
 using EasiLoginer.Infrastructure.Profiles;
 using EasiLoginer.Infrastructure.Update;
 using EasiLoginer.Infrastructure.Windows;
+using EasiLoginer.Domain.Profiles;
+using EasiLoginer.Integrations.EasiNote.Patching;
+using EasiLoginer.Integrations.EasiNote.Path;
 using EasiLoginer.Presentation;
 
 namespace EasiLoginer.Host.CommandLine;
@@ -25,7 +30,9 @@ internal static class CommandHandlers
     private static readonly HttpClient UpdateHttpClient = new() { Timeout = TimeSpan.FromSeconds(20) };
 
     /// <summary>打开主界面。</summary>
-    public static int Settings()
+    public static int Settings() => Settings(allowProfileRecovery: true);
+
+    private static int Settings(bool allowProfileRecovery)
     {
         try
         {
@@ -56,7 +63,12 @@ internal static class CommandHandlers
                 new LoginRunnerAdapter(),
                 new WindowsDisplayMetrics(),
                 new GitHubUpdateSource(UpdateHttpClient),
-                new UpdateDownloader(UpdateHttpClient));
+                new UpdateDownloader(UpdateHttpClient),
+                new AnnouncementService(
+                    new HttpAnnouncementSource(
+                        UpdateHttpClient,
+                        localFilePath: paths.AnnouncementsFile),
+                    new SerilogLogger<AnnouncementService>()));
 
             var exitCode = 0;
             var thread = new Thread(() =>
@@ -82,6 +94,41 @@ internal static class CommandHandlers
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             Log.Error(exception, "打开主界面失败");
+            return ExitCodes.Failure;
+        }
+        catch (ProfileLoadException exception)
+        {
+            // 档案文件损坏时也必须能打开界面，否则用户连重建档案的入口都没有
+            Log.Error(exception, "档案读取失败");
+
+            if (!allowProfileRecovery)
+            {
+                return ExitCodes.Failure;
+            }
+
+            return OpenSettingsWithEmptyProfiles();
+        }
+    }
+
+    /// <summary>档案损坏时的兜底：备份坏文件后用空档案启动，让用户还能进界面修配置。</summary>
+    private static int OpenSettingsWithEmptyProfiles()
+    {
+        try
+        {
+            var paths = AppPaths.Default;
+            var broken = paths.ProfileFile;
+            if (File.Exists(broken))
+            {
+                File.Copy(broken, broken + ".bak", overwrite: true);
+                File.Delete(broken);
+                Log.Warning("已把损坏的档案备份为 {Backup}", broken + ".bak");
+            }
+
+            return Settings(allowProfileRecovery: false);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Log.Error(exception, "无法备份损坏的档案文件");
             return ExitCodes.Failure;
         }
     }
@@ -157,7 +204,7 @@ internal static class CommandHandlers
         }
     }
 
-    /// <summary>写一次 SkipOnce 后退出（对应 <c>skip</c> 子命令）。</summary>
+    /// <summary>开启「取消二次确认」后退出（对应 <c>skip</c> 子命令）。</summary>
     public static int Skip()
     {
         try
@@ -167,18 +214,20 @@ internal static class CommandHandlers
             config.Login.SkipOnce = true;
             store.Save(config);
 
-            Log.Information("已设置 SkipOnce=true，下次触发登录时将跳过");
+            Log.Information("已开启「取消二次确认」：之后运行登录不再弹出确认框");
             return ExitCodes.Success;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            Log.Error(exception, "写入 SkipOnce 失败");
+            Log.Error(exception, "写入「取消二次确认」失败");
             return ExitCodes.Failure;
         }
     }
 
-    /// <summary>修补/撤销希沃白板（M3 逻辑已就绪，等待 UI 与提权路径接入）。</summary>
-    public static int Patch(bool on, bool off)
+    /// <summary>
+    /// 修补 / 撤销希沃白板登录桥（文档 §8.5：20 成功、21 操作失败、22 未找到希沃、29 未知异常）。
+    /// </summary>
+    public static async Task<int> PatchAsync(bool on, bool off, CancellationToken cancellationToken)
     {
         if (on == off)
         {
@@ -186,8 +235,60 @@ internal static class CommandHandlers
             return ExitCodes.PatchUnknown;
         }
 
-        Log.Information("命令 patch：命令行修补尚未接入 UI 提权流程，目标={Target}", on ? "on" : "off");
-        return ExitCodes.PatchUnknown;
+        Log.Information("命令 patch：{Action}", on ? "修补希沃登录桥" : "撤销希沃登录桥");
+
+        try
+        {
+            var paths = AppPaths.Default;
+            var store = new ConfigStore(paths, new SerilogLogger<ConfigStore>());
+            var config = store.Load();
+
+            var location = new EasiNoteLocator(new WindowsRegistryReader()).Resolve(config.Login.EasiNote);
+            if (location.Path is null)
+            {
+                Log.Error("未找到希沃白板，请先在配置页填写「自定义路径」");
+                return ExitCodes.PatchNotFound;
+            }
+
+            var patcher = new EasiNotePatcher(
+                paths.VendorsDirectory,
+                new PatcherProcessRunner(),
+                new SerilogLogger<EasiNotePatcher>());
+
+            if (on && patcher.IsPatched(location.Path))
+            {
+                Log.Information("希沃白板已经处于修补状态，无需重复操作");
+                return ExitCodes.PatchSuccess;
+            }
+
+            var succeeded = on
+                ? await patcher.PatchAsync(location.Path, cancellationToken).ConfigureAwait(false)
+                : await patcher.UnpatchAsync(location.Path, cancellationToken).ConfigureAwait(false);
+
+            if (succeeded)
+            {
+                Log.Information("patch 完成：{Path}", location.Path);
+                return ExitCodes.PatchSuccess;
+            }
+
+            Log.Error("patch 未成功；如果希沃白板正在运行，请先退出后重试，并确认有写入安装目录的权限");
+            return ExitCodes.PatchFailed;
+        }
+        catch (OperationCanceledException)
+        {
+            Log.Warning("patch 被取消");
+            return ExitCodes.PatchFailed;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Log.Error(exception, "patch 失败（常见原因：希沃白板正在运行，或缺少安装目录的写入权限）");
+            return ExitCodes.PatchFailed;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "patch 出现未预期的异常");
+            return ExitCodes.PatchUnknown;
+        }
     }
 
     /// <summary>日志脱敏：账号只保留首尾字符。</summary>

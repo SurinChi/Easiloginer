@@ -9,6 +9,7 @@ using EasiLoginer.Application.Profiles;
 using EasiLoginer.Domain.Profiles;
 using EasiLoginer.Infrastructure.Paths;
 using EasiLoginer.Infrastructure.Security;
+using EasiLoginer.Infrastructure.Storage;
 
 namespace EasiLoginer.Infrastructure.Profiles;
 
@@ -159,6 +160,14 @@ public sealed class JsonProfileRepository : IProfileRepository
         {
             CryptographicOperations.ZeroMemory(key);
             return false;
+        }
+
+        // 已解锁时的这次调用只是「二次确认主密码」：不要 Reload，
+        // 否则会把界面里尚未保存的编辑换成磁盘副本（改完密码再保存会变回旧值）。
+        if (IsUnlocked)
+        {
+            CryptographicOperations.ZeroMemory(key);
+            return true;
         }
 
         SetSessionKey(key);
@@ -458,17 +467,7 @@ public sealed class JsonProfileRepository : IProfileRepository
         var json = payload.ToJsonString(JsonOptions);
 
         Directory.CreateDirectory(_paths.DataDirectory);
-        var temporary = _paths.ProfileFile + ".tmp";
-        File.WriteAllText(temporary, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-
-        if (File.Exists(_paths.ProfileFile))
-        {
-            File.Replace(temporary, _paths.ProfileFile, destinationBackupFileName: null);
-        }
-        else
-        {
-            File.Move(temporary, _paths.ProfileFile);
-        }
+        AtomicFile.WriteAllText(_paths.ProfileFile, json);
     }
 
     private JsonObject BuildPayload(Profile profile)
