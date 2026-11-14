@@ -1,6 +1,7 @@
 using System.Windows;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Markup;
+using EasiLoginer.Presentation.Appearance;
 using EasiLoginer.Presentation.Shell;
 
 namespace EasiLoginer.Presentation;
@@ -47,6 +48,7 @@ public sealed class App : System.Windows.Application
         base.OnStartup(e);
 
         ThemeService.Apply(Services.Config.Current.App.Theme);
+        AppearanceService.Apply(Services.Config.Current);
 
         var window = new MainWindow(Services);
         MainWindow = window;
@@ -59,6 +61,15 @@ public sealed class App : System.Windows.Application
             Wpf.Ui.Appearance.ApplicationThemeManager.Apply(wizard);
 
             var completed = wizard.ShowDialog() == true;
+
+            // 未同意用户协议就关窗时，不把用户放进主界面：下次启动会再次要求阅读协议。
+            // 同意后直接关窗（OnClosing 会按“跳过向导”收尾）仍算完成，可以正常进入。
+            if (!completed && !wizard.IsCompleted)
+            {
+                Shutdown(0);
+                return;
+            }
+
             window.ShowAfterOobe(completed && !wizard.FinishToProfile);
             return;
         }

@@ -53,6 +53,31 @@ public enum ThemeOptions
     Dark,
 }
 
+/// <summary>窗口背景来源（EasiLoginer 自有扩展）；JSON 中写字符串。</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<BackgroundMode>))]
+public enum BackgroundMode
+{
+    /// <summary>跟随主题的纯色背景（不启用背景系统）。</summary>
+    [JsonStringEnumMemberName("theme")]
+    Theme,
+
+    /// <summary>自定义纯色。</summary>
+    [JsonStringEnumMemberName("solid")]
+    Solid,
+
+    /// <summary>自定义双色渐变。</summary>
+    [JsonStringEnumMemberName("gradient")]
+    Gradient,
+
+    /// <summary>跟随当前桌面壁纸。</summary>
+    [JsonStringEnumMemberName("wallpaper")]
+    Wallpaper,
+
+    /// <summary>本地图片。</summary>
+    [JsonStringEnumMemberName("image")]
+    Image,
+}
+
 /// <summary>更新模式，对应上游 <c>UpdateMode</c>；JSON 中写整数 0–3。</summary>
 public enum UpdateMode
 {

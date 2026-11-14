@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using EasiLoginer.Presentation.Announcements;
+using EasiLoginer.Presentation.Legal;
 
 namespace EasiLoginer.Presentation.Pages;
 
@@ -22,6 +23,13 @@ public partial class AboutPage : Page
         PageLayout.ConstrainToNavigationHost(this);
 
         VersionText.Text = $"版本 {AppVersion.Text} · GPLv3";
+    }
+
+    private void OnAgreementClicked(object sender, RoutedEventArgs e)
+    {
+        var window = new UserAgreementWindow { Owner = Window.GetWindow(this) };
+        Wpf.Ui.Appearance.ApplicationThemeManager.Apply(window);
+        window.ShowDialog();
     }
 
     private async void OnAnnouncementsClicked(object sender, RoutedEventArgs e)

@@ -16,6 +16,7 @@ public static class ConfigNormalizer
     private static readonly string[] ChannelValues = ["release", "dev"];
     private static readonly string[] SourceValues = ["auto", "github", "ghproxy", "ghfast"];
     private static readonly string[] StartPageValues = ["auto", "quickLogin", "profile", "config"];
+    private static readonly string[] BackgroundModeValues = ["theme", "solid", "gradient", "wallpaper", "image"];
 
     /// <summary>就地归一化配置 JSON。</summary>
     public static void Normalize(JsonObject root)
@@ -38,6 +39,7 @@ public static class ConfigNormalizer
         // 4. 未知枚举字符串回退默认值（§7.2「枚举未知值回退默认 + 日志」）
         CoerceStringEnum(root, "App", "Theme", ThemeValues, "Auto");
         CoerceStringEnum(root, "App", "StartPage", StartPageValues, "auto");
+        CoerceStringEnum(root, "Appearance", "BackgroundMode", BackgroundModeValues, "wallpaper");
         CoerceStringEnum(root, "Update", "TargetUpdateChannel", ChannelValues, "release");
         CoerceStringEnum(root, "Update", "TargetDownloadSource", SourceValues, "auto");
 

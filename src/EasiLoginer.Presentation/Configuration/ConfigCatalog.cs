@@ -21,6 +21,7 @@ public static class ConfigCatalog
         ["Banner"] = "警示横幅",
         ["StatusOverlay"] = "状态浮窗",
         ["App"] = "应用设置",
+        ["Appearance"] = "外观与背景",
         ["Experimental"] = "实验性选项",
         ["Profile"] = "档案设置",
         ["Update"] = "更新设置",
@@ -90,6 +91,13 @@ public static class ConfigCatalog
         ["App.MaxRetries"] = "最大重试次数",
         ["App.Theme"] = "应用主题",
         ["App.StartPage"] = "启动页面",
+        ["Appearance.AcrylicEnabled"] = "启用亚克力效果",
+        ["Appearance.BlurStrength"] = "模糊强度",
+        ["Appearance.AcrylicOpacity"] = "玻璃不透明度（%）",
+        ["Appearance.BackgroundMode"] = "背景来源",
+        ["Appearance.BackgroundColor"] = "背景颜色",
+        ["Appearance.BackgroundColor2"] = "渐变结束颜色",
+        ["Appearance.BackgroundImagePath"] = "背景图片",
         ["App.LogEnabled"] = "启用日志记录",
         ["App.ResetDataAfterDays"] = "未启动清理（天）",
         ["App.TelemetryEnabled"] = "参与匿名使用情况分析",
@@ -108,6 +116,7 @@ public static class ConfigCatalog
     {
         [typeof(LoginMethod)] = ["固定位置", "图像识别", "自动定位", "令牌投递"],
         [typeof(ThemeOptions)] = ["跟随系统", "浅色", "深色"],
+        [typeof(BackgroundMode)] = ["跟随主题", "纯色", "渐变", "桌面壁纸", "本地图片"],
         [typeof(StartPageOptions)] = ["自动（有档案进快捷登录）", "快捷登录", "档案", "设置"],
         [typeof(UpdateMode)] = ["从不自动更新", "检查并通知", "检查并下载", "检查并安装"],
         [typeof(UpdateChannel)] = ["稳定通道", "测试通道"],
@@ -119,6 +128,13 @@ public static class ConfigCatalog
     {
         ["Login.SkipOnce"] = "勾选后运行登录不再弹确认",
         ["App.ResetDataAfterDays"] = "0 关闭，最短 7 天",
+        ["Appearance.AcrylicEnabled"] = "关闭后恢复主题纯色背景",
+        ["Appearance.BlurStrength"] = "0–60，越大越模糊；仅壁纸 / 图片背景生效",
+        ["Appearance.AcrylicOpacity"] = "仅壁纸 / 图片背景生效；100 为不透明",
+        ["Appearance.BackgroundMode"] = "选择窗口背后的内容",
+        ["Appearance.BackgroundColor"] = "纯色模式使用；渐变模式为起始色",
+        ["Appearance.BackgroundColor2"] = "仅渐变模式使用",
+        ["Appearance.BackgroundImagePath"] = "支持 png / jpg / bmp / webp；留空时使用桌面壁纸",
         ["Experimental.PrivacyMask.Enabled"] = "智慧大屏上可能导致异常",
     };
 
@@ -138,6 +154,21 @@ public static class ConfigCatalog
         ["Banner.Style.TextSpeed"] = (-8, 8),
         ["App.MaxRetries"] = (0, 5),
         ["App.ResetDataAfterDays"] = (0, 3650),
+        ["Appearance.BlurStrength"] = (0, 60),
+        ["Appearance.AcrylicOpacity"] = (20, 100),
+    };
+
+    /// <summary>用滑杆编辑的整数项。</summary>
+    private static readonly HashSet<string> SliderPaths = new(StringComparer.Ordinal)
+    {
+        "Appearance.BlurStrength",
+        "Appearance.AcrylicOpacity",
+    };
+
+    /// <summary>用「浏览…」按钮选择文件路径的文本项。</summary>
+    private static readonly HashSet<string> FilePaths = new(StringComparer.Ordinal)
+    {
+        "Appearance.BackgroundImagePath",
     };
 
     /// <summary>顶部导航的功能分类：一个分类可以合并多个配置段。</summary>
@@ -145,7 +176,7 @@ public static class ConfigCatalog
     [
         ("登录", ["Login"]),
         ("提醒与遮罩", ["Warning", "Banner", "StatusOverlay", "Experimental"]),
-        ("应用与外观", ["App"]),
+        ("应用与外观", ["App", "Appearance"]),
     ];
 
     /// <summary>生成全部分组与设置项描述。</summary>
@@ -262,6 +293,16 @@ public static class ConfigCatalog
 
     private static SettingKind? ResolveKind(Type type, string path)
     {
+        if (SliderPaths.Contains(path))
+        {
+            return SettingKind.Slider;
+        }
+
+        if (FilePaths.Contains(path))
+        {
+            return SettingKind.FilePath;
+        }
+
         if (type == typeof(bool))
         {
             return SettingKind.Boolean;

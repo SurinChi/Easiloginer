@@ -18,6 +18,7 @@
 - **希沃集成**：检测安装路径、修补登录桥、终止 EasiAgent、查杀残留进程
 - **更新检查**：从 GitHub Releases 检查、下载安装包并校验 SHA-256
 - **应用内公告**：启动时读取一次公告，发布新版本或维护通知无需重新发版
+- **外观与背景**：亚克力毛玻璃效果，模糊强度与玻璃不透明度可调；背景支持桌面壁纸、本地图片、纯色和渐变
 - **本地优先**：没有账号体系、不做遥测
 
 ## 安装与运行
@@ -28,13 +29,13 @@
 
 - 欢迎 → 安装位置 → 附加任务（桌面快捷方式）→ 安装进度 → 完成并启动
 - 默认安装到 `%LOCALAPPDATA%\Programs\EasiLoginer`，**不需要管理员权限**
-- 升级安装只覆盖程序文件，保留 `data\` 里的配置与档案
+- 选择已存在的目录时会提示「保留数据安装」：只替换程序文件，保留 `data\` 里的配置与档案
 - 在「设置 → 应用 → 已安装的应用」里可正常卸载
 
 静默安装：
 
 ```cmd
-EasiLoginer-Setup-0.1.3.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+EasiLoginer-Setup-0.2.0.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 ```
 
 ### 绿色版
@@ -50,7 +51,7 @@ EasiLoginer-Setup-0.1.3.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 
 ### 1. 首次启动
 
-第一次运行会打开 6 步设置向导：用户协议 → 外观 → 登录方式 → 希沃白板 → 系统集成 → 完成。设置项随时可以在「设置」页修改。
+第一次运行会打开 6 步设置向导：用户协议 → 外观 → 登录方式 → 希沃白板 → 系统集成 → 完成。用户协议是完整版，需滚动到正文末尾后才能勾选「我同意」；未同意前「下一步」和「跳过向导」都不可用。设置项随时可以在「设置」页修改。
 
 ### 2. 添加档案
 
@@ -99,6 +100,7 @@ EasiLoginer-Setup-0.1.3.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 - **未启动清理（天）**：超过指定天数未启动会清空全部数据，`0` 关闭，最短 7 天
 - **警示横幅 / 状态浮窗**：文字、颜色、字号、位置都可调
 - **字体**：从系统已安装字体中下拉选择
+- **外观与背景**：亚克力开关、模糊强度（0–60）、玻璃不透明度（20–100%）、背景来源（跟随主题 / 纯色 / 渐变 / 桌面壁纸 / 本地图片）；修改后点「保存」立即生效
 
 ### 7. 更新
 
@@ -172,13 +174,15 @@ dotnet build EasiLoginer.sln -c Release
 dotnet test  EasiLoginer.sln -c Release --no-build
 ```
 
-`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 437 个测试。
+`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 461 个测试。
 
 ### 打包发布
 
 ```cmd
 build\publish.cmd
 ```
+
+版本号只有一个来源：`Directory.Build.props` 的 `<Version>`，发布脚本会自动读给 dotnet、安装向导与发布材料使用。
 
 打包机额外需要：
 
@@ -191,6 +195,10 @@ build\publish.cmd
 |---|---|
 | `EasiLoginer_<版本>.zip` | 绿色版，自包含 win-x64 |
 | `EasiLoginer-Setup-<版本>.exe` | 安装向导，内置同一份程序 |
+| `RELEASE-<版本>.md` | 自动生成的发布说明草稿（可直接粘到 GitHub Release） |
+| `SHA256SUMS-<版本>.txt` | 两个产物的 SHA-256 校验和 |
+
+完整的发版步骤、验证命令与常见问题见 [构建与发布流程](build/RELEASE.md)。
 
 ## 项目结构
 
@@ -228,7 +236,7 @@ build\publish.cmd
 先退出希沃白板，再执行 `EasiLoginer.exe patch --on`（需要写入安装目录的权限，通常要管理员；退出码 `20` 成功、`21` 失败、`22` 未找到希沃）。撤销用 `patch --off`。
 
 **升级后数据还在吗？**
-在。覆盖安装只替换程序文件，`data\` 保留；卸载才会删除整个目录。
+在。选择已存在的目录时安装向导会提示「保留数据安装」，只替换程序文件，`data\` 保留；卸载才会删除整个目录。
 
 **为什么启动后数据没了？**
 检查「未启动清理（天）」设置：超过设定天数未启动会自动清空数据。

@@ -1,5 +1,6 @@
 using EasiLoginer.Application.Abstractions;
 using EasiLoginer.Domain.Configuration;
+using EasiLoginer.Presentation.Legal;
 using EasiLoginer.Presentation.Onboarding;
 using FluentAssertions;
 
@@ -27,13 +28,43 @@ public sealed class WizardTests
         ]);
     }
 
-    /// <summary>协议页必须有正文，且默认未勾选。</summary>
+    /// <summary>协议页必须有完整正文，且默认未勾选。</summary>
     [Fact]
     public void 协议默认未同意()
     {
         OobeSteps.AgreementText.Should().Contain("GPLv3");
         var viewModel = CreateViewModel(out _, out _);
         viewModel.AgreementAccepted.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// 首启向导展示的是完整协议，而不是摘要：正文必须包含数据、免责、
+    /// 修补风险、协议变更等核心章节，且长度足以要求用户滚动阅读。
+    /// </summary>
+    [Fact]
+    public void 协议是完整版()
+    {
+        var text = OobeSteps.AgreementText;
+
+        text.Should().StartWith("EasiLoginer 用户协议（完整版）");
+        text.Should().Contain("数据与隐私");
+        text.Should().Contain("风险与免责声明");
+        text.Should().Contain("责任限制");
+        text.Should().Contain("协议变更");
+        text.Should().Contain("知识产权");
+        text.Should().Contain("适用法律");
+        text.Should().Contain("Argon2id", "协议需要说明主密码的加密方式");
+        text.Should().Contain("希沃白板的正常使用", "修补风险必须明确告知");
+        text.Length.Should().BeGreaterThan(4000, "完整协议应远长于摘要");
+    }
+
+    /// <summary>协议版本与生效日期集中在一处维护。</summary>
+    [Fact]
+    public void 协议版本集中维护()
+    {
+        UserAgreement.Version.Should().Be("1.0");
+        UserAgreement.EffectiveDate.Should().Be("2026-11-14");
+        OobeSteps.AgreementText.Should().Be(UserAgreement.Text);
     }
 
     /// <summary>进度文案与首尾标记随索引变化。</summary>

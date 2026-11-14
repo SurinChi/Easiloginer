@@ -1,3 +1,5 @@
+using EasiLoginer.Presentation.Legal;
+
 namespace EasiLoginer.Presentation.Onboarding;
 
 /// <summary>
@@ -9,25 +11,15 @@ namespace EasiLoginer.Presentation.Onboarding;
 /// </remarks>
 public static class OobeSteps
 {
-    /// <summary>用户协议正文（向导第一页展示，需勾选同意）。</summary>
-    public const string AgreementText =
-        "EasiLoginer 用户协议（摘要）\n\n" +
-        "1. 本软件以 GNU General Public License v3.0 发布，按「现状」提供，不附带任何明示或默示担保。\n\n" +
-        "2. EasiLoginer 仅在你本人操作时触发希沃白板登录；不会按时间、文件或进程事件自动触发。\n\n" +
-        "3. 账号与密码只保存在本机 data 目录；启用主密码后以 ea$ 密文落盘。除你主动发起的检查更新外，" +
-        "程序不联网，也不做任何遥测上报。\n\n" +
-        "4. 修补希沃白板会修改其安装目录中的程序集，需要管理员权限，可能影响希沃白板的正常使用；" +
-        "你可以随时用 `EasiLoginer.exe patch --off` 撤销修补。\n\n" +
-        "5. 修改、分发本软件须遵守 GPLv3，并保留上游 EasiAuto（作者 hxabcd）的版权与来源声明。\n\n" +
-        "6. 使用本软件产生的任何后果由使用者自行承担。\n\n" +
-        "勾选下方选项表示你已阅读并同意以上条款。";
+    /// <summary>用户协议正文（向导第一页展示，需滚动到底部并勾选同意）。</summary>
+    public const string AgreementText = UserAgreement.Text;
 
     /// <summary>构建 6 个步骤。</summary>
     public static IReadOnlyList<WizardStep> Create() =>
     [
         new WizardStep(
             "用户协议",
-            "首次使用前请阅读以下条款。",
+            "首次使用前请完整阅读以下协议。请滚动到正文末尾，再勾选“我同意”；未同意前无法进入下一步或跳过向导。",
             WizardStepKind.Agreement,
             Skippable: false),
 

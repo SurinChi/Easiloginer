@@ -8,41 +8,56 @@
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True"
                  WindowBackdropType="None"
-                 Background="{DynamicResource ApplicationBackgroundBrush}"
+                 Background="Transparent"
                  TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-    <Grid x:Name="Root">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid x:Name="Root" ClipToBounds="True">
+        <!-- 与主界面共用同一套背景 / 亚克力资源 -->
+        <Rectangle Fill="{DynamicResource AcrylicBackgroundBrush}"
+                   Margin="{DynamicResource AcrylicBackgroundMargin}"
+                   IsHitTestVisible="False">
+            <Rectangle.Effect>
+                <BlurEffect Radius="{DynamicResource AcrylicBlurRadius}"
+                            RenderingBias="Quality" />
+            </Rectangle.Effect>
+        </Rectangle>
+        <Rectangle Fill="{DynamicResource AcrylicTintBrush}" IsHitTestVisible="False" />
 
-        <ui:TitleBar Grid.Row="0" Title="EasiLoginer 首次设置"
-                     ShowMaximize="False" ShowMinimize="False" ShowClose="True" />
-
-        <Grid Grid.Row="1" Margin="28,8,28,0">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Margin="0,0,0,16">
-                <TextBlock x:Name="StepTitle" FontSize="24" FontWeight="SemiBold" />
-                <TextBlock x:Name="StepProgress" Opacity="0.7" Margin="0,4,0,0" />
-            </StackPanel>
+            <ui:TitleBar Grid.Row="0" Title="EasiLoginer 首次设置"
+                         ShowMaximize="False" ShowMinimize="False" ShowClose="True" />
 
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="StepContent" />
-            </ScrollViewer>
-        </Grid>
+            <Grid Grid.Row="1" Margin="28,8,28,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-        <Grid Grid.Row="2" Margin="28,16,28,20">
-            <TextBlock x:Name="StatusText" VerticalAlignment="Center" Opacity="0.75" />
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="SkipButton" Content="跳过向导" Padding="16,6" Margin="0,0,8,0" Click="OnSkipClicked" />
-                <Button x:Name="PreviousButton" Content="上一步" Padding="16,6" Margin="0,0,8,0" Click="OnPreviousClicked" />
-                <Button x:Name="NextButton" Content="下一步" Padding="20,6" Click="OnNextClicked" />
-            </StackPanel>
+                <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                    <TextBlock x:Name="StepTitle" FontSize="24" FontWeight="SemiBold" />
+                    <TextBlock x:Name="StepProgress" Opacity="0.7" Margin="0,4,0,0" />
+                </StackPanel>
+
+                <ScrollViewer x:Name="StepScroller" Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="StepContent" />
+                </ScrollViewer>
+            </Grid>
+
+            <Grid Grid.Row="2" Margin="28,16,28,20">
+                <TextBlock x:Name="StatusText" VerticalAlignment="Center" Opacity="0.75" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="SkipButton" Content="跳过向导" Padding="16,6" Margin="0,0,8,0" Click="OnSkipClicked" />
+                    <Button x:Name="PreviousButton" Content="上一步" Padding="16,6" Margin="0,0,8,0" Click="OnPreviousClicked" />
+                    <Button x:Name="NextButton" Content="下一步" Padding="20,6" Click="OnNextClicked" />
+                </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 </ui:FluentWindow>
