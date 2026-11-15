@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 
 # 构建收尾：生成发布说明 RELEASE-<版本>.md 与校验和清单 SHA256SUMS-<版本>.txt。
 # 由 publish.cmd 第 8 步自动调用；也可单独运行：
-#   powershell -NoProfile -ExecutionPolicy Bypass -File build\make-release.ps1 -Version 0.1.3 -Dist ..\EasiLoginer-dist
+#   powershell -NoProfile -ExecutionPolicy Bypass -File build\make-release.ps1 -Version 0.2.0-alpha.1 -Dist ..\EasiLoginer-dist
 #
 # 正文来源：
 #   1) 若存在 docs\releases\<版本>.md（人工润色的发布说明），以它为正文，自动追加构建信息与校验和；

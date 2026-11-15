@@ -35,7 +35,7 @@
 静默安装：
 
 ```cmd
-EasiLoginer-Setup-0.2.0.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+EasiLoginer-Setup-<版本>.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 ```
 
 ### 绿色版
@@ -174,7 +174,7 @@ dotnet build EasiLoginer.sln -c Release
 dotnet test  EasiLoginer.sln -c Release --no-build
 ```
 
-`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 461 个测试。
+`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 465 个测试。
 
 ### 打包发布
 
@@ -183,6 +183,8 @@ build\publish.cmd
 ```
 
 版本号只有一个来源：`Directory.Build.props` 的 `<Version>`，发布脚本会自动读给 dotnet、安装向导与发布材料使用。
+
+版本约定：稳定版 `0.2.0`；测试版 `0.2.0-alpha.1`、`0.2.0-beta.1`，每次递增末尾序号。程序集和安装包的数字版本固定为 `0.2.0.0`（去掉测试后缀），标签使用完整版本号（如 `v0.2.0-alpha.1`）。测试版不会占用将来的稳定版号，正式版仍从 `v0.2.0` 开始。
 
 打包机额外需要：
 

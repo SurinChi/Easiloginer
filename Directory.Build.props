@@ -36,11 +36,15 @@
     <Authors>SurinChi</Authors>
     <Copyright>Copyright (C) 2026 SurinChi</Copyright>
 
-    <!-- 版本号由 SurinChi 维护：0.0.1 为首发，0.0.2 起走正常迭代 -->
-    <Version>0.2.0</Version>
+    <!--
+      版本号由 SurinChi 维护：0.0.1 为首发，0.0.2 起走正常迭代。
+      稳定版：X.Y.Z；测试版：X.Y.Z-alpha.N / X.Y.Z-beta.N。
+      测试版号不得占用将来的稳定版号；程序集与安装包的数字版本始终是 X.Y.Z.0。
+    -->
+    <Version>0.2.0-alpha.1</Version>
     <AssemblyVersion>0.2.0.0</AssemblyVersion>
     <FileVersion>0.2.0.0</FileVersion>
-    <InformationalVersion>0.2.0</InformationalVersion>
+    <InformationalVersion>0.2.0-alpha.1</InformationalVersion>
   </PropertyGroup>
 
 </Project>

@@ -14,15 +14,22 @@ set "PAYLOAD=%DIST%\payload.7z"
 set "TOOLS=%DIST%\tools"
 
 rem ---- version: single source of truth (Directory.Build.props) ----
+rem VER keeps the full version (0.2.0-alpha.1); VER4 is the numeric X.Y.Z.0
+rem version required by AssemblyVersion / FileVersion / Inno VersionInfoVersion.
 set "VER="
 for /f "usebackq delims=" %%v in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\build\get-version.ps1"`) do set "VER=%%v"
 if not defined VER (
   echo ERROR: cannot read Version from Directory.Build.props
   exit /b 1
 )
+set "VER4="
+for /f "usebackq delims=" %%v in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\build\get-version.ps1" -Format Numeric`) do set "VER4=%%v"
+if not defined VER4 (
+  echo ERROR: cannot build numeric version from %VER%
+  exit /b 1
+)
 set "ZIP=%DIST%\EasiLoginer_%VER%.zip"
 set "SETUP=%DIST%\EasiLoginer-Setup-%VER%.exe"
-set "VER4=%VER%.0"
 
 echo Building EasiLoginer %VER%
 
@@ -36,7 +43,7 @@ if exist "%TOOLS%" rmdir /s /q "%TOOLS%"
 if not exist "%DIST%" mkdir "%DIST%"
 
 echo [1/8] publish main app
-dotnet publish "%ROOT%\src\EasiLoginer.Host\EasiLoginer.Host.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=%VER% -p:AssemblyInformationalVersion=%VER% -o "%OUT%"
+dotnet publish "%ROOT%\src\EasiLoginer.Host\EasiLoginer.Host.csproj" -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=%VER% -p:AssemblyVersion=%VER4% -p:FileVersion=%VER4% -p:InformationalVersion=%VER% -o "%OUT%"
 if errorlevel 1 exit /b 1
 
 echo [2/8] assemble portable folder
