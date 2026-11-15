@@ -146,6 +146,33 @@ public sealed class ProfilePageViewModelTests
         viewModel.Selected!.Password.Should().Be("新密码");
     }
 
+    /// <summary>
+    /// 点了「添加」但还没填账号的空白草稿，不能阻塞其它已有档案保存；
+    /// 草稿仍留在列表里，用户填好账号后可以继续保存。
+    /// </summary>
+    [Fact]
+    public void 空白草稿不阻塞已有档案保存()
+    {
+        var repository = new FakeProfileRepository();
+        var viewModel = CreateViewModel(repository);
+        viewModel.Add();
+        viewModel.Selected!.Account = "13800000000";
+        viewModel.Selected.Password = "pw";
+        viewModel.Save().Should().BeTrue();
+        var existing = viewModel.Items.Single();
+
+        viewModel.Add();
+        viewModel.Items.Should().HaveCount(2);
+        viewModel.Selected = existing;
+
+        viewModel.Save().Should().BeTrue();
+
+        repository.Current.Automations.Should().ContainSingle()
+            .Which.Id.Should().Be(existing.Id);
+        viewModel.Items.Should().HaveCount(2, "空白草稿要留在界面里继续编辑");
+        viewModel.StatusText.Should().Contain("草稿未保存");
+    }
+
     /// <summary>保存失败时必须返回 false，调用方才能中止后续动作。</summary>
     [Fact]
     public void 保存失败返回false()

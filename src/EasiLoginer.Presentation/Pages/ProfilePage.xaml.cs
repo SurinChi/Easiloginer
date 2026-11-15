@@ -146,6 +146,7 @@ public partial class ProfilePage : Page
         // 只有账号或密码真的被改过才要求验证；改名称等其它字段直接保存
         if (_viewModel.RequiresMasterPassword && _viewModel.HasSensitiveChanges() && !EnsureMasterPassword())
         {
+            _viewModel.StatusText = "未保存：主密码验证未通过或已取消。";
             return;
         }
 

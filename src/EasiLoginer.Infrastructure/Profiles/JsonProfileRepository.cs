@@ -504,7 +504,7 @@ public sealed class JsonProfileRepository : IProfileRepository
         {
             if (string.IsNullOrWhiteSpace(automation.Account))
             {
-                throw new ProfileValidationException("账号不能为空。");
+                throw new ProfileValidationException($"档案「{automation.DisplayLabel}」的账号不能为空。");
             }
 
             // 密码允许留空：登录前会再校验，避免用户必须先拿到密码才能建档案。
