@@ -37,6 +37,10 @@ public sealed class Config
     [JsonPropertyName("App")]
     public AppConfig App { get; set; } = new();
 
+    /// <summary>外观与背景（亚克力、背景系统）。</summary>
+    [JsonPropertyName("Appearance")]
+    public AppearanceConfig Appearance { get; set; } = new();
+
     /// <summary>实验性选项。</summary>
     [JsonPropertyName("Experimental")]
     public ExperimentalConfig Experimental { get; set; } = new();

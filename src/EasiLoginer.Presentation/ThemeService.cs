@@ -2,6 +2,7 @@ using Microsoft.Win32;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using EasiLoginer.Domain.Configuration;
+using EasiLoginer.Presentation.Appearance;
 
 namespace EasiLoginer.Presentation;
 
@@ -29,8 +30,16 @@ public static class ThemeService
 
         // 背板效果（Mica）在部分虚拟化环境下会导致窗口整体透明，
         // 这里统一使用 None + 不透明主题背景，等真机验证后再按平台启用。
+        var changed = CurrentTheme != resolved;
         CurrentTheme = resolved;
         ApplicationThemeManager.Apply(resolved, WindowBackdropType.None, true);
+
+        // 玻璃层的底色跟随浅色 / 深色主题；只有主题真的变化时才重算，
+        // 否则保存设置会连续加载两次壁纸（先重算主题、再应用外观）。
+        if (changed)
+        {
+            AppearanceService.OnThemeChanged();
+        }
     }
 
     /// <summary>读取系统是否使用浅色主题；读取失败按浅色处理。</summary>

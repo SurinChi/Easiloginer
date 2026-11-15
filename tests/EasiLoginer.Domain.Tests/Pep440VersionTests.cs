@@ -72,6 +72,30 @@ public sealed class Pep440VersionTests
         Pep440Version.Parse(input).ToString().Should().Be(expected);
     }
 
+    /// <summary>
+    /// 发布流程使用 alpha.N / beta.N 形式的测试版号；标签去掉 v 前缀后必须能解析。
+    /// </summary>
+    [Theory]
+    [InlineData("0.2.0-alpha.1", "0.2.0a1")]
+    [InlineData("0.2.0-alpha.2", "0.2.0a2")]
+    [InlineData("0.2.0-beta.1", "0.2.0b1")]
+    public void 测试版号可解析并归一化(string input, string normalized)
+    {
+        var version = Pep440Version.Parse(input);
+
+        version.Text.Should().Be(input);
+        version.ToString().Should().Be(normalized);
+    }
+
+    /// <summary>测试版排序：alpha &lt; beta &lt; 同版本正式版。</summary>
+    [Fact]
+    public void 测试版排在正式版之前()
+    {
+        Pep440Version.Parse("0.2.0-alpha.1").Should().BeLessThan(Pep440Version.Parse("0.2.0-alpha.2"));
+        Pep440Version.Parse("0.2.0-alpha.2").Should().BeLessThan(Pep440Version.Parse("0.2.0-beta.1"));
+        Pep440Version.Parse("0.2.0-beta.1").Should().BeLessThan(Pep440Version.Parse("0.2.0"));
+    }
+
     /// <summary>非法输入必须失败，不能"尽量解析"。</summary>
     [Theory]
     [InlineData("")]

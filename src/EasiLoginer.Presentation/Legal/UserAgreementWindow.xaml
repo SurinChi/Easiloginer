@@ -1,0 +1,50 @@
+<ui:FluentWindow x:Class="EasiLoginer.Presentation.Legal.UserAgreementWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="EasiLoginer 用户协议"
+                 Width="760" Height="620"
+                 MinWidth="560" MinHeight="420"
+                 WindowStartupLocation="CenterOwner"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="None"
+                 Background="{DynamicResource ApplicationBackgroundBrush}"
+                 TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="EasiLoginer 用户协议"
+                     ShowMaximize="False" ShowMinimize="False" ShowClose="True" />
+
+        <StackPanel Grid.Row="1" Margin="24,8,24,12">
+            <TextBlock Text="EasiLoginer 用户协议（完整版）" FontSize="24" FontWeight="SemiBold" />
+            <TextBlock x:Name="VersionText" Opacity="0.7" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <Border Grid.Row="2" Margin="24,0" Padding="12" CornerRadius="8"
+                Background="{DynamicResource ControlFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <TextBox x:Name="AgreementText"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     Padding="4"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Disabled" />
+        </Border>
+
+        <Grid Grid.Row="3" Margin="24,14,24,20">
+            <TextBlock x:Name="StatusText" VerticalAlignment="Center" Opacity="0.65"
+                       Text="本协议与 LICENSE、NOTICE 分开维护；与 GPLv3 冲突时以 GPLv3 为准。" />
+            <Button Content="关闭" Padding="24,6" HorizontalAlignment="Right" Click="OnCloseClicked" />
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

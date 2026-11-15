@@ -174,6 +174,7 @@ public static class ConfigBounds
         config.Banner.Style ??= new BannerStyleConfig();
         config.StatusOverlay ??= new StatusOverlayConfig();
         config.App ??= new AppConfig();
+        config.Appearance ??= new AppearanceConfig();
         config.Experimental ??= new ExperimentalConfig();
         config.Experimental.PrivacyMask ??= new PrivacyMaskConfig();
         config.Profile ??= new ProfileConfig();
@@ -206,6 +207,17 @@ public static class ConfigBounds
         style.TextSpeed = Clamp(logger, "Banner.Style.TextSpeed", style.TextSpeed, -8, 8);
 
         config.App.MaxRetries = Clamp(logger, "App.MaxRetries", config.App.MaxRetries, 0, 5);
+
+        var appearance = config.Appearance;
+        appearance.BlurStrength = Clamp(logger, "Appearance.BlurStrength", appearance.BlurStrength, 0, 60);
+        appearance.AcrylicOpacity = Clamp(logger, "Appearance.AcrylicOpacity", appearance.AcrylicOpacity, 20, 100);
+        if (!Enum.IsDefined(appearance.BackgroundMode))
+        {
+            logger.LogWarning(
+                "配置项 Appearance.BackgroundMode 取值非法（{Value}），已回退为桌面壁纸",
+                (int)appearance.BackgroundMode);
+            appearance.BackgroundMode = BackgroundMode.Wallpaper;
+        }
 
         // 遗留的明文账号键必须迁移为脱敏哈希（§7.3），否则会随配置落盘泄露账号
         config.Statistics.NormalizeAccountKeys();

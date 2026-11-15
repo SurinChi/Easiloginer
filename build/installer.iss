@@ -1,9 +1,19 @@
 ; EasiLoginer 安装脚本（Inno Setup 6）
 ; 生成单文件安装包：双击 → 向导（欢迎/目录/任务/进度/完成）→ 解压 → 启动。
-; 编译：build\publish.cmd 第 6 步自动调用 ISCC。
+; 编译：build\publish.cmd 第 7 步自动调用 ISCC，并通过 /DMyAppVersion=... 传入版本号。
+; 单独编译时可用下面的默认值（与 Directory.Build.props 保持一致）。
+;
+; 设计要点：目标目录已存在时不再弹 Inno 默认的「文件夹已存在」警告，
+; 而是明确提示「保留数据安装」：只替换程序文件，data\ 中的配置与档案保留。
+
+#ifndef MyAppVersion
+  #define MyAppVersion "0.2.0-alpha.3"
+#endif
+#ifndef MyAppVersionNumeric
+  #define MyAppVersionNumeric "0.2.0.0"
+#endif
 
 #define MyAppName "EasiLoginer"
-#define MyAppVersion "0.1.3"
 #define MyAppPublisher "SurinChi"
 #define MyAppExeName "EasiLoginer.exe"
 #define MyAppId "{{6B1F3C24-8E7A-4D69-9A62-3F5C0E1D9A71}"
@@ -21,9 +31,13 @@ DefaultDirName={localappdata}\Programs\EasiLoginer
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 DisableWelcomePage=no
+; 始终显示目录页：升级时也要让用户看到「保留数据安装」的说明与确认
+DisableDirPage=no
 LicenseFile=
 WizardStyle=modern
 PrivilegesRequired=lowest
+; 目录已存在时由下方 [Code] 统一提示「保留数据安装」，不使用 Inno 默认警告
+DirExistsWarning=no
 OutputDir=..\..\EasiLoginer-dist
 OutputBaseFilename=EasiLoginer-Setup-{#MyAppVersion}
 SetupIconFile=..\src\EasiLoginer.Host\Assets\easiloginer.ico
@@ -37,20 +51,34 @@ ArchitecturesInstallIn64BitMode=x64compatible
 AppMutex=EasiLoginerMutex
 CloseApplications=yes
 RestartApplications=no
-VersionInfoVersion=0.1.3.0
+VersionInfoVersion={#MyAppVersionNumeric}
 VersionInfoCompany={#MyAppPublisher}
-VersionInfoDescription={#MyAppName} 安装程序
+VersionInfoDescription={#MyAppName} {#MyAppVersion} 安装程序
 VersionInfoProductName={#MyAppName}
-VersionInfoProductVersion={#MyAppVersion}
+VersionInfoProductVersion={#MyAppVersionNumeric}
 
 [Languages]
 Name: "chinesesimplified"; MessagesFile: "languages\ChineseSimplified.isl"
+
+[CustomMessages]
+chinesesimplified.KeepDataTitle=保留数据安装
+chinesesimplified.KeepDataMessage=目标文件夹已存在。继续安装将保留其中的配置与档案数据（data 目录），只替换程序文件。
+chinesesimplified.KeepDataNote=升级或选择已存在的文件夹时，将保留 data 目录中的配置与档案，只替换程序文件。
+chinesesimplified.ReadyKeepData=保留数据安装：本次安装只更新程序文件，data 目录中的配置与档案不会被删除。
+
+[Messages]
+chinesesimplified.WelcomeLabel2=这将安装 [name] {#MyAppVersion} 到你的电脑。%n%n升级或选择已存在的文件夹时，安装程序会保留 data 目录中的配置与档案，只替换程序文件。%n%n继续前请关闭正在运行的 EasiLoginer。
+chinesesimplified.SelectDirDesc=选择 EasiLoginer 的安装位置。
+chinesesimplified.SelectDirLabel3=安装程序将把 [name] 安装到下面的文件夹；如果该文件夹已存在，将继续安装并保留其中的配置与档案数据。
+chinesesimplified.SelectDirBrowseLabel=点击“下一步”继续；如需安装到其他文件夹，点击“浏览”。
+chinesesimplified.ConfirmUninstall=确认要卸载 %1 吗？%n%n卸载会删除整个安装目录，包括 data 目录中的配置与档案；如需保留，请先备份。
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务："; Flags: checkedonce
 
 [InstallDelete]
-; 升级安装时清理旧版本残留的文件，避免与新版本混用
+; 只清理旧版的程序 DLL；绝不删除 data 目录（配置与档案）。
+; 升级时 7z 以 -y 覆盖程序文件，data\ 不在负载中，因此不会被清掉。
 Type: filesandordirs; Name: "{app}\*.dll"
 
 [Files]
@@ -73,3 +101,51 @@ Filename: "{app}\{#MyAppExeName}"; Description: "启动 {#MyAppName}"; Flags: no
 ; 负载解压出来的文件不在 Inno 的安装记录里，卸载时整目录清理
 Type: filesandordirs; Name: "{app}"
 
+[Code]
+// 在目录选择页显示一行说明，告诉用户已存在的目录会保留数据。
+procedure InitializeWizard();
+var
+  Note: TNewStaticText;
+begin
+  Note := TNewStaticText.Create(WizardForm);
+  Note.Parent := WizardForm.SelectDirPage;
+  Note.Left := WizardForm.DirEdit.Left;
+  Note.Top := WizardForm.DirBrowseButton.Top + WizardForm.DirBrowseButton.Height + ScaleY(10);
+  Note.Width := WizardForm.DirEdit.Width;
+  Note.Height := ScaleY(38);
+  Note.AutoSize := False;
+  Note.WordWrap := True;
+  Note.Font.Color := clGray;
+  Note.Caption := ExpandConstant('{cm:KeepDataNote}');
+end;
+
+// 目标文件夹已存在时，用「保留数据安装」代替 Inno 默认的「文件夹已存在」警告。
+// 静默安装不弹窗，直接按保留数据的方式继续。
+function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  MessageText: String;
+begin
+  Result := True;
+
+  if (CurPageID = wpSelectDir) and DirExists(WizardDirValue()) and (not WizardSilent) then
+  begin
+    MessageText := ExpandConstant('{cm:KeepDataTitle}') + '。' + #13#10#13#10 +
+      ExpandConstant('{cm:KeepDataMessage}') + #13#10#13#10 +
+      '目标位置：' + #13#10 + WizardDirValue() + #13#10#13#10 +
+      '是否继续？';
+    Result := MsgBox(MessageText, mbConfirmation, MB_YESNO or MB_DEFBUTTON1) = IDYES;
+  end;
+end;
+
+// 就绪页再次强调保留数据，避免用户以为升级会清空配置。
+function UpdateReadyMemo(
+  Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo,
+  MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
+begin
+  Result := MemoDirInfo + NewLine + NewLine + ExpandConstant('{cm:ReadyKeepData}');
+
+  if MemoTasksInfo <> '' then
+  begin
+    Result := Result + NewLine + NewLine + MemoTasksInfo;
+  end;
+end;

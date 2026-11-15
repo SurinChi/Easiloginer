@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using EasiLoginer.Application.Abstractions;
+using EasiLoginer.Presentation.Appearance;
 using EasiLoginer.Presentation.Configuration;
 
 namespace EasiLoginer.Presentation.Pages;
@@ -65,6 +66,7 @@ public sealed partial class ConfigPageViewModel : ObservableObject
 
             _config.Save();
             ThemeService.Apply(_config.Current.App.Theme);
+            AppearanceService.Apply(_config.Current);
             StatusText = string.Create(CultureInfo.InvariantCulture, $"已保存（{DateTime.Now:HH:mm:ss}）");
         }
         catch (FormatException exception)

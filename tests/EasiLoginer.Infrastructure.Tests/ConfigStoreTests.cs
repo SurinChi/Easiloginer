@@ -183,6 +183,65 @@ public sealed class ConfigStoreTests : IDisposable
         _store.Load().App.StartPage.Should().Be(StartPageOptions.Config);
     }
 
+    /// <summary>外观与背景设置可写入并读回，旧配置缺少该段时使用默认值。</summary>
+    [Fact]
+    public void 外观配置往返()
+    {
+        var config = _store.Load();
+        config.Appearance.AcrylicEnabled = false;
+        config.Appearance.BlurStrength = 44;
+        config.Appearance.AcrylicOpacity = 63;
+        config.Appearance.BackgroundMode = BackgroundMode.Gradient;
+        config.Appearance.BackgroundColor = ArgbColor.Parse("#FF112233");
+        config.Appearance.BackgroundColor2 = ArgbColor.Parse("#FF445566");
+        config.Appearance.BackgroundImagePath = @"D:\Pictures\bg.png";
+
+        _store.Save(config);
+        var loaded = _store.Load();
+
+        loaded.Appearance.AcrylicEnabled.Should().BeFalse();
+        loaded.Appearance.BlurStrength.Should().Be(44);
+        loaded.Appearance.AcrylicOpacity.Should().Be(63);
+        loaded.Appearance.BackgroundMode.Should().Be(BackgroundMode.Gradient);
+        loaded.Appearance.BackgroundColor.Should().Be(ArgbColor.Parse("#FF112233"));
+        loaded.Appearance.BackgroundColor2.Should().Be(ArgbColor.Parse("#FF445566"));
+        loaded.Appearance.BackgroundImagePath.Should().Be(@"D:\Pictures\bg.png");
+    }
+
+    /// <summary>旧配置没有 Appearance 段时，默认跟随桌面壁纸并启用亚克力。</summary>
+    [Fact]
+    public void 旧配置缺少外观段时用默认值()
+    {
+        WriteJson("""{"App":{"Theme":"Dark"}}""");
+
+        var appearance = _store.Load().Appearance;
+
+        appearance.AcrylicEnabled.Should().BeTrue();
+        appearance.BackgroundMode.Should().Be(BackgroundMode.Wallpaper);
+        appearance.EffectiveBlurRadius.Should().Be(32);
+    }
+
+    /// <summary>非法的背景模式回退为桌面壁纸，越界数值被钳制。</summary>
+    [Fact]
+    public void 非法外观值被修正()
+    {
+        WriteJson("""
+        {
+            "Appearance": {
+                "BackgroundMode": "neon",
+                "BlurStrength": 999,
+                "AcrylicOpacity": 1
+            }
+        }
+        """);
+
+        var appearance = _store.Load().Appearance;
+
+        appearance.BackgroundMode.Should().Be(BackgroundMode.Wallpaper);
+        appearance.BlurStrength.Should().Be(60);
+        appearance.AcrylicOpacity.Should().Be(20);
+    }
+
     /// <summary>未知字段忽略，缺失字段保留默认值（向前/向后兼容）。</summary>
     [Fact]
     public void 未知字段忽略且缺失字段用默认值()

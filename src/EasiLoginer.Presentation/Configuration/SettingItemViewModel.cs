@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.IO;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using EasiLoginer.Domain.Configuration;
 using EasiLoginer.Domain.Geometry;
 
@@ -23,6 +25,9 @@ public sealed partial class SettingItemViewModel : ObservableObject
 
     [ObservableProperty]
     private int _selectedIndex;
+
+    [ObservableProperty]
+    private double _numberValue;
 
     /// <summary>创建设置项并载入当前值。</summary>
     public SettingItemViewModel(Config config, SettingDescriptor descriptor)
@@ -67,8 +72,23 @@ public sealed partial class SettingItemViewModel : ObservableObject
     /// <summary>是否字体下拉。</summary>
     public bool IsFont => Descriptor.Kind == SettingKind.Font;
 
+    /// <summary>是否滑杆。</summary>
+    public bool IsSlider => Descriptor.Kind == SettingKind.Slider;
+
+    /// <summary>是否文件路径（带「浏览…」按钮）。</summary>
+    public bool IsFilePath => Descriptor.Kind == SettingKind.FilePath;
+
     /// <summary>是否文本输入（文本/数值/坐标/颜色）。</summary>
     public bool IsTextual => Descriptor.Kind is SettingKind.Text or SettingKind.Number or SettingKind.Point or SettingKind.Color;
+
+    /// <summary>滑杆下限。</summary>
+    public double Minimum => Descriptor.Min ?? 0;
+
+    /// <summary>滑杆上限。</summary>
+    public double Maximum => Descriptor.Max ?? 100;
+
+    /// <summary>滑杆当前值的显示文本。</summary>
+    public string NumberText => NumberValue.ToString("0", CultureInfo.InvariantCulture);
 
     /// <summary>枚举显示文本。</summary>
     public IReadOnlyList<string> Options => Descriptor.Options ?? [];
@@ -128,6 +148,13 @@ public sealed partial class SettingItemViewModel : ObservableObject
                 TextValue = number.ToString(CultureInfo.InvariantCulture);
                 break;
 
+            case SettingKind.Slider:
+                var sliderValue = Math.Round(Math.Clamp(NumberValue, Minimum, Maximum));
+                _leaf.SetValue(_owner, Convert.ChangeType(sliderValue, _leaf.PropertyType, CultureInfo.InvariantCulture));
+                NumberValue = sliderValue;
+                TextValue = NumberText;
+                break;
+
             case SettingKind.Point:
                 _leaf.SetValue(_owner, ParsePoint(TextValue));
                 break;
@@ -139,6 +166,32 @@ public sealed partial class SettingItemViewModel : ObservableObject
             default:
                 _leaf.SetValue(_owner, TextValue);
                 break;
+        }
+    }
+
+    partial void OnNumberValueChanged(double value) => OnPropertyChanged(nameof(NumberText));
+
+    /// <summary>打开文件选择框，把图片路径写回文本框。</summary>
+    [RelayCommand]
+    private void BrowseImage()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "选择背景图片",
+            Filter = "图片文件|*.png;*.jpg;*.jpeg;*.bmp;*.webp;*.gif|所有文件|*.*",
+            CheckFileExists = true,
+        };
+
+        if (!string.IsNullOrWhiteSpace(TextValue) && File.Exists(TextValue))
+        {
+            dialog.FileName = TextValue;
+        }
+
+        var owner = System.Windows.Application.Current?.MainWindow;
+        var accepted = owner is null ? dialog.ShowDialog() == true : dialog.ShowDialog(owner) == true;
+        if (accepted)
+        {
+            TextValue = dialog.FileName;
         }
     }
 
@@ -158,6 +211,11 @@ public sealed partial class SettingItemViewModel : ObservableObject
 
             case SettingKind.Number:
                 TextValue = Convert.ToDouble(value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+                break;
+
+            case SettingKind.Slider:
+                NumberValue = Convert.ToDouble(value, CultureInfo.InvariantCulture);
+                TextValue = NumberText;
                 break;
 
             case SettingKind.Point:

@@ -15,6 +15,12 @@ public enum SettingKind
     /// <summary>数值（含小数）。</summary>
     Number,
 
+    /// <summary>整数滑杆（配合 <see cref="SettingDescriptor.Min"/> / Max）。</summary>
+    Slider,
+
+    /// <summary>文件路径：文本输入 + 「浏览…」。</summary>
+    FilePath,
+
     /// <summary>枚举下拉。</summary>
     Enum,
 

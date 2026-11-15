@@ -157,7 +157,7 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         _profiles.UpsertAutomation(automation);
         Items.Add(automation);
         Selected = automation;
-        StatusText = "已添加，填写账号密码后保存。";
+        StatusText = "已添加，请填写账号后保存（密码可以留空）。";
     }
 
     /// <summary>删除选中档案。</summary>
@@ -196,6 +196,18 @@ public sealed partial class ProfilePageViewModel : ObservableObject
     /// </remarks>
     public bool Save()
     {
+        // 未填写账号的新行只是草稿：不能让它阻塞其他已有档案的保存。
+        // 保留在 Items 里供用户继续编辑，但从待写入的 Current 中移除；
+        // 下次选中并填写账号后，下面的 Upsert 会重新把它加回 Current。
+        var blankDrafts = Items
+            .Where(profile => !ReferenceEquals(profile, Selected) && string.IsNullOrWhiteSpace(profile.Account))
+            .ToList();
+
+        foreach (var draft in blankDrafts)
+        {
+            _profiles.DeleteAutomation(draft.Id);
+        }
+
         // 编辑器绑定的是 Items 里的实例；新行可能还没进 Current，这里再兜一次。
         if (Selected is not null)
         {
@@ -206,6 +218,12 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         {
             _profiles.Save(ProfileChangeReason.AutomationSaved);
             StatusText = $"已保存（共 {_profiles.Current.Automations.Count} 条档案）。";
+
+            if (blankDrafts.Count > 0)
+            {
+                StatusText += $" 另有 {blankDrafts.Count} 条未填写账号的草稿未保存。";
+            }
+
             return true;
         }
         catch (ProfileLockedException)

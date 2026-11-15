@@ -9,55 +9,76 @@
                  WindowStartupLocation="CenterScreen"
                  ExtendsContentIntoTitleBar="True"
                  WindowBackdropType="None"
-                 Background="{DynamicResource ApplicationBackgroundBrush}">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+                 Background="Transparent">
+    <ui:FluentWindow.Resources>
+        <!-- 让导航内容区透出底下的亚克力背景；窗格自身保持透明。 -->
+        <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
+        <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
+    </ui:FluentWindow.Resources>
 
-        <ui:TitleBar Grid.Row="0" Title="EasiLoginer" ShowMaximize="True" ShowMinimize="True" ShowClose="True">
-            <ui:TitleBar.Icon>
-                <ui:ImageIcon Width="16" Height="16"
-                              Source="pack://application:,,,/EasiLoginer.Presentation;component/Assets/easiloginer.png" />
-            </ui:TitleBar.Icon>
-        </ui:TitleBar>
+    <Grid ClipToBounds="True">
+        <!-- 背景系统：壁纸 / 图片 / 纯色 / 渐变；模糊强度由 AppearanceService 写入资源 -->
+        <Rectangle Fill="{DynamicResource AcrylicBackgroundBrush}"
+                   Margin="{DynamicResource AcrylicBackgroundMargin}"
+                   IsHitTestVisible="False">
+            <Rectangle.Effect>
+                <BlurEffect Radius="{DynamicResource AcrylicBlurRadius}"
+                            RenderingBias="Quality" />
+            </Rectangle.Effect>
+        </Rectangle>
 
-        <!-- 图标统一用 Fluent SymbolIcon：尺寸与线宽由字体决定，
-             不再出现自绘 SVG 路径（闪电）比其他图标明显偏大的问题。 -->
-        <ui:NavigationView Grid.Row="1"
-                           x:Name="RootNavigation"
-                           PaneDisplayMode="Left"
-                           IsBackButtonVisible="Collapsed">
-            <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Content="快捷登录" TargetPageType="{x:Type pages:QuickLoginPage}">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="Flash24" FontSize="16" />
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
-                <ui:NavigationViewItem Content="档案" TargetPageType="{x:Type pages:ProfilePage}">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="Person24" FontSize="16" />
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
-                <ui:NavigationViewItem Content="设置" TargetPageType="{x:Type pages:ConfigPage}">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="Settings24" FontSize="16" />
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
-                <ui:NavigationViewItem Content="更新" TargetPageType="{x:Type pages:UpdatePage}">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="ArrowDownload24" FontSize="16" />
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
-            </ui:NavigationView.MenuItems>
-            <ui:NavigationView.FooterMenuItems>
-                <ui:NavigationViewItem Content="关于" TargetPageType="{x:Type pages:AboutPage}">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="Info24" FontSize="16" />
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
-            </ui:NavigationView.FooterMenuItems>
-        </ui:NavigationView>
+        <!-- 亚克力玻璃层：壁纸 / 图片模式下按配置的不透明度着色 -->
+        <Rectangle Fill="{DynamicResource AcrylicTintBrush}" IsHitTestVisible="False" />
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <ui:TitleBar Grid.Row="0" Title="EasiLoginer" ShowMaximize="True" ShowMinimize="True" ShowClose="True">
+                <ui:TitleBar.Icon>
+                    <ui:ImageIcon Width="16" Height="16"
+                                  Source="pack://application:,,,/EasiLoginer.Presentation;component/Assets/easiloginer.png" />
+                </ui:TitleBar.Icon>
+            </ui:TitleBar>
+
+            <!-- 图标统一用 Fluent SymbolIcon：尺寸与线宽由字体决定，
+                 不再出现自绘 SVG 路径（闪电）比其他图标明显偏大的问题。 -->
+            <ui:NavigationView Grid.Row="1"
+                               x:Name="RootNavigation"
+                               PaneDisplayMode="Left"
+                               IsBackButtonVisible="Collapsed">
+                <ui:NavigationView.MenuItems>
+                    <ui:NavigationViewItem Content="快捷登录" TargetPageType="{x:Type pages:QuickLoginPage}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="Flash24" FontSize="16" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="档案" TargetPageType="{x:Type pages:ProfilePage}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="Person24" FontSize="16" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="设置" TargetPageType="{x:Type pages:ConfigPage}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="Settings24" FontSize="16" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="更新" TargetPageType="{x:Type pages:UpdatePage}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="ArrowDownload24" FontSize="16" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                </ui:NavigationView.MenuItems>
+                <ui:NavigationView.FooterMenuItems>
+                    <ui:NavigationViewItem Content="关于" TargetPageType="{x:Type pages:AboutPage}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="Info24" FontSize="16" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                </ui:NavigationView.FooterMenuItems>
+            </ui:NavigationView>
+        </Grid>
     </Grid>
 </ui:FluentWindow>
