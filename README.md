@@ -110,7 +110,8 @@ EasiLoginer-Setup-<版本>.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 
 - **稳定通道**：只提供正式版；
 - **测试通道**：在正式版与预发布中取版本最高者；
-- 发现新版本后可直接下载（显示进度、校验 SHA-256），完成后点「运行安装程序」。
+- 发现新版本后可直接下载（显示进度、校验 SHA-256），完成后点「运行安装程序」；
+- **下载镜像源「自动选择」**：先直连 GitHub，连接失败后依次回退到 ghfast / ghproxy；大文件按“无数据停滞”判断超时，不再被 20 秒总超时误杀。
 
 ### 8. 卸载
 
@@ -174,7 +175,7 @@ dotnet build EasiLoginer.sln -c Release
 dotnet test  EasiLoginer.sln -c Release --no-build
 ```
 
-`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 465 个测试。
+`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 469 个测试。
 
 ### 打包发布
 

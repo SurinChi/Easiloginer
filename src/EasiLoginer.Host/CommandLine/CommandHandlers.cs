@@ -29,6 +29,13 @@ internal static class CommandHandlers
     /// <summary>更新检查共用的 HTTP 客户端（GitHub API 要求 User-Agent，超时保守）。</summary>
     private static readonly HttpClient UpdateHttpClient = new() { Timeout = TimeSpan.FromSeconds(20) };
 
+    /// <summary>
+    /// 下载安装包专用的 HTTP 客户端：不设总超时，由 <c>UpdateDownloader</c> 用
+    /// “连接超时 + 无数据停滞”控制。共用 20 秒客户端会把大文件下载误杀成
+    /// “The request was canceled”。
+    /// </summary>
+    private static readonly HttpClient DownloadHttpClient = new() { Timeout = Timeout.InfiniteTimeSpan };
+
     /// <summary>打开主界面。</summary>
     public static int Settings() => Settings(allowProfileRecovery: true);
 
@@ -63,7 +70,9 @@ internal static class CommandHandlers
                 new LoginRunnerAdapter(),
                 new WindowsDisplayMetrics(),
                 new GitHubUpdateSource(UpdateHttpClient),
-                new UpdateDownloader(UpdateHttpClient),
+                new UpdateDownloader(
+                    DownloadHttpClient,
+                    sourceProvider: () => config.Update.TargetDownloadSource),
                 new AnnouncementService(
                     new HttpAnnouncementSource(
                         UpdateHttpClient,

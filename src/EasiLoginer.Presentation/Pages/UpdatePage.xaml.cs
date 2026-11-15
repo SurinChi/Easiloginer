@@ -31,7 +31,7 @@ public partial class UpdatePage : Page
         }
 
         VersionText.Text = $"当前版本：{AppVersion.Text}";
-        StatusText.Text = "点击「检查更新」从 GitHub Releases 获取最新版本";
+        StatusText.Text = "点击「检查更新」获取最新版本";
     }
 
     private void OnSaveSettingsClicked(object sender, RoutedEventArgs e)
@@ -122,13 +122,13 @@ public partial class UpdatePage : Page
         catch (IOException exception)
         {
             DownloadProgress.Visibility = Visibility.Collapsed;
-            StatusText.Text = $"下载失败：{exception.Message}";
+            StatusText.Text = $"下载失败：{exception.Message} 可在下方切换下载镜像源后重试。";
             DownloadButton.IsEnabled = true;
         }
         catch (UnauthorizedAccessException exception)
         {
             DownloadProgress.Visibility = Visibility.Collapsed;
-            StatusText.Text = $"下载失败：{exception.Message}";
+            StatusText.Text = $"下载失败：{exception.Message} 请检查临时目录权限。";
             DownloadButton.IsEnabled = true;
         }
     }

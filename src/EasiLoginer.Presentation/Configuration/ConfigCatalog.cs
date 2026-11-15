@@ -135,6 +135,7 @@ public static class ConfigCatalog
         ["Appearance.BackgroundColor"] = "纯色模式使用；渐变模式为起始色",
         ["Appearance.BackgroundColor2"] = "仅渐变模式使用",
         ["Appearance.BackgroundImagePath"] = "支持 png / jpg / bmp / webp；留空时使用桌面壁纸",
+        ["Update.TargetDownloadSource"] = "自动：直连失败后依次尝试 ghfast / ghproxy 镜像",
         ["Experimental.PrivacyMask.Enabled"] = "智慧大屏上可能导致异常",
     };
 
