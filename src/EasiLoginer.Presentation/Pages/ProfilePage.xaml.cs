@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using EasiLoginer.Presentation.Dialogs;
+using EasiLoginer.Presentation.Profiles;
 
 namespace EasiLoginer.Presentation.Pages;
 
@@ -11,6 +12,12 @@ public partial class ProfilePage : Page
 
     /// <summary>正在把视图模型的密码写进 PasswordBox 时抑制反向同步。</summary>
     private bool _syncingPassword;
+
+    /// <summary>
+    /// 页面是否仍在导航宿主中。离开页面时 WPF 会清空 PasswordBox，
+    /// 那个空值不是用户编辑，不能写回视图模型。
+    /// </summary>
+    private bool _isPageActive = true;
 
     /// <summary>创建档案页。</summary>
     public ProfilePage(AppServices services)
@@ -29,6 +36,16 @@ public partial class ProfilePage : Page
                 SyncPasswordBox();
             }
         };
+
+        Loaded += (_, _) =>
+        {
+            _isPageActive = true;
+
+            // 从其他页面返回时 PasswordBox 已被 WPF 清空；模型里的密码才是事实源，
+            // 重新同步一次，避免界面看起来像密码丢了。
+            SyncPasswordBox();
+        };
+        Unloaded += (_, _) => _isPageActive = false;
         SyncPasswordBox();
     }
 
@@ -55,17 +72,26 @@ public partial class ProfilePage : Page
 
     private void OnPasswordChanged(object sender, RoutedEventArgs e)
     {
-        if (_syncingPassword || _viewModel.Selected is null)
+        if (_syncingPassword || !_isPageActive || _viewModel.Selected is null)
         {
             return;
         }
 
-        _viewModel.Selected.Password = PasswordInput.Password;
+        var password = PasswordInput.Password;
+
+        // 导航离开时 PasswordBox 会被 WPF 清空并触发 PasswordChanged；
+        // 这不是用户把密码删掉，若此时密码框没有焦点且模型里已有密码，忽略这次清空。
+        if (ProfilePasswordSync.IsProgrammaticClear(password, PasswordInput.IsKeyboardFocusWithin, _viewModel.Selected.Password))
+        {
+            return;
+        }
+
+        _viewModel.Selected.Password = password;
 
         _syncingPassword = true;
         try
         {
-            PasswordPlain.Text = PasswordInput.Password;
+            PasswordPlain.Text = password;
         }
         finally
         {
@@ -75,17 +101,25 @@ public partial class ProfilePage : Page
 
     private void OnPlainTextChanged(object sender, TextChangedEventArgs e)
     {
-        if (_syncingPassword || _viewModel.Selected is null)
+        if (_syncingPassword || !_isPageActive || _viewModel.Selected is null)
         {
             return;
         }
 
-        _viewModel.Selected.Password = PasswordPlain.Text;
+        var password = PasswordPlain.Text;
+
+        // 明文框在页面卸载时同样可能被清空；用户主动清空时焦点在框内，不能误判。
+        if (ProfilePasswordSync.IsProgrammaticClear(password, PasswordPlain.IsKeyboardFocusWithin, _viewModel.Selected.Password))
+        {
+            return;
+        }
+
+        _viewModel.Selected.Password = password;
 
         _syncingPassword = true;
         try
         {
-            PasswordInput.Password = PasswordPlain.Text;
+            PasswordInput.Password = password;
         }
         finally
         {
