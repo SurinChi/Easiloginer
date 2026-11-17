@@ -1,5 +1,6 @@
 using EasiLoginer.Application.Abstractions;
 using EasiLoginer.Domain.Configuration;
+using EasiLoginer.Presentation.Configuration;
 using EasiLoginer.Presentation.Legal;
 using EasiLoginer.Presentation.Onboarding;
 using FluentAssertions;
@@ -26,6 +27,21 @@ public sealed class WizardTests
             WizardStepKind.EasiNote,
             WizardStepKind.Shortcuts,
         ]);
+    }
+
+    /// <summary>
+    /// 设置页、首次向导等入口必须使用同一组登录方式名称；
+    /// 自动定位不能再写成 UI Automation，否则用户会对不上号。
+    /// </summary>
+    [Fact]
+    public void 四种登录方式名称统一()
+    {
+        LoginMethodLabels.All.Should().Equal("固定位置", "图像识别", "自动定位", "令牌投递");
+        LoginMethodLabels.All[(int)LoginMethod.Uia].Should().Be("自动定位");
+
+        var loginStep = OobeSteps.Create().Single(step => step.Kind == WizardStepKind.LoginMethod);
+        loginStep.Description.Should().Contain("自动定位");
+        loginStep.Description.Should().NotContain("UI Automation");
     }
 
     /// <summary>协议页必须有完整正文，且默认未勾选。</summary>

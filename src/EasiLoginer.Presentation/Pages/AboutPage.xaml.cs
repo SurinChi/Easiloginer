@@ -1,28 +1,40 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using EasiLoginer.Presentation.Announcements;
+using System.Windows.Navigation;
 using EasiLoginer.Presentation.Legal;
 
 namespace EasiLoginer.Presentation.Pages;
 
-/// <summary>关于页：版本、公告入口、上游归属与许可信息（文档 §10.2）。</summary>
+/// <summary>关于页：应用横幅、作者信息、核心亮点与许可入口。</summary>
 public partial class AboutPage : Page
 {
-    private readonly AppServices _services;
-
     /// <summary>创建关于页。</summary>
     public AboutPage(AppServices services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        _services = services;
         InitializeComponent();
-
-        // 页面高度必须钉在导航容器内，否则内部 ScrollViewer 会被撑成内容高度，
-        // 滚轮事件落不到它身上（关于页正文较长，需要能滚动）。
         PageLayout.ConstrainToNavigationHost(this);
+        VersionText.Text = $"v{AppVersion.Text} · GPLv3";
+    }
 
-        VersionText.Text = $"版本 {AppVersion.Text} · GPLv3";
+    /// <summary>
+    /// 横幅按 1600×560 的原始比例跟随内容宽度缩放，避免窄窗口下被裁掉左右两侧。
+    /// </summary>
+    private void OnBannerSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not Border border || e.NewSize.Width <= 0)
+        {
+            return;
+        }
+
+        var height = Math.Round(e.NewSize.Width * 560.0 / 1600.0);
+        if (Math.Abs(border.Height - height) > 0.5)
+        {
+            border.Height = height;
+        }
     }
 
     private void OnAgreementClicked(object sender, RoutedEventArgs e)
@@ -32,18 +44,17 @@ public partial class AboutPage : Page
         window.ShowDialog();
     }
 
-    private async void OnAnnouncementsClicked(object sender, RoutedEventArgs e)
+    private void OnLinkNavigate(object sender, RequestNavigateEventArgs e)
     {
-        AnnouncementButton.IsEnabled = false;
-
         try
         {
-            await AnnouncementCenter.ShowAsync(_services, Window.GetWindow(this));
-            AnnouncementStatus.Text = "已是最新公告。";
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
         }
-        finally
+        catch (Exception exception) when (exception is Win32Exception or InvalidOperationException)
         {
-            AnnouncementButton.IsEnabled = true;
+            // 没有默认浏览器时忽略：外链不是关于页的核心功能
         }
+
+        e.Handled = true;
     }
 }

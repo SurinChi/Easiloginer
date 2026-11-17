@@ -2,22 +2,29 @@
 
 [![CI](https://github.com/SurinChi/Easiloginer/actions/workflows/ci.yml/badge.svg)](https://github.com/SurinChi/Easiloginer/actions/workflows/ci.yml)
 
+![EasiLoginer](docs/screenshots/banner.png)
+
+<img src="docs/screenshots/author.png" width="52" height="52" align="left" hspace="12" alt="SurinChi" />
+
+**SurinChi** · EasiLoginer 作者<br>
+[官网 surinchi.github.io](https://surinchi.github.io) · [GitHub](https://github.com/SurinChi) · [问题反馈](https://github.com/SurinChi/Easiloginer/issues)
+
+<br clear="left" />
+
 一个**手动触发**的希沃白板自动登录工具：点一下按钮，它替你启动希沃、填好账号密码、点登录。
 
-不驻留后台、不监视进程和文件、没有定时任务；除「检查更新」与拉取应用内公告外不发起任何网络请求。
-
-![快捷登录](docs/screenshots/quick-login.png)
+不驻留后台、不监视进程和文件、没有定时任务；除「检查更新」与拉取公告外不发起任何网络请求。
 
 ## 功能
 
-- **四种登录方式**：UI Automation（默认，最稳）、固定位置、图像识别、令牌投递
+- **四种登录方式**：自动定位（默认，最稳）、固定位置、图像识别、令牌投递
 - **快捷登录页**：每个档案一张横向卡片，按科目点名登录；有档案时启动直接进这一页
 - **档案管理**：多档案、备注、可选的**主密码加密**（账号密码以 `ea$` 密文落盘）
 - **密码脱敏**：密码始终以圆点显示，点右侧眼睛可临时查看明文
 - **流程可控**：超时、坐标缩放、隐私遮罩、警示横幅、状态浮窗、重试次数都可调
 - **希沃集成**：检测安装路径、修补登录桥、终止 EasiAgent、查杀残留进程
 - **更新检查**：从 GitHub Releases 检查、下载安装包并校验 SHA-256
-- **应用内公告**：启动时读取一次公告，发布新版本或维护通知无需重新发版
+- **公告页**：独立页面，入口在「关于」下方；启动时仍会提醒重要公告，发布新版本或维护通知无需重新发版
 - **外观与背景**：亚克力毛玻璃效果，模糊强度与玻璃不透明度可调；背景支持桌面壁纸、本地图片、纯色和渐变
 - **本地优先**：没有账号体系、不做遥测
 
@@ -73,8 +80,8 @@ EasiLoginer-Setup-<版本>.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 
 | 方式 | 适用场景 |
 |---|---|
-| **UI Automation**（默认） | 绝大多数情况首选，按控件定位，最稳定 |
-| 固定位置 | 希沃界面没变但不支持 UI Automation 时的兜底 |
+| **自动定位**（默认） | 绝大多数情况首选，按控件定位，最稳定 |
+| 固定位置 | 希沃界面没变但不支持自动定位时的兜底 |
 | 图像识别 | 模板匹配，仅支持 1920×1080@100% 与 3840×2160@200% |
 | 令牌投递 | 最快，但需要先修补希沃白板（见下方命令行 `patch --on`，可随时撤销） |
 
@@ -131,7 +138,7 @@ EasiLoginer-Setup-<版本>.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 
 - **没有任何遥测**：崩溃与诊断只写本地日志；
 - 程序不会在后台联网：只有「检查更新」「下载更新」以及拉取一次应用内公告时才访问 GitHub；
-- 公告只发一次 `GET`，不携带账号、设备或使用信息；自动检查最多每 6 小时一次，也可在「关于」页手动查看；
+- 公告只发一次 `GET`，不携带账号、设备或使用信息；自动检查最多每 6 小时一次，也可在「关于」下方的「公告」页手动查看；
 - 想保留数据：复制 `data\` 即可；换机器时把它放回程序目录。
 
 ### 应用内公告（维护者）
@@ -175,7 +182,7 @@ dotnet build EasiLoginer.sln -c Release
 dotnet test  EasiLoginer.sln -c Release --no-build
 ```
 
-`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 474 个测试。
+`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 475 个测试。
 
 ### 打包发布
 
@@ -212,7 +219,7 @@ build\publish.cmd
 | `src/EasiLoginer.Infrastructure` | 配置/档案存储、IPC、更新下载、Windows 适配 |
 | `src/EasiLoginer.Integrations.EasiNote` | 希沃安装检测、修补、进程控制 |
 | `src/EasiLoginer.Automation` | 四种登录策略与图像匹配（程序集名 `EasiLoginer.AutomationKit`） |
-| `src/EasiLoginer.Presentation` | WPF + WPF-UI 界面：快捷登录、档案、设置、更新、关于 |
+| `src/EasiLoginer.Presentation` | WPF + WPF-UI 界面：快捷登录、档案、设置、更新、关于、公告 |
 | `src/EasiLoginer.Host` | 进程入口、命令行、单实例、日志 |
 | `src/EasiLoginer.Patcher` | 独立的白板修补器（随包分发） |
 | `tests/` | 6 个测试项目：领域、应用、基础设施、集成、界面、分层规则 |
@@ -230,7 +237,7 @@ build\publish.cmd
 确认希沃白板已安装，并在设置页检查「自定义路径」是否正确；日志在 `data\logs\`。
 
 **登录方式选哪个？**
-默认的 UI Automation 最稳；若希沃界面更新后失效，可临时切到固定位置。
+默认的自动定位最稳；若希沃界面更新后失效，可临时切到固定位置。
 
 **图像识别为什么不可用？**
 只支持 1920×1080@100% 与 3840×2160@200%，其他显示环境会直接提示不支持。

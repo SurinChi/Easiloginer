@@ -57,7 +57,7 @@ public sealed class UiaLoginStrategy : ILoginStrategy
             && !await _ui.WaitForElementAsync(EasiNoteUiIds.AccountInput, IwBridgeProbe, cancellationToken)
                 .ConfigureAwait(false))
         {
-            throw new LoginException("未找到希沃登录界面（UIA）", canRetry: true);
+            throw new LoginException("未找到希沃登录界面（自动定位）", canRetry: true);
         }
 
         await EnterLoginIfNeededAsync(context, cancellationToken).ConfigureAwait(false);

@@ -7,7 +7,7 @@
 ; 而是明确提示「保留数据安装」：只替换程序文件，data\ 中的配置与档案保留。
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.2.0-alpha.3"
+  #define MyAppVersion "0.2.0-beta.1"
 #endif
 #ifndef MyAppVersionNumeric
   #define MyAppVersionNumeric "0.2.0.0"
@@ -49,7 +49,9 @@ LZMAUseSeparateProcess=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 AppMutex=EasiLoginerMutex
-CloseApplications=yes
+; 运行中的旧版本由下方 [Code] 的 InitializeSetup 明确询问并结束；
+; 不再让 Inno 在复制文件阶段弹“文件正在使用”的通用提示。
+CloseApplications=no
 RestartApplications=no
 VersionInfoVersion={#MyAppVersionNumeric}
 VersionInfoCompany={#MyAppPublisher}
@@ -65,6 +67,8 @@ chinesesimplified.KeepDataTitle=保留数据安装
 chinesesimplified.KeepDataMessage=目标文件夹已存在。继续安装将保留其中的配置与档案数据（data 目录），只替换程序文件。
 chinesesimplified.KeepDataNote=升级或选择已存在的文件夹时，将保留 data 目录中的配置与档案，只替换程序文件。
 chinesesimplified.ReadyKeepData=保留数据安装：本次安装只更新程序文件，data 目录中的配置与档案不会被删除。
+chinesesimplified.CloseRunningMessage=检测到 EasiLoginer 正在运行。%n%n安装新版本前需要先结束它，否则程序文件可能被占用。%n%n是否现在结束 EasiLoginer 并继续安装？
+chinesesimplified.CloseRunningFailed=无法结束正在运行的 EasiLoginer。请手动退出程序后重新运行安装包。
 
 [Messages]
 chinesesimplified.WelcomeLabel2=这将安装 [name] {#MyAppVersion} 到你的电脑。%n%n升级或选择已存在的文件夹时，安装程序会保留 data 目录中的配置与档案，只替换程序文件。%n%n继续前请关闭正在运行的 EasiLoginer。
@@ -102,6 +106,66 @@ Filename: "{app}\{#MyAppExeName}"; Description: "启动 {#MyAppName}"; Flags: no
 Type: filesandordirs; Name: "{app}"
 
 [Code]
+// 安装开始前检查旧版本是否还在运行：明确询问后结束它，避免 Inno 在复制文件阶段
+// 才弹出“文件正在使用”的通用提示。静默安装不询问，直接结束旧进程。
+function InitializeSetup(): Boolean;
+var
+  ResultCode: Integer;
+  Attempt: Integer;
+begin
+  Result := True;
+
+  if not CheckForMutexes('EasiLoginerMutex') then
+  begin
+    Exit;
+  end;
+
+  Log('EasiLoginer is running before install');
+
+  if WizardSilent then
+  begin
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM EasiLoginer.exe',
+      '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Log(Format('taskkill exit code: %d', [ResultCode]));
+  end
+  else
+  begin
+    if MsgBox(ExpandConstant('{cm:CloseRunningMessage}'), mbConfirmation,
+      MB_YESNO or MB_DEFBUTTON1) <> IDYES then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+    if Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM EasiLoginer.exe',
+      '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    begin
+      Log(Format('taskkill exit code: %d', [ResultCode]));
+    end
+    else
+    begin
+      Log('taskkill could not be started');
+    end;
+  end;
+
+  for Attempt := 1 to 10 do
+  begin
+    if not CheckForMutexes('EasiLoginerMutex') then
+    begin
+      Break;
+    end;
+
+    Sleep(300);
+  end;
+
+  if CheckForMutexes('EasiLoginerMutex') then
+  begin
+    Log('EasiLoginer is still running after taskkill');
+    MsgBox(ExpandConstant('{cm:CloseRunningFailed}'), mbError, MB_OK);
+    Result := False;
+  end;
+end;
+
 // 在目录选择页显示一行说明，告诉用户已存在的目录会保留数据。
 procedure InitializeWizard();
 var

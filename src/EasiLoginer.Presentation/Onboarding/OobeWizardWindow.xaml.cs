@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using Wpf.Ui.Controls;
 using EasiLoginer.Application.Abstractions;
 using EasiLoginer.Domain.Configuration;
+using EasiLoginer.Presentation.Configuration;
 
 namespace EasiLoginer.Presentation.Onboarding;
 
@@ -275,11 +276,12 @@ public partial class OobeWizardWindow : FluentWindow
     private ComboBox BuildMethodSelector()
     {
         var combo = new ComboBox { Width = 260, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 16, 0, 0) };
-        // 顺序必须与 LoginMethod 枚举一致：Fixed=0, Cv=1, Uia=2, Token=3
-        combo.Items.Add("固定位置");
-        combo.Items.Add("图像识别（模板匹配）");
-        combo.Items.Add("UI Automation（推荐）");
-        combo.Items.Add("令牌投递（需先修补）");
+        // 顺序与 LoginMethod 枚举一致（Fixed=0, Cv=1, Uia=2, Token=3），
+        // 名称统一从设置页使用的同一份标签表读取。
+        foreach (var label in LoginMethodLabels.All)
+        {
+            combo.Items.Add(label);
+        }
         combo.SelectedIndex = _viewModel.MethodIndex;
         combo.SelectionChanged += (_, _) =>
         {

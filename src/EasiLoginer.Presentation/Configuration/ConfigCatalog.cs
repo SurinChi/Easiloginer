@@ -114,7 +114,7 @@ public static class ConfigCatalog
     /// <summary>枚举项的显示文本（顺序与枚举成员一致）。</summary>
     private static readonly Dictionary<Type, string[]> EnumLabels = new()
     {
-        [typeof(LoginMethod)] = ["固定位置", "图像识别", "自动定位", "令牌投递"],
+        [typeof(LoginMethod)] = LoginMethodLabels.All,
         [typeof(ThemeOptions)] = ["跟随系统", "浅色", "深色"],
         [typeof(BackgroundMode)] = ["跟随主题", "纯色", "渐变", "桌面壁纸", "本地图片"],
         [typeof(StartPageOptions)] = ["自动（有档案进快捷登录）", "快捷登录", "档案", "设置"],

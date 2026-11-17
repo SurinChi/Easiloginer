@@ -8,7 +8,7 @@ namespace EasiLoginer.Application.Automation;
 /// 登录策略契约，对应上游 <c>BaseAutomator</c> 的四个钩子。
 /// </summary>
 /// <remarks>
-/// 实现位于 <c>EasiLoginer.Automation</c>（固定位置 / 图像识别 / UIA / 令牌投递）。
+/// 实现位于 <c>EasiLoginer.Automation</c>（固定位置 / 图像识别 / 自动定位 / 令牌投递）。
 /// 策略只负责"怎么登录"，准备与重试由 <see cref="LoginPipeline"/> 统一负责。
 /// </remarks>
 public interface ILoginStrategy
