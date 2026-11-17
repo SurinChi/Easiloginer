@@ -20,6 +20,23 @@ public partial class AboutPage : Page
         VersionText.Text = $"v{AppVersion.Text} · GPLv3";
     }
 
+    /// <summary>
+    /// 横幅按 1600×560 的原始比例跟随内容宽度缩放，避免窄窗口下被裁掉左右两侧。
+    /// </summary>
+    private void OnBannerSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not Border border || e.NewSize.Width <= 0)
+        {
+            return;
+        }
+
+        var height = Math.Round(e.NewSize.Width * 560.0 / 1600.0);
+        if (Math.Abs(border.Height - height) > 0.5)
+        {
+            border.Height = height;
+        }
+    }
+
     private void OnAgreementClicked(object sender, RoutedEventArgs e)
     {
         var window = new UserAgreementWindow { Owner = Window.GetWindow(this) };

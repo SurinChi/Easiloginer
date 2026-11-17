@@ -48,6 +48,7 @@
             <ui:NavigationView Grid.Row="1"
                                x:Name="RootNavigation"
                                PaneDisplayMode="Left"
+                               OpenPaneLength="240"
                                IsBackButtonVisible="Collapsed">
                 <ui:NavigationView.MenuItems>
                     <ui:NavigationViewItem Content="快捷登录" TargetPageType="{x:Type pages:QuickLoginPage}">

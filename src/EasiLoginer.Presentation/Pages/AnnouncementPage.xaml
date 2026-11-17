@@ -10,7 +10,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" Padding="24">
         <StackPanel MaxWidth="860" HorizontalAlignment="Left">
             <TextBlock Text="公告" FontSize="28" FontWeight="SemiBold" />
-            <TextBlock Text="版本更新、维护通知与使用须知。公告由项目仓库统一发布，不需要重新安装应用。"
+            <TextBlock Text="版本更新、维护通知与使用须知。"
                        Opacity="0.7" Margin="0,4,0,0" TextWrapping="Wrap" />
 
             <StackPanel Orientation="Horizontal" Margin="0,14,0,4">

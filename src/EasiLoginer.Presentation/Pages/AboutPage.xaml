@@ -7,7 +7,8 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" Padding="24">
         <StackPanel MaxWidth="900" HorizontalAlignment="Left">
             <!-- 大横幅：与 README 共用同一张图 -->
-            <Border Height="300" Margin="0,0,0,22" CornerRadius="16">
+            <Border x:Name="BannerBorder" Height="300" Margin="0,0,0,22" CornerRadius="16"
+                    SizeChanged="OnBannerSizeChanged">
                 <Border.Background>
                     <ImageBrush ImageSource="pack://application:,,,/EasiLoginer.Presentation;component/Assets/banner.png"
                                 Stretch="UniformToFill" />
