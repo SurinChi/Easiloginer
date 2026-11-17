@@ -76,7 +76,7 @@
                             <ui:SymbolIcon Symbol="Person24" FontSize="18" Margin="0,0,8,0" />
                             <TextBlock Text="四种登录方式" FontWeight="SemiBold" />
                         </StackPanel>
-                        <TextBlock Text="UI Automation 默认最稳，另有固定位置、图像识别与令牌投递。"
+                        <TextBlock Text="自动定位默认最稳，另有固定位置、图像识别与令牌投递。"
                                    Opacity="0.7" TextWrapping="Wrap" Margin="0,6,0,0" />
                     </StackPanel>
                 </Border>

@@ -11,7 +11,7 @@ public enum LoginMethod
     /// <summary>图像识别（上游已移除 OpenCV，仅保留命名与模板匹配）。</summary>
     Cv = 1,
 
-    /// <summary>UI Automation 自动定位。</summary>
+    /// <summary>自动定位（底层使用 UI Automation）。</summary>
     Uia = 2,
 
     /// <summary>令牌投递（需要先修补）。</summary>
