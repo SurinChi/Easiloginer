@@ -7,7 +7,7 @@
 ; 而是明确提示「保留数据安装」：只替换程序文件，data\ 中的配置与档案保留。
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.2.0-alpha.3"
+  #define MyAppVersion "0.2.0-beta.1"
 #endif
 #ifndef MyAppVersionNumeric
   #define MyAppVersionNumeric "0.2.0.0"

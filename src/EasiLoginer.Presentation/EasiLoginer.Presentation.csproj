@@ -25,6 +25,10 @@
   <ItemGroup>
     <!-- 窗口图标（PNG，WPF 直接支持）；exe 图标在 Host 项目用 .ico -->
     <Resource Include="Assets\easiloginer.png" />
+
+    <!-- README 与关于页共用同一份横幅 / 作者头像，避免两处各放一份 -->
+    <Resource Include="..\..\docs\screenshots\banner.png" Link="Assets\banner.png" />
+    <Resource Include="..\..\docs\screenshots\author.png" Link="Assets\author.png" />
   </ItemGroup>
 
 </Project>

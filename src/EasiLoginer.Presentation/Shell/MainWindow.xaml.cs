@@ -87,6 +87,7 @@ internal sealed class PageProvider(AppServices services) : INavigationViewPagePr
         var type when type == typeof(ProfilePage) => new ProfilePage(services),
         var type when type == typeof(UpdatePage) => new UpdatePage(services),
         var type when type == typeof(AboutPage) => new AboutPage(services),
+        var type when type == typeof(AnnouncementPage) => new AnnouncementPage(services),
         _ => null,
     };
 }

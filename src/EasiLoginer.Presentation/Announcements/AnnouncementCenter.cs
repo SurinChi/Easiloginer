@@ -1,10 +1,11 @@
 using System.IO;
 using System.Windows;
+using EasiLoginer.Domain.Announcements;
 
 namespace EasiLoginer.Presentation.Announcements;
 
 /// <summary>
-/// 公告的展示入口：启动时自动检查（有频率上限），关于页可手动查看。
+/// 公告的展示入口：启动时自动检查（有频率上限），公告页可手动刷新。
 /// </summary>
 /// <remarks>
 /// 公告是「有则更好」的能力：任何失败都不弹错误、不阻塞启动（文档 §6.6）。
@@ -48,34 +49,35 @@ internal static class AnnouncementCenter
         }
     }
 
-    /// <summary>手动查看公告（关于页入口，忽略自动检查间隔）。</summary>
-    public static async Task ShowAsync(AppServices services, Window? owner)
+    /// <summary>
+    /// 读取公告列表，供公告页使用；<paramref name="includeHidden"/> 为 false 时
+    /// 忽略「不再提示」记录，让用户仍能在页面里主动查看全部公告。
+    /// </summary>
+    internal static async Task<IReadOnlyList<Announcement>> FetchAsync(
+        AppServices services,
+        bool includeHidden,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        try
+        var version = AppVersion.TryGet();
+        if (version is null)
         {
-            await ShowCoreAsync(services, owner).ConfigureAwait(true);
+            return [];
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            // 同上：公告失败不弹错误
-        }
+
+        var hidden = includeHidden
+            ? services.Config.Current.Internal.HiddenAnnouncementIds
+            : null;
+
+        return await services.Announcements
+            .FetchAsync(version, hidden, cancellationToken)
+            .ConfigureAwait(true);
     }
 
     private static async Task ShowCoreAsync(AppServices services, Window? owner)
     {
-        var version = AppVersion.TryGet();
-        if (version is null)
-        {
-            return;
-        }
-
-        var hidden = services.Config.Current.Internal.HiddenAnnouncementIds;
-        var announcements = await services.Announcements
-            .FetchAsync(version, hidden, CancellationToken.None)
-            .ConfigureAwait(true);
-
+        var announcements = await FetchAsync(services, includeHidden: true).ConfigureAwait(true);
         if (announcements.Count == 0)
         {
             return;
@@ -92,7 +94,10 @@ internal static class AnnouncementCenter
         Wpf.Ui.Appearance.ApplicationThemeManager.Apply(window);
         window.ShowDialog();
 
-        SaveHiddenIds(services, hidden, window.HiddenIds);
+        SaveHiddenIds(
+            services,
+            services.Config.Current.Internal.HiddenAnnouncementIds,
+            window.HiddenIds);
     }
 
     private static void SaveHiddenIds(

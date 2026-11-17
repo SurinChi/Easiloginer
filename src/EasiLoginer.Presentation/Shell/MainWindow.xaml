@@ -77,6 +77,11 @@
                             <ui:SymbolIcon Symbol="Info24" FontSize="16" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="公告" TargetPageType="{x:Type pages:AnnouncementPage}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="Megaphone24" FontSize="16" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
                 </ui:NavigationView.FooterMenuItems>
             </ui:NavigationView>
         </Grid>
