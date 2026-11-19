@@ -42,6 +42,7 @@ public sealed class JsonProfileRepository : IProfileRepository
     private readonly ILogger<JsonProfileRepository> _logger;
     private readonly DpapiKeyCache _keyCache;
     private byte[]? _sessionKey;
+    private List<SensitiveSnapshot> _sensitiveBaseline = [];
 
     /// <summary>创建档案仓储。</summary>
     public JsonProfileRepository(AppPaths paths, ILogger<JsonProfileRepository> logger)
@@ -73,6 +74,7 @@ public sealed class JsonProfileRepository : IProfileRepository
         {
             Current = new Profile();
             WriteProfile(Current);
+            CaptureSensitiveBaseline();
             return Current;
         }
 
@@ -108,6 +110,7 @@ public sealed class JsonProfileRepository : IProfileRepository
             _logger.LogWarning("档案 schema_version={Version}，强制重建为空档案", version);
             Current = new Profile();
             WriteProfile(Current);
+            CaptureSensitiveBaseline();
             return Current;
         }
 
@@ -128,10 +131,12 @@ public sealed class JsonProfileRepository : IProfileRepository
                 _logger.LogError("旧档案部分密码解密失败，已备份原文件，需重新填写对应密码");
             }
 
+            CaptureSensitiveBaseline();
             return Current;
         }
 
         Current = Deserialize(root);
+        CaptureSensitiveBaseline();
         return Current;
     }
 
@@ -145,6 +150,8 @@ public sealed class JsonProfileRepository : IProfileRepository
 
         Validate(Current);
         WriteProfile(Current);
+        SealDraftPasswords();
+        CaptureSensitiveBaseline();
         Changed?.Invoke(this, new ProfileChangedEventArgs(reason));
     }
 
@@ -226,6 +233,13 @@ public sealed class JsonProfileRepository : IProfileRepository
             return false;
         }
 
+        // 关闭加密前把所有密码密文解密回草稿；任何一条失败都不能写回空密码。
+        if (!ReleaseAllPasswords())
+        {
+            _logger.LogError("关闭加密失败：存在无法解密的密码");
+            return false;
+        }
+
         Current.EncryptionEnabled = false;
         Current.EncryptionSalt = null;
         Current.EncryptionCheck = null;
@@ -238,12 +252,50 @@ public sealed class JsonProfileRepository : IProfileRepository
     }
 
     /// <inheritdoc />
+    public bool ChangeMasterPassword(string currentMasterPassword, string newMasterPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newMasterPassword) || !Unlock(currentMasterPassword))
+        {
+            return false;
+        }
+
+        // 旧密钥先把密码解回草稿，再用新密钥重新加密；否则旧密文会留在新密钥下。
+        if (!ReleaseAllPasswords())
+        {
+            _logger.LogError("更换主密码失败：存在无法解密的密码");
+            return false;
+        }
+
+        var salt = MasterKeyDeriver.CreateSalt();
+        var key = MasterKeyDeriver.DeriveRaw(newMasterPassword, salt);
+
+        SetSessionKey(key);
+        _keyCache.Save(key);
+        Current.EncryptionSalt = Convert.ToBase64String(salt);
+        Current.EncryptionCheck = EncryptSecretString(ProfileSchema.MasterPasswordCheckPayload);
+        Current.EncryptionEnabled = true;
+
+        Save(ProfileChangeReason.EncryptionChanged);
+        _logger.LogInformation("已更换档案主密码");
+        return true;
+    }
+
+    /// <inheritdoc />
     public void Lock()
     {
         if (_sessionKey is not null)
         {
             CryptographicOperations.ZeroMemory(_sessionKey);
             _sessionKey = null;
+        }
+
+        // 锁定后清掉尚未保存的密码草稿；已保存密码只剩密文，不留在内存。
+        if (Current.EncryptionEnabled)
+        {
+            foreach (var automation in Current.Automations)
+            {
+                automation.Password = string.Empty;
+            }
         }
     }
 
@@ -257,6 +309,129 @@ public sealed class JsonProfileRepository : IProfileRepository
     /// <inheritdoc />
     public AutomationProfile? FindAutomation(string id)
         => Current.Automations.FirstOrDefault(item => string.Equals(item.Id, id, StringComparison.Ordinal));
+
+    /// <inheritdoc />
+    public bool HasPassword(string id)
+        => FindAutomation(id) is { HasStoredPassword: true };
+
+    /// <inheritdoc />
+    public bool TryGetPassword(string id, out string password)
+    {
+        password = string.Empty;
+
+        var automation = FindAutomation(id);
+        if (automation is null)
+        {
+            return false;
+        }
+
+        // 用户在界面上新输入的密码草稿优先；已保存密码则按需解密密文。
+        if (!string.IsNullOrEmpty(automation.Password))
+        {
+            password = automation.Password;
+            return true;
+        }
+
+        if (string.IsNullOrEmpty(automation.EncryptedPassword))
+        {
+            return true;
+        }
+
+        if (_sessionKey is null ||
+            !TryDecryptSecret(automation.EncryptedPassword, out var plaintext))
+        {
+            return false;
+        }
+
+        password = plaintext;
+        return true;
+    }
+
+    /// <inheritdoc />
+    public bool VerifyProfilePassword(string id, string candidate)
+    {
+        var automation = FindAutomation(id);
+        if (automation is null || string.IsNullOrEmpty(candidate))
+        {
+            return false;
+        }
+
+        // 修改密码时界面上可能已有新草稿；这里校验的是“原密码”，
+        // 因此优先使用已保存密码的密文，而不是新草稿。
+        string stored;
+        if (!string.IsNullOrEmpty(automation.EncryptedPassword))
+        {
+            if (!TryDecryptSecret(automation.EncryptedPassword, out stored))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            stored = automation.Password;
+        }
+
+        if (string.IsNullOrEmpty(stored))
+        {
+            return false;
+        }
+
+        var candidateBytes = Encoding.UTF8.GetBytes(candidate);
+        var storedBytes = Encoding.UTF8.GetBytes(stored);
+
+        return candidateBytes.Length == storedBytes.Length &&
+               CryptographicOperations.FixedTimeEquals(candidateBytes, storedBytes);
+    }
+
+    /// <inheritdoc />
+    public void CaptureSensitiveBaseline()
+        => _sensitiveBaseline = Current.Automations
+            .Select(item => new SensitiveSnapshot(
+                item.Id,
+                item.Account,
+                PasswordFingerprint(item)))
+            .ToList();
+
+    /// <inheritdoc />
+    public bool HasSensitiveChanges()
+    {
+        foreach (var automation in Current.Automations)
+        {
+            var before = _sensitiveBaseline.FirstOrDefault(
+                item => string.Equals(item.Id, automation.Id, StringComparison.Ordinal));
+
+            if (before is null)
+            {
+                if (!string.IsNullOrEmpty(automation.Account) || automation.HasStoredPassword)
+                {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (!string.Equals(before.Account, automation.Account, StringComparison.Ordinal) ||
+                !string.Equals(before.Password, PasswordFingerprint(automation), StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 密码基线指纹：新输入草稿与已保存密文都算不同状态，避免切换页面后把编辑值当成基线。
+    /// </summary>
+    private static string PasswordFingerprint(AutomationProfile automation)
+        => !string.IsNullOrEmpty(automation.Password)
+            ? "plain:" + automation.Password
+            : automation.EncryptedPassword is { Length: > 0 } token
+                ? "cipher:" + token
+                : string.Empty;
+
+    /// <summary>一条档案的账号/密码基线。</summary>
+    private sealed record SensitiveSnapshot(string Id, string Account, string Password);
 
     /// <inheritdoc />
     public void UpsertAutomation(AutomationProfile automation)
@@ -408,7 +583,21 @@ public sealed class JsonProfileRepository : IProfileRepository
         foreach (var automation in profile.Automations)
         {
             automation.Account = DecryptSecret(automation.Account);
-            automation.Password = DecryptSecret(automation.Password);
+
+            var rawPassword = automation.Password;
+            automation.Password = string.Empty;
+            automation.EncryptedPassword = null;
+
+            if (profile.EncryptionEnabled && rawPassword.StartsWith(ProfileSchema.SecretPrefix, StringComparison.Ordinal))
+            {
+                // 已保存的密码只保留密文，解锁后也不把明文放回档案对象。
+                automation.EncryptedPassword = rawPassword;
+            }
+            else
+            {
+                // 未加密档案或尚未加密的新密码草稿才留在 Password。
+                automation.Password = rawPassword;
+            }
 
             if (string.IsNullOrEmpty(automation.Type))
             {
@@ -428,21 +617,86 @@ public sealed class JsonProfileRepository : IProfileRepository
         }
 
         // 锁定态：静默返回空串，解锁后由 Reload 刷新为明文（文档 §5.2）
-        if (_sessionKey is null)
+        return TryDecryptSecret(value, out var plaintext) ? plaintext : string.Empty;
+    }
+
+    private bool TryDecryptSecret(string value, out string plaintext)
+    {
+        plaintext = string.Empty;
+
+        if (string.IsNullOrEmpty(value) ||
+            !value.StartsWith(ProfileSchema.SecretPrefix, StringComparison.Ordinal) ||
+            _sessionKey is null)
         {
-            return string.Empty;
+            return false;
         }
 
         try
         {
             var cipher = new FernetCipher(_sessionKey);
-            return Encoding.UTF8.GetString(cipher.Decrypt(value[ProfileSchema.SecretPrefix.Length..]));
+            plaintext = Encoding.UTF8.GetString(cipher.Decrypt(value[ProfileSchema.SecretPrefix.Length..]));
+            return true;
         }
         catch (CryptographicException exception)
         {
             _logger.LogError(exception, "解密档案字段失败，已置空");
-            return string.Empty;
+            return false;
         }
+    }
+
+    /// <summary>
+    /// 把用户刚输入的新密码草稿加密成密文，并立即清掉密码对象里的明文。
+    /// </summary>
+    private void SealDraftPasswords()
+    {
+        if (!Current.EncryptionEnabled)
+        {
+            return;
+        }
+
+        foreach (var automation in Current.Automations)
+        {
+            if (string.IsNullOrEmpty(automation.Password))
+            {
+                continue;
+            }
+
+            automation.EncryptedPassword = EncryptSecretString(automation.Password);
+            automation.Password = string.Empty;
+        }
+    }
+
+    /// <summary>关闭加密前把全部密文解密回明文草稿；任意一条失败则整体放弃。</summary>
+    private bool ReleaseAllPasswords()
+    {
+        if (_sessionKey is null)
+        {
+            return false;
+        }
+
+        var released = new List<(AutomationProfile Automation, string Plaintext)>();
+        foreach (var automation in Current.Automations)
+        {
+            if (string.IsNullOrEmpty(automation.EncryptedPassword))
+            {
+                continue;
+            }
+
+            if (!TryDecryptSecret(automation.EncryptedPassword, out var plaintext))
+            {
+                return false;
+            }
+
+            released.Add((automation, plaintext));
+        }
+
+        foreach (var (automation, plaintext) in released)
+        {
+            automation.Password = plaintext;
+            automation.EncryptedPassword = null;
+        }
+
+        return true;
     }
 
     private string EncryptSecretString(string plaintext)
@@ -484,15 +738,20 @@ public sealed class JsonProfileRepository : IProfileRepository
             return node;
         }
 
-        foreach (var element in automations)
+        for (var index = 0; index < automations.Count && index < profile.Automations.Count; index++)
         {
-            if (element is not JsonObject item)
+            if (automations[index] is not JsonObject item)
             {
                 continue;
             }
 
+            var automation = profile.Automations[index];
             item["account"] = EncryptSecretString(item["account"]?.GetValue<string>() ?? string.Empty);
-            item["password"] = EncryptSecretString(item["password"]?.GetValue<string>() ?? string.Empty);
+
+            // 新密码草稿优先；否则沿用已保存密文，绝不再加密一次。
+            item["password"] = !string.IsNullOrEmpty(automation.Password)
+                ? EncryptSecretString(automation.Password)
+                : automation.EncryptedPassword ?? string.Empty;
         }
 
         return node;

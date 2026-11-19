@@ -173,6 +173,38 @@ public sealed class ProfilePageViewModelTests
         viewModel.StatusText.Should().Contain("草稿未保存");
     }
 
+    /// <summary>启用主密码后不允许再显示密码明文。</summary>
+    [Fact]
+    public void 启用加密后隐藏显示密码()
+    {
+        var repository = new FakeProfileRepository();
+        var viewModel = CreateViewModel(repository);
+
+        viewModel.CanRevealPassword.Should().BeTrue();
+        viewModel.EnableEncryption("pw");
+        viewModel.CanRevealPassword.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// 修改账号/密码后切换页面再回来，新的视图模型仍要能识别未保存的敏感改动，
+    /// 不能因为重新载入时以当前值建立基线而绕过主密码。
+    /// </summary>
+    [Fact]
+    public void 切换页面后仍识别未保存的敏感修改()
+    {
+        var repository = new FakeProfileRepository();
+        var viewModel = CreateViewModel(repository);
+        viewModel.Add();
+        viewModel.Selected!.Account = "13800000000";
+        viewModel.Selected.Password = "old";
+        viewModel.Save().Should().BeTrue();
+
+        viewModel.Selected.Account = "13800000001";
+
+        var recreated = CreateViewModel(repository);
+        recreated.HasSensitiveChanges().Should().BeTrue();
+    }
+
     /// <summary>保存失败时必须返回 false，调用方才能中止后续动作。</summary>
     [Fact]
     public void 保存失败返回false()
@@ -218,7 +250,39 @@ public sealed class ProfilePageViewModelTests
 
         public Profile Current { get; } = new();
 
+        private List<(string Id, string Account, string Password)> _baseline = [];
+
         public bool IsUnlocked => Unlocked;
+
+        public void CaptureSensitiveBaseline()
+            => _baseline = Current.Automations
+                .Select(item => (item.Id, item.Account, item.Password))
+                .ToList();
+
+        public bool HasSensitiveChanges()
+        {
+            foreach (var automation in Current.Automations)
+            {
+                var before = _baseline.FirstOrDefault(item => string.Equals(item.Id, automation.Id, StringComparison.Ordinal));
+                if (before == default)
+                {
+                    if (!string.IsNullOrEmpty(automation.Account) || !string.IsNullOrEmpty(automation.Password))
+                    {
+                        return true;
+                    }
+
+                    continue;
+                }
+
+                if (!string.Equals(before.Account, automation.Account, StringComparison.Ordinal) ||
+                    !string.Equals(before.Password, automation.Password, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         public int SaveCalls { get; private set; }
 
@@ -244,6 +308,7 @@ public sealed class ProfilePageViewModelTests
             }
 
             SaveCalls++;
+            CaptureSensitiveBaseline();
         }
 
         public bool Unlock(string masterPassword)
@@ -290,6 +355,9 @@ public sealed class ProfilePageViewModelTests
 
         public bool DisableEncryption(string masterPassword) => true;
 
+        public bool ChangeMasterPassword(string currentMasterPassword, string newMasterPassword)
+            => currentMasterPassword == "pw";
+
         public void Lock()
         {
             Unlocked = false;
@@ -300,6 +368,18 @@ public sealed class ProfilePageViewModelTests
 
         public AutomationProfile? FindAutomation(string id)
             => Current.Automations.FirstOrDefault(item => string.Equals(item.Id, id, StringComparison.Ordinal));
+
+        public bool HasPassword(string id) => FindAutomation(id) is { HasStoredPassword: true };
+
+        public bool TryGetPassword(string id, out string password)
+        {
+            var automation = FindAutomation(id);
+            password = automation?.Password ?? string.Empty;
+            return automation is not null;
+        }
+
+        public bool VerifyProfilePassword(string id, string candidate)
+            => TryGetPassword(id, out var password) && string.Equals(password, candidate, StringComparison.Ordinal);
 
         public void UpsertAutomation(AutomationProfile automation)
         {

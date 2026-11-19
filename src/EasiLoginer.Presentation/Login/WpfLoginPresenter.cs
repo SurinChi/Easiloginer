@@ -21,6 +21,7 @@ public sealed class WpfLoginPresenter : ILoginPresenter
     private readonly double _scale;
     private readonly BannerOptions? _bannerOptions;
     private readonly bool _showStatusOverlay;
+    private readonly Action? _cancelRequested;
     private PrivacyMaskWindow? _mask;
     private StatusOverlayWindow? _overlay;
     private BannerWindow? _banner;
@@ -29,7 +30,12 @@ public sealed class WpfLoginPresenter : ILoginPresenter
     /// <param name="display">屏幕度量，用于把物理像素换算成 DIP。</param>
     /// <param name="bannerOptions">警示横幅选项；为 <see langword="null"/> 时不显示横幅。</param>
     /// <param name="showStatusOverlay">是否显示状态浮窗（对应 <c>StatusOverlay.Enabled</c>）。</param>
-    public WpfLoginPresenter(IDisplayMetrics display, BannerOptions? bannerOptions = null, bool showStatusOverlay = true)
+    /// <param name="cancelRequested">点击「立即终止」时的回调；为空时不显示该按钮。</param>
+    public WpfLoginPresenter(
+        IDisplayMetrics display,
+        BannerOptions? bannerOptions = null,
+        bool showStatusOverlay = true,
+        Action? cancelRequested = null)
     {
         ArgumentNullException.ThrowIfNull(display);
 
@@ -37,6 +43,7 @@ public sealed class WpfLoginPresenter : ILoginPresenter
         _scale = display.Capture().Scale is > 0 and var scale ? scale : 1.0;
         _bannerOptions = bannerOptions;
         _showStatusOverlay = showStatusOverlay;
+        _cancelRequested = cancelRequested;
     }
 
     /// <inheritdoc />
@@ -121,6 +128,12 @@ public sealed class WpfLoginPresenter : ILoginPresenter
         if (_overlay is null)
         {
             _overlay = new StatusOverlayWindow();
+            _overlay.CanCancel = _cancelRequested is not null;
+            if (_cancelRequested is not null)
+            {
+                _overlay.CancelRequested += (_, _) => _cancelRequested();
+            }
+
             _overlay.Show();
         }
 

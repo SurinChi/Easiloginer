@@ -64,7 +64,7 @@ EasiLoginer 启动时会读取它，并在应用里弹出当前有效的公告�
 ## 4. 展示规则
 
 1. 只显示满足 `start_at ≤ 现在 < end_at` 且版本落在 `[min_version, max_version)` 内的公告；
-2. 已被用户「不再提示」的 `id` 不再出现（记录在 `data/config.json` 的 `Internal.HiddenAnnouncementIds`）；
+2. 已被用户「不再提示」的 `id` 不再出现（记录在注册表 `HKCU\Software\EasiLoginer\Settings` 的 `Internal.HiddenAnnouncementIds` 中）；
 3. 按 `published_at` 倒序，**一次最多显示 3 条**；
 4. 单条公告写坏（缺 `id`/`title`、超长、链接非法）只会跳过该条；整份文件写坏则本次不显示，日志里留一条 warning；
 5. 文件大小上限 256 KB，读取超时 5 秒；失败完全不打扰用户。

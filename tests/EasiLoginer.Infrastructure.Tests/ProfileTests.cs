@@ -104,7 +104,64 @@ public sealed class ProfileTests : IDisposable
         locked.Unlock(MasterPassword).Should().BeTrue();
         locked.IsUnlocked.Should().BeTrue();
         locked.Current.Automations[0].Account.Should().Be("acc");
-        locked.Current.Automations[0].Password.Should().Be("pw");
+        locked.Current.Automations[0].Password.Should().BeEmpty("解锁后也不把密码明文放回档案对象");
+        locked.TryGetPassword(locked.Current.Automations[0].Id, out var password).Should().BeTrue();
+        password.Should().Be("pw");
+    }
+
+    /// <summary>启用加密后，解锁也不把密码明文留在档案对象里，只能按需取出。</summary>
+    [Fact]
+    public void 加密后密码不以明文常驻档案对象()
+    {
+        _repo.Load();
+        _repo.UpsertAutomation(new AutomationProfile { Account = "acc", Password = "pw" });
+        _repo.Save();
+        _repo.EnableEncryption(MasterPassword);
+
+        var automation = _repo.Current.Automations[0];
+        automation.Password.Should().BeEmpty("密码明文不能在档案对象里常驻");
+        automation.EncryptedPassword.Should().StartWith(ProfileSchema.SecretPrefix);
+        _repo.HasPassword(automation.Id).Should().BeTrue();
+        _repo.TryGetPassword(automation.Id, out var password).Should().BeTrue();
+        password.Should().Be("pw");
+    }
+
+    /// <summary>修改账号/密码时，原密码校验读取已保存密文，而不是界面上的新草稿。</summary>
+    [Fact]
+    public void 原密码校验不受新草稿影响()
+    {
+        _repo.Load();
+        _repo.UpsertAutomation(new AutomationProfile { Account = "acc", Password = "old-pw" });
+        _repo.Save();
+        _repo.EnableEncryption(MasterPassword);
+
+        var id = _repo.Current.Automations[0].Id;
+        _repo.Current.Automations[0].Password = "new-draft";
+
+        _repo.VerifyProfilePassword(id, "old-pw").Should().BeTrue();
+        _repo.VerifyProfilePassword(id, "new-draft").Should().BeFalse();
+        _repo.TryGetPassword(id, out var password).Should().BeTrue();
+        password.Should().Be("new-draft", "登录时优先使用用户刚输入的新密码");
+    }
+
+    /// <summary>更换主密码需要旧密码，旧密码随即失效。</summary>
+    [Fact]
+    public void 更换主密码后旧密码失效()
+    {
+        _repo.Load();
+        _repo.UpsertAutomation(new AutomationProfile { Account = "acc", Password = "pw" });
+        _repo.Save();
+        _repo.EnableEncryption(MasterPassword);
+
+        _repo.ChangeMasterPassword("wrong", "new-master").Should().BeFalse();
+        _repo.ChangeMasterPassword(MasterPassword, "new-master").Should().BeTrue();
+
+        var reloaded = NewRepository();
+        reloaded.Load();
+        reloaded.Unlock(MasterPassword).Should().BeFalse();
+        reloaded.Unlock("new-master").Should().BeTrue();
+        reloaded.TryGetPassword(reloaded.Current.Automations[0].Id, out var password).Should().BeTrue();
+        password.Should().Be("pw");
     }
 
     /// <summary>错误主密码不能解锁。</summary>
@@ -153,7 +210,9 @@ public sealed class ProfileTests : IDisposable
         var cached = NewRepository();
         cached.Load();
         cached.TryCachedUnlock().Should().BeTrue();
-        cached.Current.Automations[0].Password.Should().Be("pw");
+        cached.Current.Automations[0].Password.Should().BeEmpty();
+        cached.TryGetPassword(cached.Current.Automations[0].Id, out var cachedPassword).Should().BeTrue();
+        cachedPassword.Should().Be("pw");
 
         // 能解开但与档案校验密文不匹配：必须清除缓存（上游 clear_cached_key 分支）
         new DpapiKeyCache(_paths).Save(RandomNumberGenerator.GetBytes(32));

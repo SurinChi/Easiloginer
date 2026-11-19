@@ -34,6 +34,17 @@ internal static class DataRetentionService
         {
             var days = DataRetentionPolicy.Normalize(configuredDays);
             var removed = DataWipeService.Wipe(paths);
+
+            // 设置已迁移到注册表，重置数据时也要一并清掉，否则下次启动会读回旧设置。
+            try
+            {
+                new RegistryConfigBackend().Clear();
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+            {
+                // 清不掉注册表时仍继续清理文件数据
+            }
+
             wipe = new RetentionWipe(days, removed);
         }
 

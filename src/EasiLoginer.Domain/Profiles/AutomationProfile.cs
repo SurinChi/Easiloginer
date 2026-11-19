@@ -69,7 +69,10 @@ public sealed class AutomationProfile : INotifyPropertyChanged
         }
     }
 
-    /// <summary>密码（启用加密时落盘为 <c>ea$</c> 密文）。</summary>
+    /// <summary>
+    /// 密码输入草稿；启用加密后，已保存的密码不再以明文放在这里，
+    /// 而是保存在 <see cref="EncryptedPassword"/>。用户输入新密码时才短暂持有明文。
+    /// </summary>
     [JsonPropertyName("password")]
     public string Password
     {
@@ -80,9 +83,21 @@ public sealed class AutomationProfile : INotifyPropertyChanged
             {
                 _password = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(HasStoredPassword));
             }
         }
     }
+
+    /// <summary>
+    /// 已保存密码的 <c>ea$</c> 密文；启用加密时只以密文常驻内存。
+    /// </summary>
+    [JsonIgnore]
+    public string? EncryptedPassword { get; set; }
+
+    /// <summary>是否已有保存的密码（明文草稿或密文都算）。</summary>
+    [JsonIgnore]
+    public bool HasStoredPassword
+        => !string.IsNullOrEmpty(_password) || !string.IsNullOrEmpty(EncryptedPassword);
 
     /// <summary>希沃白板用户名。</summary>
     [JsonPropertyName("account_name")]

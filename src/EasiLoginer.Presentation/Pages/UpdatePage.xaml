@@ -26,7 +26,7 @@
                 <Button x:Name="CheckButton" Content="检查更新" Padding="18,6" Click="OnCheckClicked" />
                 <Button x:Name="DownloadButton" Content="下载更新" Padding="18,6" Margin="10,0,0,0"
                         Visibility="Collapsed" Click="OnDownloadClicked" />
-                <Button x:Name="InstallButton" Content="运行安装程序" Padding="18,6" Margin="10,0,0,0"
+                <Button x:Name="InstallButton" Content="静默安装并重启" Padding="18,6" Margin="10,0,0,0"
                         Visibility="Collapsed" Click="OnInstallClicked" />
                 <TextBlock x:Name="StatusText" VerticalAlignment="Center" Margin="14,0,0,0" Opacity="0.85" TextWrapping="Wrap" />
             </StackPanel>

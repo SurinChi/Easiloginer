@@ -16,10 +16,10 @@ namespace EasiLoginer.Presentation.Legal;
 public static class UserAgreement
 {
     /// <summary>协议版本。</summary>
-    public const string Version = "1.0";
+    public const string Version = "1.1";
 
     /// <summary>生效日期。</summary>
-    public const string EffectiveDate = "2026-11-14";
+    public const string EffectiveDate = "2026-11-19";
 
     /// <summary>完整协议正文。</summary>
     public const string Text = """
@@ -112,17 +112,19 @@ public static class UserAgreement
 
         第四条 数据与隐私
 
-        4.1 本软件采用本地优先设计。账号、密码、档案、设置与日志默认只保存在本机
-            程序目录的 data 文件夹中，不会上传到作者或任何第三方服务器。
+        4.1 本软件采用本地优先设计。账号、密码、档案、设置与日志默认只保存在本机，
+            不会上传到作者或任何第三方服务器。设置存放在当前用户的注册表
+            HKCU\Software\EasiLoginer\Settings 中；档案与日志存放在程序目录的 data
+            文件夹中。
 
-        4.2 data 文件夹中的主要文件包括：config.json（设置）、profile.json（档案）、
-            state.json（启动状态）、profile.unlock 或 profile.key（主密码相关状态）、
-            logs（本地日志）、cache 与 avatars（运行缓存）。具体文件名与结构可能随
-            版本调整。
+        4.2 data 文件夹中的主要文件包括：profile.json（档案）、state.json（启动状态）、
+            profile.unlock 或 profile.key（主密码相关状态）、logs（本地日志）、cache
+            与 avatars（运行缓存）。具体文件名与结构可能随版本调整。
 
         4.3 启用主密码后，账号与密码使用 Argon2id 派生密钥并以 ea$ 开头的 Fernet
-            密文落盘。主密码本身不会被保存，作者也无法为你恢复忘记的主密码。请自行
-            保管主密码并备份 data 文件夹。
+            密文落盘。密码不以明文长期保存在内存或界面中；登录时才临时解密。主密码
+            本身不会被保存，作者也无法为你恢复忘记的主密码。请自行保管主密码并备份
+            data 文件夹。
 
         4.4 本软件不包含任何遥测、崩溃上报或使用统计。除以下情形外，本软件不会主动
             访问网络：

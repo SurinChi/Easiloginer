@@ -22,6 +22,12 @@ public sealed partial class ConfigPageViewModel : ObservableObject
     [ObservableProperty]
     private int _selectedCategoryIndex;
 
+    /// <summary>是否有尚未保存的改动（用于左下角悬浮提示）。</summary>
+    [ObservableProperty]
+    private bool _hasUnsavedChanges;
+
+    private bool _suppressDirty;
+
     /// <summary>创建视图模型并构建设置树。</summary>
     public ConfigPageViewModel(IConfigService config)
     {
@@ -38,6 +44,12 @@ public sealed partial class ConfigPageViewModel : ObservableObject
 
         // 供测试与「保存」遍历使用：所有分类下的全部分组
         Groups = Categories.SelectMany(category => category.Groups).ToList();
+
+        // 订阅放在初始载入之后，避免构建卡片时就被判定为“有改动”。
+        foreach (var item in AllItems)
+        {
+            item.PropertyChanged += OnItemPropertyChanged;
+        }
     }
 
     /// <summary>顶部分类导航。</summary>
@@ -52,14 +64,25 @@ public sealed partial class ConfigPageViewModel : ObservableObject
     /// <summary>全部设置分组（按分类顺序平铺）。</summary>
     public IReadOnlyList<SettingsGroupViewModel> Groups { get; }
 
+    private IEnumerable<SettingItemViewModel> AllItems => Groups.SelectMany(group => group.Items);
+
     partial void OnSelectedCategoryIndexChanged(int value) => OnPropertyChanged(nameof(CurrentGroups));
+
+    private void OnItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (!_suppressDirty)
+        {
+            HasUnsavedChanges = true;
+        }
+    }
 
     /// <summary>把界面值写回配置并落盘。</summary>
     public void Save()
     {
+        _suppressDirty = true;
         try
         {
-            foreach (var item in Groups.SelectMany(group => group.Items))
+            foreach (var item in AllItems)
             {
                 item.Apply();
             }
@@ -67,6 +90,7 @@ public sealed partial class ConfigPageViewModel : ObservableObject
             _config.Save();
             ThemeService.Apply(_config.Current.App.Theme);
             AppearanceService.Apply(_config.Current);
+            HasUnsavedChanges = false;
             StatusText = string.Create(CultureInfo.InvariantCulture, $"已保存（{DateTime.Now:HH:mm:ss}）");
         }
         catch (FormatException exception)
@@ -77,6 +101,34 @@ public sealed partial class ConfigPageViewModel : ObservableObject
         {
             StatusText = $"保存失败：{exception.Message}";
         }
+        finally
+        {
+            _suppressDirty = false;
+        }
+    }
+
+    /// <summary>把全部设置恢复默认值（尚未保存）。</summary>
+    public void ResetAll()
+    {
+        foreach (var item in AllItems)
+        {
+            item.ResetToDefault();
+        }
+
+        HasUnsavedChanges = true;
+        StatusText = "已重置全部设置，点击“保存”后生效。";
+    }
+
+    /// <summary>把当前分类的设置恢复默认值（尚未保存）。</summary>
+    public void ResetCurrentPage()
+    {
+        foreach (var item in CurrentGroups.SelectMany(group => group.Items))
+        {
+            item.ResetToDefault();
+        }
+
+        HasUnsavedChanges = true;
+        StatusText = "已重置本页设置，点击“保存”后生效。";
     }
 
     private static List<SettingsGroupViewModel> BuildGroups(

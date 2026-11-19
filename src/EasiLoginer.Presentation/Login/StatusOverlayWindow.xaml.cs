@@ -13,6 +13,9 @@ public partial class StatusOverlayWindow : Window
     private const int WsExToolWindow = 0x00000080;
     private const int WsExNoActivate = 0x08000000;
 
+    /// <summary>用户点击「立即终止」。</summary>
+    public event EventHandler? CancelRequested;
+
     /// <summary>创建浮窗并定位到主屏底部居中。</summary>
     public StatusOverlayWindow()
     {
@@ -30,19 +33,35 @@ public partial class StatusOverlayWindow : Window
     /// <summary>更新进度文案。</summary>
     public void SetProgress(string progress) => ProgressText.Text = progress;
 
+    /// <summary>是否允许用户中途终止。</summary>
+    public bool CanCancel
+    {
+        get => CancelButton.Visibility == Visibility.Visible;
+        set => CancelButton.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     /// <summary>展示最终结果。</summary>
     public void SetFinal(LoginOutcome outcome, string? error)
     {
         TaskText.Text = outcome switch
         {
             LoginOutcome.Success => "登录成功",
-            LoginOutcome.Cancelled => "已取消",
+            LoginOutcome.Cancelled => "已终止",
             _ => "登录失败",
         };
 
         ProgressText.Text = outcome == LoginOutcome.Failed && !string.IsNullOrEmpty(error)
             ? error
             : string.Empty;
+
+        CanCancel = false;
+    }
+
+    private void OnCancelClicked(object sender, RoutedEventArgs e)
+    {
+        CancelButton.IsEnabled = false;
+        CancelButton.Content = "正在终止…";
+        CancelRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void ApplyNoActivate()

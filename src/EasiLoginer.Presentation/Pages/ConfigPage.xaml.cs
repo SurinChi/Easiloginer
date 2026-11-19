@@ -20,4 +20,21 @@ public partial class ConfigPage : Page
     }
 
     private void OnSaveClicked(object sender, RoutedEventArgs e) => _viewModel.Save();
+
+    private void OnResetAllClicked(object sender, RoutedEventArgs e)
+    {
+        var answer = MessageBox.Show(
+            Window.GetWindow(this),
+            "确定把所有设置恢复为默认值吗？点击“保存”后才会真正写入。",
+            "重置全部",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (answer == MessageBoxResult.Yes)
+        {
+            _viewModel.ResetAll();
+        }
+    }
+
+    private void OnResetPageClicked(object sender, RoutedEventArgs e) => _viewModel.ResetCurrentPage();
 }
