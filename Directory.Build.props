@@ -41,10 +41,10 @@
       稳定版：X.Y.Z；测试版：X.Y.Z-alpha.N / X.Y.Z-beta.N。
       测试版号不得占用将来的稳定版号；程序集与安装包的数字版本始终是 X.Y.Z.0。
     -->
-    <Version>0.2.0-beta.2</Version>
+    <Version>0.2.0</Version>
     <AssemblyVersion>0.2.0.0</AssemblyVersion>
     <FileVersion>0.2.0.0</FileVersion>
-    <InformationalVersion>0.2.0-beta.2</InformationalVersion>
+    <InformationalVersion>0.2.0</InformationalVersion>
   </PropertyGroup>
 
 </Project>

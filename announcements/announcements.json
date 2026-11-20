@@ -1,4 +1,18 @@
 {
-  "schema": 1,
-  "announcements": []
+    "schema":  1,
+    "announcements":  [
+                          {
+                              "id":  "to_all_users",
+                              "title":  "给所有使用者的一封信",
+                              "body":  "写下这些话时，心里颇多感慨。\n\n首先，感谢每一位选择并使用 EasiLoginer 的你。\n也感谢 EasiAuto 的作者 hxabcd 老师——没有他的开源探索，就没有这款软件的起点。\n\n高中时，我作为课代表，因为“懒”，用 Python 和 C++ 写过一款类似的工具：点一下按钮，就能完成希沃白板自动登录。受当时技术条件所限，只做到了 OCR（文字识别）。后来，我发现了 hxabcd 老师开发的 EasiAuto，但它与 ClassIsland（CI）高度绑定，而我所在的学校并没有铺开使用 CI，所以最终没有用上。\n\n高中毕业后，我反复思量，决定用 C# 重写这款希沃自动登录工具，让它适配我们学校的环境。这是我送给老师和学弟学妹们的一份特殊礼物，也把它送给每一位使用者。无论你是老师还是同学，愿你都有美好的一天。\n\nSurinChi\n2026 年 11 月 20 日\n于华南师范大学",
+                              "severity":  "info",
+                              "published_at":  "2026-11-18T20:00:00+08:00",
+                              "start_at":  "2026-11-18T20:00:00+08:00",
+                              "end_at":  "",
+                              "min_version":  "0.1.3",
+                              "max_version":  "",
+                              "url":  "https://github.com/SurinChi/Easiloginer/releases",
+                              "dismissible":  true
+                          }
+                      ]
 }
