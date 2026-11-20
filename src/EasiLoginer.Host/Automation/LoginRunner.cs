@@ -247,13 +247,15 @@ public static class LoginRunner
             return null;
         }
 
-        if (string.IsNullOrWhiteSpace(automation.Account) || string.IsNullOrWhiteSpace(automation.Password))
+        if (string.IsNullOrWhiteSpace(automation.Account) ||
+            !profiles.TryGetPassword(profileId, out var storedPassword) ||
+            string.IsNullOrWhiteSpace(storedPassword))
         {
-            Log.Error("档案 {ProfileId} 的账号或密码为空", profileId);
+            Log.Error("档案 {ProfileId} 的账号或密码为空，或密码无法解密", profileId);
             return null;
         }
 
-        return (automation.Account, automation.Password);
+        return (automation.Account, storedPassword);
     }
 
     private static async Task<LoginOutcome> RunPipelineAsync(

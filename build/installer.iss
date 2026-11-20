@@ -7,7 +7,7 @@
 ; 而是明确提示「保留数据安装」：只替换程序文件，data\ 中的配置与档案保留。
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.2.0-beta.1"
+  #define MyAppVersion "0.2.0-beta.2"
 #endif
 #ifndef MyAppVersionNumeric
   #define MyAppVersionNumeric "0.2.0.0"
@@ -40,6 +40,10 @@ PrivilegesRequired=lowest
 DirExistsWarning=no
 OutputDir=..\..\EasiLoginer-dist
 OutputBaseFilename=EasiLoginer-Setup-{#MyAppVersion}
+; 专属竖向品牌侧边栏与右上角小图标（328×628 源图按向导尺寸等比缩放）
+WizardImageFile=installer-sidebar.bmp
+WizardSmallImageFile=installer-small.bmp
+WizardImageStretch=yes
 SetupIconFile=..\src\EasiLoginer.Host\Assets\easiloginer.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 UninstallDisplayName={#MyAppName}
@@ -78,7 +82,7 @@ chinesesimplified.SelectDirBrowseLabel=点击“下一步”继续；如需安�
 chinesesimplified.ConfirmUninstall=确认要卸载 %1 吗？%n%n卸载会删除整个安装目录，包括 data 目录中的配置与档案；如需保留，请先备份。
 
 [Tasks]
-Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务："; Flags: checkedonce
+Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务："
 
 [InstallDelete]
 ; 只清理旧版的程序 DLL；绝不删除 data 目录（配置与档案）。
@@ -100,12 +104,30 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 [Run]
 Filename: "{app}\.setup\7z.exe"; Parameters: "x ""{app}\payload.7z"" -o""{app}"" -y"; Flags: runhidden waituntilterminated; StatusMsg: "正在解压程序文件…"
 Filename: "{app}\{#MyAppExeName}"; Description: "启动 {#MyAppName}"; Flags: nowait postinstall skipifsilent
+; 应用内更新会传 /RESTARTAPP：静默安装结束后自动拉起新版本
+Filename: "{app}\{#MyAppExeName}"; Flags: nowait; Check: IsRestartRequested
 
 [UninstallDelete]
 ; 负载解压出来的文件不在 Inno 的安装记录里，卸载时整目录清理
 Type: filesandordirs; Name: "{app}"
 
 [Code]
+// 应用内静默更新由 UpdatePage 传入 /RESTARTAPP；安装结束后据此拉起新版本。
+function IsRestartRequested: Boolean;
+var
+  Index: Integer;
+begin
+  Result := False;
+  for Index := 1 to ParamCount do
+  begin
+    if CompareText(ParamStr(Index), '/RESTARTAPP') = 0 then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+end;
+
 // 安装开始前检查旧版本是否还在运行：明确询问后结束它，避免 Inno 在复制文件阶段
 // 才弹出“文件正在使用”的通用提示。静默安装不询问，直接结束旧进程。
 function InitializeSetup(): Boolean;
@@ -163,6 +185,15 @@ begin
     Log('EasiLoginer is still running after taskkill');
     MsgBox(ExpandConstant('{cm:CloseRunningFailed}'), mbError, MB_OK);
     Result := False;
+  end;
+end;
+
+// 设置已迁移到 HKCU 注册表；卸载时一并清掉，避免重装后残留旧设置。
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usPostUninstall then
+  begin
+    RegDeleteKeyIncludingSubkeys(HKCU, 'Software\EasiLoginer\Settings');
   end;
 end;
 

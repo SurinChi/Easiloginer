@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -141,11 +142,28 @@ public partial class UpdatePage : Page
             return;
         }
 
-        // 是安装包就直接运行；是绿色版 ZIP 就打开所在文件夹
+        // 是安装包就静默安装并重启；是绿色版 ZIP 就打开所在文件夹
         if (string.Equals(Path.GetExtension(_downloadedPath), ".exe", StringComparison.OrdinalIgnoreCase))
         {
-            Process.Start(new ProcessStartInfo(_downloadedPath) { UseShellExecute = true });
-            StatusText.Text = "已启动安装程序。";
+            InstallButton.IsEnabled = false;
+            try
+            {
+                var startInfo = new ProcessStartInfo(_downloadedPath)
+                {
+                    UseShellExecute = true,
+                    WorkingDirectory = Path.GetDirectoryName(_downloadedPath) ?? string.Empty,
+                    Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTAPP",
+                };
+
+                Process.Start(startInfo);
+                StatusText.Text = "正在静默安装，完成后会自动重启 EasiLoginer……";
+            }
+            catch (Exception exception) when (exception is Win32Exception or InvalidOperationException)
+            {
+                InstallButton.IsEnabled = true;
+                StatusText.Text = $"启动安装程序失败：{exception.Message}";
+            }
+
             return;
         }
 

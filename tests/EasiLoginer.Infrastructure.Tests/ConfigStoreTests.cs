@@ -22,7 +22,7 @@ public sealed class ConfigStoreTests : IDisposable
     {
         _root = Path.Combine(Path.GetTempPath(), "EasiLoginerTests", "config", Guid.NewGuid().ToString("N"));
         _paths = new AppPaths(_root);
-        _store = new ConfigStore(_paths, NullLogger<ConfigStore>.Instance);
+        _store = new ConfigStore(_paths, NullLogger<ConfigStore>.Instance, new FileConfigBackend(_paths));
     }
 
     public void Dispose()

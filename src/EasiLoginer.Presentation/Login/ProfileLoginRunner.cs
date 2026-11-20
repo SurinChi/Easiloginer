@@ -21,15 +21,27 @@ internal static class ProfileLoginRunner
     {
         ArgumentNullException.ThrowIfNull(profile);
 
+        using var cancelSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var scale = display.Capture().Scale;
         var presenter = new WpfLoginPresenter(
             display,
             BannerOptions.FromConfig(config.Current.Banner, scale),
-            config.Current.StatusOverlay.Enabled);
+            config.Current.StatusOverlay.Enabled,
+            cancelRequested: () =>
+            {
+                try
+                {
+                    cancelSource.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // 登录已经结束、浮窗正在淡出：忽略迟到的点击
+                }
+            });
         var options = new LoginRunOptions(presenter, new WpfLoginConfirmation());
 
         return await login
-            .RunForProfileAsync(profile.Id, options, cancellationToken)
+            .RunForProfileAsync(profile.Id, options, cancelSource.Token)
             .ConfigureAwait(true);
     }
 }

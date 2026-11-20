@@ -83,7 +83,7 @@ public sealed partial class QuickLoginPageViewModel : ObservableObject
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(profile.Password))
+        if (!_profiles.HasPassword(profile.Id))
         {
             StatusText = $"「{profile.Name}」没有填写密码，无法登录。请到「档案」页补全。";
             return;

@@ -195,10 +195,13 @@ public sealed partial class SettingItemViewModel : ObservableObject
         }
     }
 
-    private void Load()
-    {
-        var value = _leaf.GetValue(_owner);
+    /// <summary>把编辑器恢复为该设置项的默认值（尚未写回配置，需点击保存）。</summary>
+    public void ResetToDefault() => LoadValue(ReadValue(new Config(), Descriptor.Path));
 
+    private void Load() => LoadValue(_leaf.GetValue(_owner));
+
+    private void LoadValue(object? value)
+    {
         switch (Descriptor.Kind)
         {
             case SettingKind.Boolean:
@@ -227,6 +230,23 @@ public sealed partial class SettingItemViewModel : ObservableObject
                 TextValue = value?.ToString() ?? string.Empty;
                 break;
         }
+    }
+
+    private static object? ReadValue(Config config, string path)
+    {
+        var parts = path.Split('.');
+        object? owner = config;
+        for (var index = 0; index < parts.Length; index++)
+        {
+            if (owner is null)
+            {
+                return null;
+            }
+
+            owner = owner.GetType().GetProperty(parts[index])?.GetValue(owner);
+        }
+
+        return owner;
     }
 
     private static PixelPoint ParsePoint(string text)

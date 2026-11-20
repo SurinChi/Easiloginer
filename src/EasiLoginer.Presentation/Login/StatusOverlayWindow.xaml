@@ -1,7 +1,7 @@
 <Window x:Class="EasiLoginer.Presentation.Login.StatusOverlayWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Width="440" Height="132"
+        Width="440" Height="168"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -11,10 +11,26 @@
         ResizeMode="NoResize"
         WindowStartupLocation="Manual">
     <Border CornerRadius="10" Background="#F21F1F1F" Padding="18,14">
-        <StackPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
             <TextBlock x:Name="TaskText" Text="正在登录" FontSize="16" FontWeight="SemiBold" Foreground="White" />
-            <TextBlock x:Name="ProgressText" Text="" Margin="0,6,0,0" Foreground="#CCFFFFFF" TextWrapping="Wrap" />
-            <TextBlock x:Name="BrandText" Text="EasiLoginer" Margin="0,10,0,0" FontSize="11" Foreground="#88FFFFFF" />
-        </StackPanel>
+            <TextBlock x:Name="ProgressText" Grid.Row="1" Text="" Margin="0,6,0,0"
+                       Foreground="#CCFFFFFF" TextWrapping="Wrap" />
+
+            <DockPanel Grid.Row="2" Margin="0,12,0,0">
+                <TextBlock x:Name="BrandText" Text="EasiLoginer" VerticalAlignment="Center"
+                           FontSize="11" Foreground="#88FFFFFF" />
+                <Button x:Name="CancelButton" Content="立即终止" HorizontalAlignment="Right"
+                        Padding="12,4" Foreground="White" Background="#33FFFFFF"
+                        BorderBrush="#55FFFFFF" BorderThickness="1"
+                        ToolTip="终止当前登录流程，不修改任何设置"
+                        Click="OnCancelClicked" />
+            </DockPanel>
+        </Grid>
     </Border>
 </Window>

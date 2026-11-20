@@ -45,7 +45,16 @@ public partial class ProfilePage : Page
             // 重新同步一次，避免界面看起来像密码丢了。
             SyncPasswordBox();
         };
-        Unloaded += (_, _) => _isPageActive = false;
+        Unloaded += (_, _) =>
+        {
+            _isPageActive = false;
+
+            // 启用主密码后，离开页面不把用户刚输入但尚未保存的密码明文留在内存里。
+            if (_viewModel.RequiresMasterPassword)
+            {
+                _viewModel.DiscardPasswordDrafts();
+            }
+        };
         SyncPasswordBox();
     }
 
@@ -68,6 +77,20 @@ public partial class ProfilePage : Page
         {
             _syncingPassword = false;
         }
+
+        if (_viewModel.RequiresMasterPassword)
+        {
+            ShowMaskedPassword();
+        }
+    }
+
+    /// <summary>强制回到脱敏模式；启用主密码后不允许明文框继续显示。</summary>
+    private void ShowMaskedPassword()
+    {
+        PasswordInput.Visibility = Visibility.Visible;
+        PasswordPlain.Visibility = Visibility.Collapsed;
+        RevealButton.Content = "👁";
+        RevealButton.ToolTip = "显示密码";
     }
 
     private void OnPasswordChanged(object sender, RoutedEventArgs e)
@@ -130,6 +153,12 @@ public partial class ProfilePage : Page
     /// <summary>在 PasswordBox 与明文 TextBox 之间切换；两者始终保存同一份密码。</summary>
     private void OnRevealClicked(object sender, RoutedEventArgs e)
     {
+        if (_viewModel.RequiresMasterPassword)
+        {
+            ShowMaskedPassword();
+            return;
+        }
+
         var reveal = PasswordInput.Visibility == Visibility.Visible;
 
         _syncingPassword = true;
@@ -200,6 +229,12 @@ public partial class ProfilePage : Page
         }
 
         await _viewModel.RunAsync();
+
+        // Save() 会把新密码封成密文并清空模型；同步一次密码框，避免明文残留在界面上。
+        if (_viewModel.RequiresMasterPassword)
+        {
+            SyncPasswordBox();
+        }
     }
 
     /// <summary>涉及账号密码的操作前验证主密码；未设主密码时直接放行。</summary>
@@ -212,7 +247,7 @@ public partial class ProfilePage : Page
 
         var dialog = new MasterPasswordDialog(
             "验证主密码",
-            "该操作涉及账号与密码，请先输入主密码。",
+            "该操作涉及账号与密码。请输入主密码，或当前档案的原密码。",
             requireConfirmation: false)
         {
             Owner = Window.GetWindow(this),
@@ -223,14 +258,15 @@ public partial class ProfilePage : Page
             return false;
         }
 
-        if (_viewModel.VerifyMasterPassword(dialog.Password))
+        if (_viewModel.VerifyMasterPassword(dialog.Password) ||
+            _viewModel.VerifyProfilePassword(dialog.Password))
         {
             return true;
         }
 
         MessageBox.Show(
             Window.GetWindow(this),
-            "主密码错误，操作已取消。",
+            "主密码与档案原密码均不正确，操作已取消。",
             "验证失败",
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
@@ -240,6 +276,26 @@ public partial class ProfilePage : Page
 
     private void OnEnableEncryptionClicked(object sender, RoutedEventArgs e)
     {
+        // 从“无主密码”变为“有主密码”属于修改安全设置：若当前档案已有密码，
+        // 先验证原密码，避免任何能打开应用的人直接设置主密码。
+        if (_viewModel.SelectedHasPassword)
+        {
+            var verify = new MasterPasswordDialog(
+                "验证档案原密码",
+                "启用主密码前，请先输入当前档案的原密码。",
+                requireConfirmation: false)
+            {
+                Owner = Window.GetWindow(this),
+            };
+
+            if (verify.ShowDialog() != true ||
+                !_viewModel.VerifyProfilePassword(verify.Password))
+            {
+                _viewModel.StatusText = "启用失败：档案原密码不正确。";
+                return;
+            }
+        }
+
         var dialog = new MasterPasswordDialog(
             "启用档案加密",
             "设置主密码后，档案中的账号与密码会以密文保存。忘记主密码将无法恢复这些密码。",
@@ -252,6 +308,37 @@ public partial class ProfilePage : Page
         {
             _viewModel.EnableEncryption(dialog.Password);
             _viewModel.CaptureSensitiveSnapshot();
+            SyncPasswordBox();
+        }
+    }
+
+    private void OnChangeMasterPasswordClicked(object sender, RoutedEventArgs e)
+    {
+        var current = new MasterPasswordDialog(
+            "修改主密码",
+            "请输入当前主密码。",
+            requireConfirmation: false)
+        {
+            Owner = Window.GetWindow(this),
+        };
+
+        if (current.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var next = new MasterPasswordDialog(
+            "设置新主密码",
+            "输入并确认新的主密码。忘记主密码将无法恢复档案密码。",
+            requireConfirmation: true)
+        {
+            Owner = Window.GetWindow(this),
+        };
+
+        if (next.ShowDialog() == true)
+        {
+            _viewModel.ChangeMasterPassword(current.Password, next.Password);
+            SyncPasswordBox();
         }
     }
 

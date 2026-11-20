@@ -3,6 +3,10 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="档案"
       TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </Page.Resources>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" Padding="0,0,0,0">
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -19,8 +23,11 @@
                         IsEnabled="{Binding CanEnableEncryption}" Click="OnEnableEncryptionClicked" />
                 <Button Content="解锁" Padding="16,6" Margin="0,0,8,0"
                         IsEnabled="{Binding CanUnlock}" Click="OnUnlockClicked" />
-                <Button Content="关闭加密" Padding="16,6"
+                <Button Content="关闭加密" Padding="16,6" Margin="0,0,8,0"
                         IsEnabled="{Binding CanDisableEncryption}" Click="OnDisableEncryptionClicked" />
+                <Button Content="修改主密码" Padding="16,6"
+                        Visibility="{Binding RequiresMasterPassword, Converter={StaticResource BoolToVisibility}}"
+                        IsEnabled="{Binding CanChangeMasterPassword}" Click="OnChangeMasterPasswordClicked" />
             </StackPanel>
         </StackPanel>
 
@@ -63,7 +70,8 @@
                     </Grid>
 
                     <Button x:Name="RevealButton" Grid.Column="1" Content="👁" Padding="12,0"
-                            Margin="8,0,0,0" ToolTip="显示密码" Click="OnRevealClicked" />
+                            Margin="8,0,0,0" ToolTip="显示密码" Click="OnRevealClicked"
+                            Visibility="{Binding CanRevealPassword, Converter={StaticResource BoolToVisibility}}" />
                 </Grid>
 
                 <StackPanel Orientation="Horizontal" Margin="0,20,0,0">

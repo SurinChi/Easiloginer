@@ -28,41 +28,47 @@ public sealed class ConfigStore
 
     private readonly AppPaths _paths;
     private readonly ILogger<ConfigStore> _logger;
+    private readonly IConfigBackend _backend;
 
-    /// <summary>创建配置存储。</summary>
-    public ConfigStore(AppPaths paths, ILogger<ConfigStore> logger)
+    /// <summary>创建配置存储；默认使用注册表，测试可注入文件后端。</summary>
+    public ConfigStore(AppPaths paths, ILogger<ConfigStore> logger, IConfigBackend? backend = null)
     {
         ArgumentNullException.ThrowIfNull(paths);
         ArgumentNullException.ThrowIfNull(logger);
 
         _paths = paths;
         _logger = logger;
+        _backend = backend ?? new RegistryConfigBackend();
     }
 
-    /// <summary>读取配置；文件不存在时写入默认配置。</summary>
+    /// <summary>读取配置；后端不存在时写入默认配置。</summary>
     public Config Load()
     {
-        var configPath = _paths.ConfigFile;
-
-        if (!File.Exists(configPath))
+        if (!_backend.Exists)
         {
+            // 首次升级：把旧的 config.json 导入注册表，避免用户设置丢失。
+            if (TryMigrateFromFile())
+            {
+                return Load();
+            }
+
             var defaults = new Config();
             Save(defaults);
-            _logger.LogInformation("配置文件不存在，已写入默认配置：{Path}", configPath);
+            _logger.LogInformation("配置不存在，已写入默认配置（{Backend}）", _backend.GetType().Name);
             return defaults;
         }
 
-        // 读取失败大多是瞬时的（编辑器占用、杀软扫描、另一实例正在 File.Replace），
-        // 先重试；仍然失败时只以默认值启动，绝不覆盖原文件，否则一次占用就清空用户全部设置。
+        // 读取失败大多是瞬时的（杀软扫描、注册表被占用、另一实例正在写），
+        // 先重试；仍然失败时只以默认值启动，绝不覆盖已有配置。
         string? text = null;
         Exception? readFailure = null;
         for (var attempt = 1; attempt <= ReadAttempts && text is null; attempt++)
         {
             try
             {
-                text = File.ReadAllText(configPath, Encoding.UTF8);
+                text = _backend.Read();
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
             {
                 readFailure = exception;
                 if (attempt < ReadAttempts)
@@ -74,7 +80,7 @@ public sealed class ConfigStore
 
         if (text is null)
         {
-            _logger.LogError(readFailure, "读取配置失败（已重试 {Attempts} 次），本次以默认值运行，原文件保持不变", ReadAttempts);
+            _logger.LogError(readFailure, "读取配置失败（已重试 {Attempts} 次），本次以默认值运行，原配置保持不变", ReadAttempts);
             return new Config();
         }
 
@@ -82,6 +88,21 @@ public sealed class ConfigStore
         {
             var config = Deserialize(text);
             ConfigBounds.Normalize(config, _logger);
+
+            // 旧版把整份配置放在一个 Config 值里；首次读取后拆分到每个设置项。
+            if (_backend is RegistryConfigBackend registry && registry.HasLegacyBlob)
+            {
+                try
+                {
+                    Save(config);
+                    _logger.LogInformation("已把旧版注册表配置拆分为逐项设置");
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+                {
+                    _logger.LogWarning(exception, "拆分旧版注册表配置失败，本次仍使用原配置");
+                }
+            }
+
             return config;
         }
         catch (JsonException exception)
@@ -94,14 +115,13 @@ public sealed class ConfigStore
         }
     }
 
-    /// <summary>原子写入配置。</summary>
+    /// <summary>写入配置。</summary>
     public void Save(Config config)
     {
         ArgumentNullException.ThrowIfNull(config);
 
-        Directory.CreateDirectory(_paths.DataDirectory);
         var json = JsonSerializer.Serialize(config, ConfigJson.Options);
-        AtomicFile.WriteAllText(_paths.ConfigFile, json);
+        _backend.Write(json);
     }
 
     private static Config Deserialize(string text)
@@ -121,12 +141,10 @@ public sealed class ConfigStore
 
     private Config RecoverFromFailure(string reason, Exception exception)
     {
-        var backup = _paths.ConfigFile + ".bak";
-
         try
         {
-            File.Copy(_paths.ConfigFile, backup, overwrite: true);
-            _logger.LogError(exception, "{Reason}，已备份到 {Backup} 并使用默认配置启动", reason, backup);
+            _backend.BackupCorrupt();
+            _logger.LogError(exception, "{Reason}，已备份原始配置并使用默认配置启动", reason);
         }
         catch (Exception backupException)
         {
@@ -138,13 +156,48 @@ public sealed class ConfigStore
         {
             Save(defaults);
         }
-        catch (Exception saveException) when (saveException is IOException or UnauthorizedAccessException)
+        catch (Exception saveException) when (saveException is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
             // 恢复动作本身失败时仍要能启动：默认值只留在内存里
             _logger.LogError(saveException, "写入默认配置失败，本次以内存中的默认值运行");
         }
 
         return defaults;
+    }
+
+    /// <summary>首次切到注册表时导入旧 <c>config.json</c>；成功后重命名为 .migrated。</summary>
+    private bool TryMigrateFromFile()
+    {
+        if (_backend is not RegistryConfigBackend || !File.Exists(_paths.ConfigFile))
+        {
+            return false;
+        }
+
+        try
+        {
+            var text = File.ReadAllText(_paths.ConfigFile, Encoding.UTF8);
+            var config = Deserialize(text);
+            ConfigBounds.Normalize(config, _logger);
+            Save(config);
+
+            var migrated = _paths.ConfigFile + ".migrated";
+            try
+            {
+                File.Move(_paths.ConfigFile, migrated, overwrite: true);
+            }
+            catch (Exception moveException) when (moveException is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogWarning(moveException, "旧配置文件已导入注册表，但重命名失败");
+            }
+
+            _logger.LogInformation("已把旧 config.json 导入注册表：HKCU\\{Key}", RegistryConfigBackend.DefaultKeyPath);
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or FormatException or System.Security.SecurityException)
+        {
+            _logger.LogWarning(exception, "旧 config.json 导入注册表失败，将使用默认配置");
+            return false;
+        }
     }
 }
 

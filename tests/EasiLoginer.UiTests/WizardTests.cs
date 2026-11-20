@@ -78,8 +78,8 @@ public sealed class WizardTests
     [Fact]
     public void 协议版本集中维护()
     {
-        UserAgreement.Version.Should().Be("1.0");
-        UserAgreement.EffectiveDate.Should().Be("2026-11-14");
+        UserAgreement.Version.Should().Be("1.1");
+        UserAgreement.EffectiveDate.Should().Be("2026-11-19");
         OobeSteps.AgreementText.Should().Be(UserAgreement.Text);
     }
 
