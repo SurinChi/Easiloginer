@@ -97,7 +97,7 @@
         </DockPanel>
 
         <!-- 未保存改动的悬浮提示：左下角，带快捷保存 -->
-        <Border Panel.ZIndex="10" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+        <Border Panel.ZIndex="10" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                 Margin="24" Padding="16,10" CornerRadius="10"
                 Background="{DynamicResource ControlFillColorSecondaryBrush}"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
