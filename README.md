@@ -94,7 +94,8 @@ EasiLoginer-Setup-<版本>.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 - 密码框不再提供「显示密码」按钮；
 - 查看档案、运行登录**不需要**再次输入主密码（本机缓存自动解锁）；
 - **修改账号/密码、删除档案**时需要验证主密码，或该档案的原密码；
-- 启用前若当前档案已有密码，会先要求验证该原密码；更换主密码需要旧主密码；
+- 启用主密码只要求设置并确认新主密码，不再要求验证档案原密码；
+- 更换主密码需要旧主密码；
 - 忘记主密码无法恢复，请自行备份或牢记。
 
 ### 6. 设置页
@@ -186,7 +187,7 @@ dotnet build EasiLoginer.sln -c Release
 dotnet test  EasiLoginer.sln -c Release --no-build
 ```
 
-`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 487 个测试。
+`Directory.Build.props` 启用了 `TreatWarningsAsErrors`，零警告是硬要求。当前共 488 个测试。
 
 ### 打包发布
 

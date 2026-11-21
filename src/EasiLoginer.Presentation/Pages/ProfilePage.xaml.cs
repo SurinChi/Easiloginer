@@ -195,7 +195,7 @@ public partial class ProfilePage : Page
     private void OnDeleteClicked(object sender, RoutedEventArgs e)
     {
         // 删除账号属于"修改账号"，设了主密码就要验证
-        if (_viewModel.RequiresMasterPassword && !EnsureMasterPassword())
+        if (_viewModel.RequiresMasterPassword && !EnsureCredentialVerification())
         {
             return;
         }
@@ -207,7 +207,7 @@ public partial class ProfilePage : Page
     private void OnSaveClicked(object sender, RoutedEventArgs e)
     {
         // 只有账号或密码真的被改过才要求验证；改名称等其它字段直接保存
-        if (_viewModel.RequiresMasterPassword && _viewModel.HasSensitiveChanges() && !EnsureMasterPassword())
+        if (_viewModel.RequiresMasterPassword && _viewModel.HasSensitiveChanges() && !EnsureCredentialVerification())
         {
             _viewModel.StatusText = "未保存：主密码验证未通过或已取消。";
             return;
@@ -223,7 +223,7 @@ public partial class ProfilePage : Page
     private async void OnRunClicked(object sender, RoutedEventArgs e)
     {
         // 「运行登录」同样会写盘，敏感改动必须先过主密码关，和「保存档案」保持一致
-        if (_viewModel.RequiresMasterPassword && _viewModel.HasSensitiveChanges() && !EnsureMasterPassword())
+        if (_viewModel.RequiresMasterPassword && _viewModel.HasSensitiveChanges() && !EnsureCredentialVerification())
         {
             return;
         }
@@ -237,18 +237,15 @@ public partial class ProfilePage : Page
         }
     }
 
-    /// <summary>涉及账号密码的操作前验证主密码；未设主密码时直接放行。</summary>
-    private bool EnsureMasterPassword()
+    /// <summary>涉及账号密码的操作前验证主密码或档案原密码；未设主密码时直接放行。</summary>
+    private bool EnsureCredentialVerification()
     {
         if (!_viewModel.RequiresMasterPassword)
         {
             return true;
         }
 
-        var dialog = new MasterPasswordDialog(
-            "验证主密码",
-            "该操作涉及账号与密码。请输入主密码，或当前档案的原密码。",
-            requireConfirmation: false)
+        var dialog = new CredentialVerificationDialog(_viewModel.CanVerifyProfilePassword)
         {
             Owner = Window.GetWindow(this),
         };
@@ -258,15 +255,20 @@ public partial class ProfilePage : Page
             return false;
         }
 
-        if (_viewModel.VerifyMasterPassword(dialog.Password) ||
-            _viewModel.VerifyProfilePassword(dialog.Password))
+        var verified = dialog.Method == CredentialVerificationMethod.MasterPassword
+            ? _viewModel.VerifyMasterPassword(dialog.Password)
+            : _viewModel.VerifyProfilePassword(dialog.Password);
+
+        if (verified)
         {
             return true;
         }
 
         MessageBox.Show(
             Window.GetWindow(this),
-            "主密码与档案原密码均不正确，操作已取消。",
+            dialog.Method == CredentialVerificationMethod.MasterPassword
+                ? "主密码不正确，操作已取消。"
+                : "档案原密码不正确，操作已取消。",
             "验证失败",
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
@@ -276,26 +278,6 @@ public partial class ProfilePage : Page
 
     private void OnEnableEncryptionClicked(object sender, RoutedEventArgs e)
     {
-        // 从“无主密码”变为“有主密码”属于修改安全设置：若当前档案已有密码，
-        // 先验证原密码，避免任何能打开应用的人直接设置主密码。
-        if (_viewModel.SelectedHasPassword)
-        {
-            var verify = new MasterPasswordDialog(
-                "验证档案原密码",
-                "启用主密码前，请先输入当前档案的原密码。",
-                requireConfirmation: false)
-            {
-                Owner = Window.GetWindow(this),
-            };
-
-            if (verify.ShowDialog() != true ||
-                !_viewModel.VerifyProfilePassword(verify.Password))
-            {
-                _viewModel.StatusText = "启用失败：档案原密码不正确。";
-                return;
-            }
-        }
-
         var dialog = new MasterPasswordDialog(
             "启用档案加密",
             "设置主密码后，档案中的账号与密码会以密文保存。忘记主密码将无法恢复这些密码。",

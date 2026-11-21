@@ -24,7 +24,7 @@ public static class ProfileEncryptionState
 
         if (!profile.EncryptionEnabled)
         {
-            return "档案未加密（明文保存）";
+            return "档案未加密";
         }
 
         return isUnlocked
