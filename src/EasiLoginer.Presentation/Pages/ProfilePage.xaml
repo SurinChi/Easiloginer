@@ -22,6 +22,7 @@
                 <Button Content="启用加密" Padding="16,6" Margin="0,0,8,0"
                         IsEnabled="{Binding CanEnableEncryption}" Click="OnEnableEncryptionClicked" />
                 <Button Content="解锁" Padding="16,6" Margin="0,0,8,0"
+                        Visibility="{Binding CanUnlock, Converter={StaticResource BoolToVisibility}}"
                         IsEnabled="{Binding CanUnlock}" Click="OnUnlockClicked" />
                 <Button Content="关闭加密" Padding="16,6" Margin="0,0,8,0"
                         IsEnabled="{Binding CanDisableEncryption}" Click="OnDisableEncryptionClicked" />

@@ -185,6 +185,28 @@ public sealed class ProfilePageViewModelTests
         viewModel.CanRevealPassword.Should().BeFalse();
     }
 
+    /// <summary>档案没有密码或尚未解锁时，不能使用“档案原密码”验证页。</summary>
+    [Fact]
+    public void 原密码验证需要已解锁且档案有密码()
+    {
+        var repository = new FakeProfileRepository();
+        var viewModel = CreateViewModel(repository);
+        viewModel.Add();
+        viewModel.Selected!.Account = "13800000000";
+        viewModel.Selected.Password = "pw";
+        viewModel.Save().Should().BeTrue();
+
+        viewModel.EnableEncryption("master");
+        viewModel.CanVerifyProfilePassword.Should().BeTrue();
+
+        viewModel.Selected.Password = string.Empty;
+        viewModel.CanVerifyProfilePassword.Should().BeFalse();
+
+        viewModel.Selected.Password = "pw";
+        repository.Unlocked = false;
+        viewModel.CanVerifyProfilePassword.Should().BeFalse();
+    }
+
     /// <summary>
     /// 修改账号/密码后切换页面再回来，新的视图模型仍要能识别未保存的敏感改动，
     /// 不能因为重新载入时以当前值建立基线而绕过主密码。

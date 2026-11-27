@@ -16,7 +16,7 @@ public sealed class ProfileEncryptionStateTests
         ProfileEncryptionState.CanEnable(profile).Should().BeTrue();
         ProfileEncryptionState.CanUnlock(profile, isUnlocked: false).Should().BeFalse();
         ProfileEncryptionState.CanDisable(profile, isUnlocked: false).Should().BeFalse();
-        ProfileEncryptionState.Describe(profile, isUnlocked: false).Should().Contain("未加密");
+        ProfileEncryptionState.Describe(profile, isUnlocked: false).Should().Be("档案未加密");
     }
 
     /// <summary>已加密且锁定：可以解锁，但不能关闭加密（无密钥安全重写）。</summary>

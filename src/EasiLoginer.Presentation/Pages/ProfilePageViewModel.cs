@@ -136,10 +136,17 @@ public sealed partial class ProfilePageViewModel : ObservableObject
     /// <summary>当前档案是否已有可校验的原密码。</summary>
     public bool SelectedHasPassword => Selected is not null && _profiles.HasPassword(Selected.Id);
 
+    /// <summary>
+    /// 是否可以在修改账号/密码时使用“档案原密码”验证。
+    /// 档案锁定无法解密时只能用主密码解锁，不能走原密码页。
+    /// </summary>
+    public bool CanVerifyProfilePassword => RequiresMasterPassword && _profiles.IsUnlocked && SelectedHasPassword;
+
     partial void OnSelectedChanged(AutomationProfile? value)
     {
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(SelectedHasPassword));
+        OnPropertyChanged(nameof(CanVerifyProfilePassword));
     }
 
     /// <summary>新增一条空白档案。</summary>
@@ -354,6 +361,7 @@ public sealed partial class ProfilePageViewModel : ObservableObject
         OnPropertyChanged(nameof(CanChangeMasterPassword));
         OnPropertyChanged(nameof(CanRevealPassword));
         OnPropertyChanged(nameof(SelectedHasPassword));
+        OnPropertyChanged(nameof(CanVerifyProfilePassword));
         OnPropertyChanged(nameof(RequiresMasterPassword));
         OnPropertyChanged(nameof(HasSelection));
     }
